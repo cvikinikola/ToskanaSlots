@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Hammer of Thor 1000</title>
+		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+		<link rel="stylesheet" href="https://use.typekit.net/aba0ebl.css" />
+		<meta name="viewport" content="width=device-width" />
+		<!-- DEV MOCK: redirects /wallet/* requests to the local Vite dev server. Remove before connecting to a real RGS backend. -->
+		<script>
+		(function() {
+			if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return;
+			var LOCAL = location.origin;
+			function patchFetch(fn) {
+				return function devFetch(input, init) {
+					var url = input instanceof Request ? input.url : String(input);
+					if (url.indexOf('/wallet/') !== -1) {
+						var local = LOCAL + url.replace(/^https?:\/\/[^\/]*/, '');
+						console.info('[mock-rgs]', url, '->', local);
+						return fn.call(this, local, init instanceof Headers ? init : (init || {}));
+					}
+					return fn.apply(this, arguments);
+				};
+			}
+			window.fetch = patchFetch(window.fetch);
+		})();
+		</script>
+		%sveltekit.head%
+	</head>
+	<body style="margin: 0; padding: 0; overflow: hidden; background-color: black">
+		<div>%sveltekit.body%</div>
+	</body>
+</html>

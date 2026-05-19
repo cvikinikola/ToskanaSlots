@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" width="300" height="300">
+	<defs>
+		<radialGradient id="sAura" cx="50%" cy="50%" r="55%">
+			<stop offset="0%" stop-color="#ffd147" stop-opacity="0.9"/>
+			<stop offset="55%" stop-color="#ffd147" stop-opacity="0.25"/>
+			<stop offset="100%" stop-color="#ffd147" stop-opacity="0"/>
+		</radialGradient>
+		<radialGradient id="sRing" cx="50%" cy="35%" r="70%">
+			<stop offset="0%" stop-color="#fff8d4"/>
+			<stop offset="50%" stop-color="#ffd147"/>
+			<stop offset="100%" stop-color="#3a2208"/>
+		</radialGradient>
+		<linearGradient id="sBg" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#3a1f10"/>
+			<stop offset="100%" stop-color="#1a0c08"/>
+		</linearGradient>
+		<linearGradient id="helmet" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#fff8d4"/>
+			<stop offset="50%" stop-color="#c89236"/>
+			<stop offset="100%" stop-color="#5a3a18"/>
+		</linearGradient>
+		<linearGradient id="horn" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#fff3d4"/>
+			<stop offset="100%" stop-color="#7a5a2a"/>
+		</linearGradient>
+	</defs>
+	<circle cx="150" cy="150" r="148" fill="url(#sAura)"/>
+	<circle cx="150" cy="150" r="135" fill="url(#sRing)"/>
+	<circle cx="150" cy="150" r="118" fill="url(#sBg)"/>
+	<path d="M95,108 Q40,80 28,118 Q22,150 50,140 Q75,128 100,128 Z" fill="url(#horn)" stroke="#3a2208" stroke-width="2.5"/>
+	<path d="M205,108 Q260,80 272,118 Q278,150 250,140 Q225,128 200,128 Z" fill="url(#horn)" stroke="#3a2208" stroke-width="2.5"/>
+	<path d="M85,130 Q150,60 215,130 L218,168 Q150,150 82,168 Z" fill="url(#helmet)" stroke="#3a2208" stroke-width="2.5"/>
+	<circle cx="120" cy="148" r="5" fill="#fff8d4" stroke="#3a2208" stroke-width="1"/>
+	<circle cx="180" cy="148" r="5" fill="#fff8d4" stroke="#3a2208" stroke-width="1"/>
+	<rect x="146" y="130" width="8" height="50" fill="url(#helmet)" stroke="#3a2208" stroke-width="1.5"/>
+	<ellipse cx="150" cy="180" rx="32" ry="26" fill="#e6c08a"/>
+	<ellipse cx="138" cy="178" rx="3" ry="5" fill="#1a0608"/>
+	<ellipse cx="162" cy="178" rx="3" ry="5" fill="#1a0608"/>
+	<path d="M120,194 Q150,260 180,194 Q175,230 150,238 Q125,230 120,194 Z" fill="#b48c4a" stroke="#5a3a1a" stroke-width="1.5"/>
+	<path d="M70,250 Q150,220 230,250 L230,300 L70,300 Z" fill="#7a4a1f"/>
+	<text x="150" y="288" text-anchor="middle" font-family="serif" font-weight="900" font-size="22" fill="#ffd700" stroke="#1a0608" stroke-width="3" paint-order="stroke">SCATTER</text>
+</svg>

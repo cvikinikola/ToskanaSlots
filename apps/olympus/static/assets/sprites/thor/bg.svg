@@ -1,0 +1,264 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080" preserveAspectRatio="xMidYMid slice">
+	<defs>
+		<!-- Stormy twilight sky with hot orange horizon -->
+		<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%"  stop-color="#0a0822"/>
+			<stop offset="35%" stop-color="#241a4a"/>
+			<stop offset="65%" stop-color="#7a3a4a"/>
+			<stop offset="85%" stop-color="#d8843a"/>
+			<stop offset="100%" stop-color="#2a0a0a"/>
+		</linearGradient>
+		<radialGradient id="sun" cx="50%" cy="80%" r="60%">
+			<stop offset="0%" stop-color="#fff8d4" stop-opacity="0.9"/>
+			<stop offset="40%" stop-color="#ffb24d" stop-opacity="0.55"/>
+			<stop offset="100%" stop-color="#ff5a1f" stop-opacity="0"/>
+		</radialGradient>
+		<radialGradient id="cloudPurple" cx="50%" cy="50%" r="50%">
+			<stop offset="0%" stop-color="#5a3a7a" stop-opacity="0.95"/>
+			<stop offset="100%" stop-color="#2a1a3a" stop-opacity="0"/>
+		</radialGradient>
+		<radialGradient id="cloudPink" cx="50%" cy="50%" r="50%">
+			<stop offset="0%" stop-color="#c87a8a" stop-opacity="0.65"/>
+			<stop offset="100%" stop-color="#5a2a3a" stop-opacity="0"/>
+		</radialGradient>
+		<linearGradient id="castleStone" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#5a4a3a"/>
+			<stop offset="55%" stop-color="#2a2018"/>
+			<stop offset="100%" stop-color="#0a0608"/>
+		</linearGradient>
+		<linearGradient id="castleHi" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#a88a5a"/>
+			<stop offset="100%" stop-color="#3a2a18"/>
+		</linearGradient>
+		<linearGradient id="roof" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#5a6a8a"/>
+			<stop offset="100%" stop-color="#1a1a2a"/>
+		</linearGradient>
+		<linearGradient id="window" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#fff3a0"/>
+			<stop offset="100%" stop-color="#ffa040"/>
+		</linearGradient>
+		<radialGradient id="windowGlow" cx="50%" cy="50%" r="50%">
+			<stop offset="0%" stop-color="#ffd147" stop-opacity="0.95"/>
+			<stop offset="100%" stop-color="#ffd147" stop-opacity="0"/>
+		</radialGradient>
+		<linearGradient id="firelight" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#ffb24d" stop-opacity="0.55"/>
+			<stop offset="100%" stop-color="#ffb24d" stop-opacity="0"/>
+		</linearGradient>
+		<radialGradient id="torchGlow" cx="50%" cy="50%" r="50%">
+			<stop offset="0%" stop-color="#ffd9a0" stop-opacity="0.9"/>
+			<stop offset="60%" stop-color="#ff8a40" stop-opacity="0.45"/>
+			<stop offset="100%" stop-color="#ff5a1f" stop-opacity="0"/>
+		</radialGradient>
+	</defs>
+
+	<!-- Sky -->
+	<rect width="1920" height="1080" fill="url(#sky)"/>
+	<ellipse cx="960" cy="900" rx="1200" ry="500" fill="url(#sun)"/>
+
+	<!-- Storm clouds -->
+	<ellipse cx="220" cy="180" rx="380" ry="90" fill="url(#cloudPurple)"/>
+	<ellipse cx="1620" cy="160" rx="420" ry="100" fill="url(#cloudPurple)"/>
+	<ellipse cx="600" cy="280" rx="320" ry="60" fill="url(#cloudPink)" opacity="0.85"/>
+	<ellipse cx="1320" cy="260" rx="340" ry="60" fill="url(#cloudPink)" opacity="0.85"/>
+	<ellipse cx="960" cy="120" rx="700" ry="80" fill="url(#cloudPurple)" opacity="0.5"/>
+
+	<!-- Faint distant lightning -->
+	<g fill="#ffeed8" opacity="0.5">
+		<path d="M280,140 L260,260 L300,260 L240,440 L290,320 L255,320 Z"/>
+		<path d="M1640,160 L1620,280 L1660,280 L1600,460 L1650,340 L1615,340 Z"/>
+	</g>
+
+	<!-- ── Far castle silhouette (left) ────────────────────────── -->
+	<g fill="#1a1828" opacity="0.85">
+		<rect x="40"  y="540" width="120" height="320"/>
+		<rect x="60"  y="500" width="22" height="80"/>
+		<rect x="120" y="500" width="22" height="80"/>
+		<polygon points="40,540 100,460 160,540"/>
+		<rect x="170" y="600" width="180" height="260"/>
+		<polygon points="170,600 260,500 350,600"/>
+		<rect x="195" y="560" width="14" height="60"/>
+		<rect x="245" y="560" width="14" height="60"/>
+		<rect x="295" y="560" width="14" height="60"/>
+		<rect x="360" y="560" width="80" height="300"/>
+		<polygon points="360,560 400,490 440,560"/>
+	</g>
+
+	<!-- ── Far castle silhouette (right) ───────────────────────── -->
+	<g fill="#1a1828" opacity="0.85">
+		<rect x="1480" y="600" width="80" height="260"/>
+		<polygon points="1480,600 1520,520 1560,600"/>
+		<rect x="1570" y="540" width="180" height="320"/>
+		<polygon points="1570,540 1660,440 1750,540"/>
+		<rect x="1770" y="580" width="120" height="280"/>
+		<polygon points="1770,580 1830,500 1890,580"/>
+	</g>
+
+	<!-- ── Central GREAT CASTLE OF VALHALLA ──────────────────── -->
+	<!-- Backwall + main keep -->
+	<g>
+		<!-- Curtain wall -->
+		<rect x="380" y="640" width="1160" height="240" fill="url(#castleStone)" stroke="#0a0608" stroke-width="2"/>
+		<rect x="380" y="640" width="1160" height="22" fill="url(#castleHi)" opacity="0.6"/>
+		<!-- Crenellations across top of curtain wall -->
+		<g fill="url(#castleStone)" stroke="#0a0608" stroke-width="1.5">
+			<rect x="390" y="618" width="22" height="26"/>
+			<rect x="430" y="618" width="22" height="26"/>
+			<rect x="470" y="618" width="22" height="26"/>
+			<rect x="1430" y="618" width="22" height="26"/>
+			<rect x="1470" y="618" width="22" height="26"/>
+			<rect x="1510" y="618" width="22" height="26"/>
+		</g>
+
+		<!-- Left tall tower -->
+		<rect x="500" y="380" width="140" height="500" fill="url(#castleStone)" stroke="#0a0608" stroke-width="2"/>
+		<rect x="500" y="380" width="140" height="14" fill="url(#castleHi)"/>
+		<polygon points="490,380 570,260 650,380" fill="url(#roof)" stroke="#0a0608" stroke-width="2"/>
+		<polygon points="565,265 575,200 575,265" fill="#3a2a4a"/>
+		<rect x="572" y="190" width="6" height="18" fill="#5a4a3a"/>
+		<polygon points="572,190 585,180 572,200" fill="#a82836"/>
+
+		<!-- Right tall tower -->
+		<rect x="1280" y="380" width="140" height="500" fill="url(#castleStone)" stroke="#0a0608" stroke-width="2"/>
+		<rect x="1280" y="380" width="140" height="14" fill="url(#castleHi)"/>
+		<polygon points="1270,380 1350,260 1430,380" fill="url(#roof)" stroke="#0a0608" stroke-width="2"/>
+		<polygon points="1345,265 1355,200 1355,265" fill="#3a2a4a"/>
+		<rect x="1352" y="190" width="6" height="18" fill="#5a4a3a"/>
+		<polygon points="1352,190 1365,180 1352,200" fill="#a82836"/>
+
+		<!-- Central enormous keep -->
+		<rect x="700" y="280" width="520" height="600" fill="url(#castleStone)" stroke="#0a0608" stroke-width="2"/>
+		<rect x="700" y="280" width="520" height="18" fill="url(#castleHi)" opacity="0.75"/>
+		<polygon points="680,280 960,80 1240,280" fill="url(#roof)" stroke="#0a0608" stroke-width="2.5"/>
+		<polygon points="780,180 960,40 1140,180" fill="url(#roof)" opacity="0.85" stroke="#0a0608" stroke-width="2"/>
+		<polygon points="955,42 970,-15 970,42" fill="#3a2a4a"/>
+		<rect x="965" y="-22" width="5" height="22" fill="#5a4a3a"/>
+		<polygon points="965,-22 985,-32 965,-12" fill="#a82836"/>
+
+		<!-- Side mini towers -->
+		<rect x="640" y="460" width="60" height="420" fill="url(#castleStone)" stroke="#0a0608" stroke-width="1.5"/>
+		<polygon points="635,460 670,400 705,460" fill="url(#roof)" stroke="#0a0608" stroke-width="1.5"/>
+		<rect x="1220" y="460" width="60" height="420" fill="url(#castleStone)" stroke="#0a0608" stroke-width="1.5"/>
+		<polygon points="1215,460 1250,400 1285,460" fill="url(#roof)" stroke="#0a0608" stroke-width="1.5"/>
+
+		<!-- Gothic gateway -->
+		<path d="M880,880 L880,720 Q960,640 1040,720 L1040,880 Z" fill="#0a0408" stroke="#3a2a18" stroke-width="3"/>
+		<path d="M895,880 L895,728 Q960,664 1025,728 L1025,880 Z" fill="#1a0a08"/>
+	</g>
+
+	<!-- Window glows on central keep -->
+	<g>
+		<g transform="translate(820 380)">
+			<ellipse rx="32" ry="24" fill="url(#windowGlow)"/>
+			<path d="M-10,-18 Q0,-30 10,-18 L10,12 L-10,12 Z" fill="url(#window)" stroke="#3a1a06" stroke-width="1.5"/>
+		</g>
+		<g transform="translate(960 360)">
+			<ellipse rx="50" ry="36" fill="url(#windowGlow)"/>
+			<path d="M-16,-24 Q0,-44 16,-24 L16,16 L-16,16 Z" fill="url(#window)" stroke="#3a1a06" stroke-width="2"/>
+			<rect x="-2" y="-22" width="4" height="38" fill="#3a1a06"/>
+		</g>
+		<g transform="translate(1100 380)">
+			<ellipse rx="32" ry="24" fill="url(#windowGlow)"/>
+			<path d="M-10,-18 Q0,-30 10,-18 L10,12 L-10,12 Z" fill="url(#window)" stroke="#3a1a06" stroke-width="1.5"/>
+		</g>
+
+		<g transform="translate(820 500)">
+			<ellipse rx="22" ry="16" fill="url(#windowGlow)"/>
+			<rect x="-7" y="-12" width="14" height="22" fill="url(#window)" stroke="#3a1a06" stroke-width="1.5"/>
+		</g>
+		<g transform="translate(880 500)">
+			<ellipse rx="22" ry="16" fill="url(#windowGlow)"/>
+			<rect x="-7" y="-12" width="14" height="22" fill="url(#window)" stroke="#3a1a06" stroke-width="1.5"/>
+		</g>
+		<g transform="translate(1040 500)">
+			<ellipse rx="22" ry="16" fill="url(#windowGlow)"/>
+			<rect x="-7" y="-12" width="14" height="22" fill="url(#window)" stroke="#3a1a06" stroke-width="1.5"/>
+		</g>
+		<g transform="translate(1100 500)">
+			<ellipse rx="22" ry="16" fill="url(#windowGlow)"/>
+			<rect x="-7" y="-12" width="14" height="22" fill="url(#window)" stroke="#3a1a06" stroke-width="1.5"/>
+		</g>
+		<g transform="translate(820 600)">
+			<ellipse rx="22" ry="16" fill="url(#windowGlow)"/>
+			<rect x="-7" y="-12" width="14" height="22" fill="url(#window)" stroke="#3a1a06" stroke-width="1.5"/>
+		</g>
+		<g transform="translate(880 600)">
+			<ellipse rx="22" ry="16" fill="url(#windowGlow)"/>
+			<rect x="-7" y="-12" width="14" height="22" fill="url(#window)" stroke="#3a1a06" stroke-width="1.5"/>
+		</g>
+		<g transform="translate(1040 600)">
+			<ellipse rx="22" ry="16" fill="url(#windowGlow)"/>
+			<rect x="-7" y="-12" width="14" height="22" fill="url(#window)" stroke="#3a1a06" stroke-width="1.5"/>
+		</g>
+		<g transform="translate(1100 600)">
+			<ellipse rx="22" ry="16" fill="url(#windowGlow)"/>
+			<rect x="-7" y="-12" width="14" height="22" fill="url(#window)" stroke="#3a1a06" stroke-width="1.5"/>
+		</g>
+
+		<!-- Tower windows -->
+		<g transform="translate(570 480)">
+			<ellipse rx="20" ry="14" fill="url(#windowGlow)"/>
+			<rect x="-5" y="-10" width="10" height="20" fill="url(#window)" stroke="#3a1a06" stroke-width="1"/>
+		</g>
+		<g transform="translate(570 580)">
+			<ellipse rx="20" ry="14" fill="url(#windowGlow)"/>
+			<rect x="-5" y="-10" width="10" height="20" fill="url(#window)" stroke="#3a1a06" stroke-width="1"/>
+		</g>
+		<g transform="translate(1350 480)">
+			<ellipse rx="20" ry="14" fill="url(#windowGlow)"/>
+			<rect x="-5" y="-10" width="10" height="20" fill="url(#window)" stroke="#3a1a06" stroke-width="1"/>
+		</g>
+		<g transform="translate(1350 580)">
+			<ellipse rx="20" ry="14" fill="url(#windowGlow)"/>
+			<rect x="-5" y="-10" width="10" height="20" fill="url(#window)" stroke="#3a1a06" stroke-width="1"/>
+		</g>
+	</g>
+
+	<!-- Banners on curtain wall -->
+	<g>
+		<rect x="430" y="660" width="40" height="160" fill="#3a1a30"/>
+		<polygon points="430,820 450,800 470,820 470,840 430,840" fill="#3a1a30"/>
+		<text x="450" y="744" text-anchor="middle" font-family="serif" font-weight="900" font-size="30" fill="#ffd147">ᚦ</text>
+
+		<rect x="1450" y="660" width="40" height="160" fill="#3a1a30"/>
+		<polygon points="1450,820 1470,800 1490,820 1490,840 1450,840" fill="#3a1a30"/>
+		<text x="1470" y="744" text-anchor="middle" font-family="serif" font-weight="900" font-size="30" fill="#ffd147">ᛟ</text>
+	</g>
+
+	<!-- Foreground stone terrace + torches -->
+	<rect x="0" y="900" width="1920" height="180" fill="#0a0608"/>
+	<rect x="0" y="900" width="1920" height="14" fill="url(#castleHi)"/>
+	<g stroke="#0a0608" stroke-width="2" opacity="0.55">
+		<line x1="120" y1="900" x2="120" y2="1080"/>
+		<line x1="320" y1="900" x2="320" y2="1080"/>
+		<line x1="520" y1="900" x2="520" y2="1080"/>
+		<line x1="720" y1="900" x2="720" y2="1080"/>
+		<line x1="920" y1="900" x2="920" y2="1080"/>
+		<line x1="1120" y1="900" x2="1120" y2="1080"/>
+		<line x1="1320" y1="900" x2="1320" y2="1080"/>
+		<line x1="1520" y1="900" x2="1520" y2="1080"/>
+		<line x1="1720" y1="900" x2="1720" y2="1080"/>
+	</g>
+
+	<!-- Atmospheric warm glow at base of castle -->
+	<ellipse cx="960" cy="940" rx="900" ry="120" fill="url(#firelight)"/>
+
+	<!-- Torches with glow auras -->
+	<g>
+		<circle cx="160"  cy="900" r="120" fill="url(#torchGlow)"/>
+		<rect x="155" y="890" width="10" height="40" fill="#3a1a06"/>
+		<circle cx="160" cy="884" r="14" fill="#ffb24d"/>
+		<circle cx="160" cy="876" r="9"  fill="#fff8a0"/>
+
+		<circle cx="1760" cy="900" r="120" fill="url(#torchGlow)"/>
+		<rect x="1755" y="890" width="10" height="40" fill="#3a1a06"/>
+		<circle cx="1760" cy="884" r="14" fill="#ffb24d"/>
+		<circle cx="1760" cy="876" r="9"  fill="#fff8a0"/>
+	</g>
+
+	<!-- Fog/mist sweeping across base -->
+	<ellipse cx="960" cy="880" rx="1200" ry="40" fill="#3a2a4a" opacity="0.55"/>
+	<ellipse cx="600" cy="900" rx="700"  ry="30" fill="#5a4a6a" opacity="0.4"/>
+	<ellipse cx="1320" cy="910" rx="700" ry="30" fill="#5a4a6a" opacity="0.4"/>
+</svg>

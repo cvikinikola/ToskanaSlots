@@ -1,0 +1,236 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 1100" width="700" height="1100">
+	<defs>
+		<radialGradient id="thorAura" cx="40%" cy="35%" r="60%">
+			<stop offset="0%"  stop-color="#7df0ff" stop-opacity="0.55"/>
+			<stop offset="55%" stop-color="#4cc9f0" stop-opacity="0.18"/>
+			<stop offset="100%" stop-color="#4cc9f0" stop-opacity="0"/>
+		</radialGradient>
+		<linearGradient id="cape" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#8a1a26"/>
+			<stop offset="100%" stop-color="#1a0608"/>
+		</linearGradient>
+		<linearGradient id="capeInner" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#c83040"/>
+			<stop offset="100%" stop-color="#3a0608"/>
+		</linearGradient>
+		<linearGradient id="fur" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#5a4030"/>
+			<stop offset="100%" stop-color="#1a1006"/>
+		</linearGradient>
+		<linearGradient id="armor" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#fff3c4"/>
+			<stop offset="35%" stop-color="#ffd147"/>
+			<stop offset="70%" stop-color="#a8741a"/>
+			<stop offset="100%" stop-color="#3a2208"/>
+		</linearGradient>
+		<linearGradient id="armorDark" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#5a3a18"/>
+			<stop offset="100%" stop-color="#1a0a04"/>
+		</linearGradient>
+		<linearGradient id="leather" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#7a4a28"/>
+			<stop offset="100%" stop-color="#2a1808"/>
+		</linearGradient>
+		<linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#f5d2a8"/>
+			<stop offset="100%" stop-color="#a8744a"/>
+		</linearGradient>
+		<linearGradient id="skinShade" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#d8a878"/>
+			<stop offset="100%" stop-color="#7a4a28"/>
+		</linearGradient>
+		<linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#e8c074"/>
+			<stop offset="100%" stop-color="#5a3a14"/>
+		</linearGradient>
+		<linearGradient id="beard" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#d4a868"/>
+			<stop offset="100%" stop-color="#5a3a14"/>
+		</linearGradient>
+		<linearGradient id="horn" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#fff3d4"/>
+			<stop offset="100%" stop-color="#7a5a2a"/>
+		</linearGradient>
+		<linearGradient id="steelW" x1="0" y1="0" x2="1" y2="1">
+			<stop offset="0%" stop-color="#ffffff"/>
+			<stop offset="40%" stop-color="#a8b2c0"/>
+			<stop offset="100%" stop-color="#2a3240"/>
+		</linearGradient>
+		<linearGradient id="haftW" x1="0" y1="0" x2="0" y2="1">
+			<stop offset="0%" stop-color="#a8743a"/>
+			<stop offset="100%" stop-color="#3a2208"/>
+		</linearGradient>
+	</defs>
+
+	<!-- Glow aura -->
+	<ellipse cx="280" cy="500" rx="360" ry="560" fill="url(#thorAura)"/>
+
+	<!-- Lightning bolts radiating from raised hammer (TOP-LEFT side) -->
+	<g fill="#7df0ff" stroke="#fff8d4" stroke-width="2" opacity="0.9">
+		<path d="M150,40 L210,140 L170,140 L260,260 L200,180 L230,180 Z"/>
+		<path d="M70,80 L120,200 L90,200 L170,320 L120,240 L145,240 Z"/>
+		<path d="M250,30 L280,120 L260,120 L320,240 L290,160 L305,160 Z"/>
+	</g>
+
+	<!-- Cape (behind body) -->
+	<path d="M120,420 Q60,700 130,1060 L260,1060 Q210,720 200,460 Z" fill="url(#cape)" stroke="#1a0608" stroke-width="2.5"/>
+	<path d="M580,420 Q640,700 570,1060 L440,1060 Q490,720 500,460 Z" fill="url(#cape)" stroke="#1a0608" stroke-width="2.5"/>
+	<path d="M180,460 Q160,700 200,1000 L240,1000 Q230,720 240,440 Z" fill="url(#capeInner)" opacity="0.65"/>
+	<path d="M520,460 Q540,700 500,1000 L460,1000 Q470,720 460,440 Z" fill="url(#capeInner)" opacity="0.65"/>
+
+	<!-- Fur shoulder mantle -->
+	<path d="M150,360 Q220,330 350,330 Q480,330 550,360 Q540,400 350,400 Q160,400 150,360 Z"
+		fill="url(#fur)" stroke="#1a0e04" stroke-width="2"/>
+	<g stroke="#1a0e04" stroke-width="0.6" opacity="0.6">
+		<line x1="180" y1="370" x2="190" y2="395"/>
+		<line x1="220" y1="365" x2="225" y2="395"/>
+		<line x1="260" y1="362" x2="262" y2="395"/>
+		<line x1="300" y1="360" x2="300" y2="395"/>
+		<line x1="350" y1="358" x2="350" y2="395"/>
+		<line x1="400" y1="360" x2="400" y2="395"/>
+		<line x1="440" y1="362" x2="438" y2="395"/>
+		<line x1="480" y1="365" x2="475" y2="395"/>
+		<line x1="520" y1="370" x2="510" y2="395"/>
+	</g>
+
+	<!-- LEFT arm RAISED holding Mjolnir up to viewer's left/up -->
+	<g transform="translate(190 360) rotate(20)">
+		<!-- Upper arm -->
+		<path d="M-22,0 Q-30,-130 20,-180 L60,-160 Q20,-100 30,40 Z" fill="url(#armor)" stroke="#1a0608" stroke-width="2.5"/>
+		<!-- Forearm -->
+		<g transform="translate(40 -170) rotate(-10)">
+			<path d="M-22,0 Q-10,-120 30,-150 L60,-130 Q30,-80 26,20 Z" fill="url(#armor)" stroke="#1a0608" stroke-width="2.5"/>
+			<!-- Gauntlet -->
+			<ellipse cx="44" cy="-138" rx="28" ry="22" fill="url(#armorDark)" stroke="#1a0608" stroke-width="2"/>
+			<rect x="36" y="-150" width="16" height="6" fill="url(#armor)"/>
+			<!-- Mjolnir -->
+			<g transform="translate(46 -150) rotate(8)">
+				<rect x="-7" y="-180" width="14" height="180" fill="url(#haftW)" stroke="#1a0a04" stroke-width="2.5"/>
+				<rect x="-9" y="-30" width="18" height="14" fill="#a8743a" stroke="#1a0a04" stroke-width="2"/>
+				<rect x="-7" y="-100" width="14" height="5" fill="#3a1a06"/>
+				<rect x="-7" y="-120" width="14" height="5" fill="#3a1a06"/>
+				<rect x="-7" y="-140" width="14" height="5" fill="#3a1a06"/>
+				<!-- Hammer head -->
+				<rect x="-72" y="-242" width="144" height="68" rx="6" fill="url(#steelW)" stroke="#1a1a22" stroke-width="3"/>
+				<rect x="-64" y="-234" width="20" height="48" fill="#fff8d4" fill-opacity="0.35"/>
+				<rect x="-72" y="-244" width="144" height="6" fill="#fff8d4" opacity="0.55"/>
+				<text x="0" y="-200" text-anchor="middle" font-family="serif" font-weight="900" font-size="32" fill="#3a1a06">ᚦ</text>
+			</g>
+		</g>
+	</g>
+
+	<!-- Legs in leather pants -->
+	<path d="M260,720 Q250,920 270,1060 L330,1060 Q325,920 330,720 Z" fill="url(#leather)" stroke="#1a0608" stroke-width="2.5"/>
+	<path d="M370,720 Q375,920 370,1060 L430,1060 Q450,920 440,720 Z" fill="url(#leather)" stroke="#1a0608" stroke-width="2.5"/>
+	<!-- Knee pads -->
+	<ellipse cx="298" cy="880" rx="22" ry="14" fill="url(#armor)" stroke="#1a0608" stroke-width="1.8"/>
+	<ellipse cx="402" cy="880" rx="22" ry="14" fill="url(#armor)" stroke="#1a0608" stroke-width="1.8"/>
+	<!-- Boots -->
+	<path d="M256,1010 L342,1010 L348,1080 L250,1080 Z" fill="url(#armorDark)" stroke="#1a0608" stroke-width="2.5"/>
+	<path d="M358,1010 L444,1010 L450,1080 L352,1080 Z" fill="url(#armorDark)" stroke="#1a0608" stroke-width="2.5"/>
+	<rect x="252" y="1006" width="96" height="8" fill="url(#armor)"/>
+	<rect x="354" y="1006" width="96" height="8" fill="url(#armor)"/>
+
+	<!-- Torso (gold breastplate) -->
+	<path d="M210,360 Q170,560 220,740 L480,740 Q530,560 490,360 Q350,310 210,360 Z" fill="url(#armor)" stroke="#1a0608" stroke-width="3"/>
+	<!-- Pectoral contour shading -->
+	<path d="M250,400 Q280,440 310,400" fill="none" stroke="#3a2208" stroke-width="2.5" opacity="0.6"/>
+	<path d="M390,400 Q420,440 450,400" fill="none" stroke="#3a2208" stroke-width="2.5" opacity="0.6"/>
+	<path d="M260,540 Q350,600 440,540" fill="none" stroke="#3a2208" stroke-width="2.5" opacity="0.5"/>
+	<!-- Belt -->
+	<rect x="210" y="620" width="280" height="46" fill="url(#leather)" stroke="#1a0608" stroke-width="2.5"/>
+	<rect x="332" y="616" width="46" height="54" fill="url(#armor)" stroke="#1a0608" stroke-width="2"/>
+	<circle cx="355" cy="643" r="10" fill="#3a1430"/>
+	<rect x="240" y="630" width="14" height="26" fill="url(#armor)" stroke="#1a0608" stroke-width="1"/>
+	<rect x="446" y="630" width="14" height="26" fill="url(#armor)" stroke="#1a0608" stroke-width="1"/>
+
+	<!-- Mjolnir medallion on chest -->
+	<g transform="translate(350 480)">
+		<circle r="48" fill="url(#armor)" stroke="#1a0608" stroke-width="3"/>
+		<circle r="36" fill="#3a1430" stroke="#1a0608" stroke-width="2"/>
+		<rect x="-5" y="-22" width="10" height="36" fill="#ffd147"/>
+		<rect x="-22" y="-26" width="44" height="14" rx="2" fill="#ffd147"/>
+	</g>
+
+	<!-- Pauldrons -->
+	<ellipse cx="200" cy="370" rx="56" ry="38" fill="url(#armor)" stroke="#1a0608" stroke-width="2.5"/>
+	<ellipse cx="500" cy="370" rx="56" ry="38" fill="url(#armor)" stroke="#1a0608" stroke-width="2.5"/>
+	<circle cx="200" cy="370" r="9" fill="#3a1430" stroke="#1a0608" stroke-width="1.5"/>
+	<circle cx="500" cy="370" r="9" fill="#3a1430" stroke="#1a0608" stroke-width="1.5"/>
+	<!-- Pauldron spikes -->
+	<polygon points="160,346 175,330 180,360" fill="#a8b2c0" stroke="#1a0608" stroke-width="1.5"/>
+	<polygon points="540,346 525,330 520,360" fill="#a8b2c0" stroke="#1a0608" stroke-width="1.5"/>
+
+	<!-- RIGHT arm (relaxed by side) -->
+	<path d="M520,400 Q570,540 540,720 L490,720 Q500,560 480,420 Z" fill="url(#armor)" stroke="#1a0608" stroke-width="2.5"/>
+	<ellipse cx="530" cy="730" rx="40" ry="28" fill="url(#armorDark)" stroke="#1a0608" stroke-width="2.5"/>
+
+	<!-- ── HEAD + helmet ── -->
+	<g transform="translate(350 230)">
+		<!-- Long hair behind head -->
+		<path d="M-78,-10 Q-110,90 -90,160 Q-50,160 -40,80 Z" fill="url(#hair)" stroke="#3a2208" stroke-width="2"/>
+		<path d="M78,-10 Q110,90 90,160 Q50,160 40,80 Z" fill="url(#hair)" stroke="#3a2208" stroke-width="2"/>
+
+		<!-- Horns -->
+		<path d="M-65,-32 Q-130,-60 -150,-22 Q-150,12 -120,-2 Q-95,-12 -68,-12 Z" fill="url(#horn)" stroke="#3a2208" stroke-width="3"/>
+		<path d="M65,-32 Q130,-60 150,-22 Q150,12 120,-2 Q95,-12 68,-12 Z" fill="url(#horn)" stroke="#3a2208" stroke-width="3"/>
+		<!-- Horn ridge details -->
+		<g stroke="#3a2208" stroke-width="0.8" fill="none" opacity="0.7">
+			<path d="M-95,-22 Q-115,-30 -130,-22"/>
+			<path d="M-95,-12 Q-115,-20 -130,-12"/>
+			<path d="M95,-22 Q115,-30 130,-22"/>
+			<path d="M95,-12 Q115,-20 130,-12"/>
+		</g>
+
+		<!-- Helmet dome -->
+		<path d="M-78,-10 Q0,-110 78,-10 L82,40 Q0,18 -82,40 Z" fill="url(#armor)" stroke="#3a2208" stroke-width="3"/>
+		<!-- Helmet centre ridge -->
+		<path d="M-3,-100 L3,-100 L8,30 L-8,30 Z" fill="url(#armorDark)"/>
+		<!-- Nose guard -->
+		<rect x="-7" y="0" width="14" height="60" fill="url(#armor)" stroke="#3a2208" stroke-width="2"/>
+		<!-- Helmet rivets -->
+		<circle cx="-46" cy="22" r="5" fill="#fff8d4" stroke="#3a2208" stroke-width="1"/>
+		<circle cx="46"  cy="22" r="5" fill="#fff8d4" stroke="#3a2208" stroke-width="1"/>
+		<circle cx="-30" cy="-50" r="3" fill="#3a2208"/>
+		<circle cx="30"  cy="-50" r="3" fill="#3a2208"/>
+
+		<!-- Face -->
+		<path d="M-50,30 Q-58,80 -36,116 Q0,140 36,116 Q58,80 50,30 Q0,16 -50,30 Z" fill="url(#skin)" stroke="#7a4a28" stroke-width="1.5"/>
+		<!-- Cheek shading -->
+		<path d="M-46,76 Q-30,90 -14,82" fill="none" stroke="#a8744a" stroke-width="1.5" opacity="0.7"/>
+		<path d="M14,82 Q30,90 46,76" fill="none" stroke="#a8744a" stroke-width="1.5" opacity="0.7"/>
+
+		<!-- Eyes — fierce blue with glow -->
+		<g>
+			<ellipse cx="-22" cy="56" rx="8" ry="6" fill="#fff8d4"/>
+			<ellipse cx="22"  cy="56" rx="8" ry="6" fill="#fff8d4"/>
+			<circle cx="-22" cy="56" r="4.5" fill="#3070d8"/>
+			<circle cx="22"  cy="56" r="4.5" fill="#3070d8"/>
+			<circle cx="-22" cy="56" r="2"   fill="#0a0608"/>
+			<circle cx="22"  cy="56" r="2"   fill="#0a0608"/>
+			<circle cx="-20" cy="54" r="1.2" fill="#ffffff"/>
+			<circle cx="24"  cy="54" r="1.2" fill="#ffffff"/>
+		</g>
+		<!-- Brows (angry) -->
+		<path d="M-40,42 L-12,48" stroke="#5a3a14" stroke-width="4" stroke-linecap="round"/>
+		<path d="M40,42 L12,48" stroke="#5a3a14" stroke-width="4" stroke-linecap="round"/>
+
+		<!-- Nose hint -->
+		<path d="M0,62 Q-4,76 0,84" stroke="#a8744a" stroke-width="1.5" fill="none" opacity="0.7"/>
+
+		<!-- Beard (braided) -->
+		<path d="M-50,98 Q-30,170 0,200 Q30,170 50,98 Q40,140 30,170 Q15,196 0,200 Q-15,196 -30,170 Q-40,140 -50,98 Z"
+			fill="url(#beard)" stroke="#3a2208" stroke-width="1.5"/>
+		<g stroke="#3a2208" stroke-width="0.8" fill="none" opacity="0.6">
+			<path d="M-32,120 Q-18,150 -10,180"/>
+			<path d="M32,120 Q18,150 10,180"/>
+			<path d="M-12,140 L-8,180"/>
+			<path d="M12,140 L8,180"/>
+		</g>
+		<!-- Braid rings -->
+		<ellipse cx="-12" cy="180" rx="6" ry="3" fill="#ffd147" stroke="#3a2208" stroke-width="0.8"/>
+		<ellipse cx="12"  cy="180" rx="6" ry="3" fill="#ffd147" stroke="#3a2208" stroke-width="0.8"/>
+		<!-- Mustache -->
+		<path d="M-22,72 Q-30,86 -10,82 L0,86 L10,82 Q30,86 22,72" fill="url(#beard)" stroke="#3a2208" stroke-width="1.2"/>
+	</g>
+</svg>

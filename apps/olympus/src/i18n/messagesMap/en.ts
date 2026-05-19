@@ -1,0 +1,9 @@
+export default {
+	HOME: 'HOME',
+	'BIG WIN': 'BIG WIN',
+	'SUPER WIN': 'SUPER WIN',
+	'MEGA WIN': 'MEGA WIN',
+	'EPIC WIN': 'EPIC WIN',
+	'LEGENDARY WIN': 'LEGENDARY WIN',
+	'FREE SPINS': 'FREE SPINS',
+};

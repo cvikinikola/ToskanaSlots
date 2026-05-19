@@ -1,0 +1,9 @@
+{
+	"extends": "config-ts/base.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"ignoreDeprecations": "6.0"
+	},
+	"include": ["."],
+	"exclude": ["dist", "build", "node_modules"]
+}
