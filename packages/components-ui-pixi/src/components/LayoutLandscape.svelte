@@ -110,11 +110,11 @@
 			</Container>
 
 			<Container scale={0.8} y={LANDSCAPE_BASE_SIZE * 0.5 - 150 - 170 * 2}>
-				{@render props.buttonGameRules({ anchor: 0.5 })}
+				{@render props.buttonSettings({ anchor: 0.5 })}
 			</Container>
 
 			<Container scale={0.8} y={LANDSCAPE_BASE_SIZE * 0.5 - 150 - 170 * 1}>
-				{@render props.buttonSettings({ anchor: 0.5 })}
+				{@render props.buttonGameRules({ anchor: 0.5 })}
 			</Container>
 
 			<Container scale={0.8} y={LANDSCAPE_BASE_SIZE * 0.5 - 150}>

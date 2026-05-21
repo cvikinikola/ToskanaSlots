@@ -92,6 +92,8 @@ export const stateGame = $state({
 	globalMultiplier: 1,
 	/** Scatter land counter for progressive scatter landing sounds */
 	scatterCounter: 0,
+	/** True while the free-spin outro panel is visible (used by 3-D overlays to dim) */
+	freeSpinOutroActive: false,
 });
 
 // ─── Derived computations ─────────────────────────────────────────────────────

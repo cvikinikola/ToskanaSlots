@@ -5,5 +5,5 @@
 		"ignoreDeprecations": "6.0"
 	},
 	"include": ["."],
-	"exclude": ["dist", "build", "node_modules"]
+	"exclude": ["dist", "build", "node_modules", "mock-rgs", "scripts"]
 }

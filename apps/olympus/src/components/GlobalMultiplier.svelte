@@ -12,7 +12,7 @@
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { SYMBOL_SIZE, BOARD_SIZES } from '../game/constants';
 
 	const context = getContext();
 
@@ -20,9 +20,12 @@
 	const PANEL_H = SYMBOL_SIZE * 0.9;
 	const CORNER = 12;
 
-	/** Position to the right of the board */
+	// Frame extends 9% beyond board width on each side (FRAME_PADDING_X=1.18).
+	// BoardContainer coords are in native (pre-scale) units, so board right edge
+	// = BOARD_SIZES.width (600) and frame right edge = 600 + 54 = 654.
+	// Place the panel just outside: 600 + 74 = 674.
 	const position = $derived({
-		x: context.stateGameDerived.boardLayout().width + SYMBOL_SIZE * 0.3,
+		x: BOARD_SIZES.width + SYMBOL_SIZE * 0.74,
 		y: SYMBOL_SIZE * 0.2,
 	});
 

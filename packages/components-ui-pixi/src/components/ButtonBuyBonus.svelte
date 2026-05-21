@@ -3,7 +3,7 @@
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { stateModal, stateBet, stateBetDerived } from 'state-shared';
 
-	import UiSprite from './UiSprite.svelte';
+	import UiButtonPlate from './UiButtonPlate.svelte';
 	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from '../constants';
 	import { getContext } from '../context';
 	import { i18nDerived } from '../i18n/i18nDerived';
@@ -49,21 +49,21 @@
 			pressed,
 		})}
 
-		<UiSprite
-			key="buyBonus"
+		<UiButtonPlate
 			{...center}
 			anchor={0.5}
 			width={sizes.width}
 			height={sizes.height}
+			backgroundColor={active ? 0x4a1f1f : 0x14182a}
+			backgroundAlpha={0.95}
+			borderWidth={active ? 3 : hovered || pressed ? 3 : 2}
+			borderColor={active ? 0xffe79a : hovered || pressed ? 0xffe79a : 0xffd147}
+			borderRadius={18}
 			{...disabled
 				? {
-						backgroundColor: 0xaaaaaa,
-					}
-				: {}}
-			{...active
-				? {
-						borderWidth: 10,
-						borderColor: 0xffffff,
+						backgroundColor: 0x2a2a32,
+						backgroundAlpha: 0.85,
+						borderColor: 0x6b5a2a,
 					}
 				: {}}
 		/>
@@ -75,11 +75,21 @@
 			style={{
 				align: 'center',
 				wordWrap: true,
-				wordWrapWidth: 200,
-				fontFamily: 'proxima-nova',
-				fontWeight: '600',
-				fontSize: UI_BASE_FONT_SIZE * 0.9,
-				fill: 0xffffff,
+				wordWrapWidth: sizes.width - 16,
+				fontFamily: 'serif',
+				fontWeight: '900',
+				letterSpacing: 1,
+				lineHeight: UI_BASE_FONT_SIZE * 0.95,
+				fontSize: UI_BASE_FONT_SIZE * 0.78,
+				fill: 0xffe79a,
+				stroke: { color: 0x2a0d0d, width: 2 },
+				dropShadow: {
+					color: 0x000000,
+					alpha: 0.7,
+					blur: 2,
+					distance: 1,
+					angle: Math.PI / 2,
+				},
 			}}
 		/>
 	{/snippet}

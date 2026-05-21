@@ -76,8 +76,8 @@ export const BOARD_LAYOUT_BY_TYPE: Record<
 	// above the BALANCE / WIN / BET row + button row at the bottom.
 	desktop:   { center: { x: 0.5, y: 0.36 }, fit: { w: 0.42, h: 0.55 } },
 	landscape: { center: { x: 0.5, y: 0.36 }, fit: { w: 0.42, h: 0.55 } },
-	tablet:    { center: { x: 0.5, y: 0.34 }, fit: { w: 0.72, h: 0.46 } },
-	portrait:  { center: { x: 0.5, y: 0.34 }, fit: { w: 0.86, h: 0.42 } },
+	tablet:    { center: { x: 0.5, y: 0.44 }, fit: { w: 0.72, h: 0.46 } },
+	portrait:  { center: { x: 0.5, y: 0.50 }, fit: { w: 0.86, h: 0.42 } },
 };
 
 export const getBoardCenterFraction = (layoutType: LayoutType) =>
@@ -190,9 +190,8 @@ export const getBoardCenterMain = (
  * the title logo sits in the middle of the screen rather than tracking
  * the (now lifted) board centre.
  */
-export const getLoadingCenterFraction = (layoutType: LayoutType) => {
-	const xOffset = layoutType === 'portrait' || layoutType === 'tablet' ? 0 : 0.045;
-	return { x: 0.5 + xOffset, y: 0.5 };
+export const getLoadingCenterFraction = (_layoutType: LayoutType) => {
+	return { x: 0.5, y: 0.5 };
 };
 
 // ─── Initial board ────────────────────────────────────────────────────────────

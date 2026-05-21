@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { stateModal } from 'state-shared';
 	import { gameActor } from '../game/actor';
 	import { getContext } from '../game/context';
 
@@ -25,5 +26,8 @@
 		bet: () => gameActor.send({ type: 'BET' }),
 		autoBet: () => gameActor.send({ type: 'AUTO_BET' }),
 		resumeBet: () => gameActor.send({ type: 'RESUME_BET' }),
+		buyBonusConfirm: () => {
+			stateModal.modal = { name: 'buyBonusConfirm' };
+		},
 	});
 </script>

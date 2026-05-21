@@ -26,7 +26,20 @@
 		},
 
 		// One-shot SFX
-		soundOnce: ({ name, forcePlay }) => {
+		soundOnce: ({ name }) => {
+			if (name === 'sfx_coin_clink') {
+				const src = Math.random() < 0.5
+					? '/assets/audio/clinking-coins.mp3'
+					: '/assets/audio/clinking-coins1.mp3';
+				const audio = new Audio(src);
+				audio.play().catch(() => {});
+				return;
+			}
+			if (name === 'sfx_thunder') {
+				const audio = new Audio('/assets/audio/thunder.mp3');
+				audio.play().catch(() => {});
+				return;
+			}
 			// sound.players.once.play({ name });
 			console.debug('[sound] sfx →', name);
 		},

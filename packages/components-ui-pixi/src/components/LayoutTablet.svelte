@@ -105,11 +105,11 @@
 			</Container>
 
 			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 2}>
-				{@render props.buttonGameRules({ anchor: 0.5 })}
+				{@render props.buttonSettings({ anchor: 0.5 })}
 			</Container>
 
 			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 1}>
-				{@render props.buttonSettings({ anchor: 0.5 })}
+				{@render props.buttonGameRules({ anchor: 0.5 })}
 			</Container>
 
 			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185}>

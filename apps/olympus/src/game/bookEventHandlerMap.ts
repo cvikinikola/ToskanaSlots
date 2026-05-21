@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
 import { stateBet, stateUi } from 'state-shared';
 import { sequence } from 'utils-shared/sequence';
+import { waitForTimeout } from 'utils-shared/wait';
 
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
@@ -83,6 +84,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// One or more winning clusters found. Animate each winning group in sequence.
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_coin_clink' });
 		await sequence(bookEvent.wins, async (win) => {
 			await animateSymbols({ positions: win.positions });
 		});
@@ -194,12 +196,27 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── freeSpinTrigger ───────────────────────────────────────────────────────
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
-		// Animate scatter symbols
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
-		await animateSymbols({ positions: bookEvent.positions });
+		// Animate each scatter one-by-one: individual lightning bolt + pop sound per scatter.
+		// This gives the player clear visual feedback for each one landing.
+		await sequence(bookEvent.positions, async (pos) => {
+			eventEmitter.broadcast({ type: 'lightningStrike', durationMs: 280 });
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
+			await animateSymbols({ positions: [pos] });
+			await waitForTimeout(110);
+		});
+
+		// All scatters confirmed — unleash the storm before transition.
+		eventEmitter.broadcast({ type: 'scatterStorm' });
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
+		if (bookEvent.positions.length >= 4) {
+			// First boom — thunder travels slower than lightning
+			setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' }), 420);
+			// Second rolling thunder as the storm builds
+			setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' }), 1050);
+		}
+		await waitForTimeout(1500);
 
 		// Transition to free spins mode
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await eventEmitter.broadcastAsync({ type: 'transition' });
 
@@ -234,6 +251,33 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'drawerFold' });
 	},
 
+	// ── freeSpinRetrigger ─────────────────────────────────────────────────────
+	// 3+ scatters during free spins → +N extra spins.
+	// Animate scatters, show a brief "+N FREE SPINS" panel, bump the counter.
+	freeSpinRetrigger: async (bookEvent: BookEventOfType<'freeSpinRetrigger'>) => {
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
+		// Thunder strike on retrigger — it's an exciting moment
+		setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' }), 350);
+		await animateSymbols({ positions: bookEvent.positions });
+
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
+		eventEmitter.broadcast({ type: 'freeSpinRetriggerShow' });
+		await eventEmitter.broadcastAsync({
+			type: 'freeSpinRetriggerUpdate',
+			extraFreeSpins: bookEvent.extraFs,
+			totalFreeSpins: bookEvent.totalFs,
+		});
+		eventEmitter.broadcast({ type: 'freeSpinRetriggerHide' });
+
+		// Reflect the new total on the persistent free-spin counter.
+		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
+		eventEmitter.broadcast({
+			type: 'freeSpinCounterUpdate',
+			current: stateUi.freeSpinCounterCurrent,
+			total: bookEvent.totalFs,
+		});
+	},
+
 	// ── updateFreeSpin ────────────────────────────────────────────────────────
 	updateFreeSpin: async (bookEvent: BookEventOfType<'updateFreeSpin'>) => {
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
@@ -249,7 +293,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── freeSpinEnd ───────────────────────────────────────────────────────────
 	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
-		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
+		// winLevel 0 is not in the map — fall back to level 1 (no win presentation)
+		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel] ?? winLevelMap[1];
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		stateGame.gameType = 'basegame';
@@ -257,7 +302,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
+		stateGame.freeSpinOutroActive = true;
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
+		// Thunder boom as the free-spin finale
+		setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' }), 300);
 		winLevelSoundsPlay({ winLevelData });
 
 		await eventEmitter.broadcastAsync({
@@ -267,6 +315,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 
 		winLevelSoundsStop();
+		stateGame.freeSpinOutroActive = false;
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;

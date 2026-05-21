@@ -42,7 +42,10 @@ export type SoundEffectName =
 	| 'sfx_reel_stop_1'
 	// UI
 	| 'sfx_btn_general'
-	| 'sfx_btn_spin';
+	| 'sfx_btn_spin'
+	// Win
+	| 'sfx_coin_clink'
+	| 'sfx_thunder';
 
 export type SoundName = MusicName | SoundEffectName;
 

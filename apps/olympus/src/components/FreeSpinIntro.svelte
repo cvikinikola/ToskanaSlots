@@ -2,7 +2,10 @@
 	export type EmitterEventFreeSpinIntro =
 		| { type: 'freeSpinIntroShow' }
 		| { type: 'freeSpinIntroHide' }
-		| { type: 'freeSpinIntroUpdate'; totalFreeSpins: number };
+		| { type: 'freeSpinIntroUpdate'; totalFreeSpins: number }
+		| { type: 'freeSpinRetriggerShow' }
+		| { type: 'freeSpinRetriggerHide' }
+		| { type: 'freeSpinRetriggerUpdate'; extraFreeSpins: number; totalFreeSpins: number };
 </script>
 
 <script lang="ts">
@@ -16,20 +19,39 @@
 
 	const context = getContext();
 
-	const PANEL_W = SYMBOL_SIZE * 6;
-	const PANEL_H = SYMBOL_SIZE * 3.6;
+	// Responsive panel — caps to mainLayout so it never overflows on mobile.
+	const layout = $derived(context.stateLayoutDerived.mainLayout());
+	const PANEL_W = $derived(Math.min(SYMBOL_SIZE * 6, layout.width * 0.9));
+	const PANEL_H = $derived(Math.min(SYMBOL_SIZE * 3.6, layout.height * 0.55));
+	const FONT_SCALE = $derived(PANEL_W / (SYMBOL_SIZE * 6));
 	const CORNER = 24;
 
 	let show = $state(false);
 	let totalFreeSpins = $state(0);
+	let extraFreeSpins = $state(0);
+	let mode = $state<'trigger' | 'retrigger'>('trigger');
 	let oncomplete = $state(() => {});
 
 	context.eventEmitter.subscribeOnMount({
-		freeSpinIntroShow: () => (show = true),
+		freeSpinIntroShow: () => {
+			mode = 'trigger';
+			show = true;
+		},
 		freeSpinIntroHide: () => (show = false),
 		freeSpinIntroUpdate: async (e) => {
 			totalFreeSpins = e.totalFreeSpins;
 			await waitForTimeout(2200);
+			oncomplete();
+		},
+		freeSpinRetriggerShow: () => {
+			mode = 'retrigger';
+			show = true;
+		},
+		freeSpinRetriggerHide: () => (show = false),
+		freeSpinRetriggerUpdate: async (e) => {
+			extraFreeSpins = e.extraFreeSpins;
+			totalFreeSpins = e.totalFreeSpins;
+			await waitForTimeout(1600);
 			oncomplete();
 		},
 	});
@@ -63,8 +85,8 @@
 
 	<MainContainer>
 		<Container
-			x={context.stateLayoutDerived.mainLayout().width / 2}
-			y={context.stateLayoutDerived.mainLayout().height / 2}
+			x={layout.width / 2}
+			y={layout.height / 2}
 		>
 			<!-- Rotating godrays -->
 			<Container rotation={(rayAngle * Math.PI) / 180}>
@@ -118,10 +140,10 @@
 			<BitmapText
 				anchor={{ x: 0.5, y: 0.5 }}
 				y={SYMBOL_SIZE * 0.55}
-				text="FREE SPINS"
+				text={mode === 'retrigger' ? 'RETRIGGER' : 'FREE SPINS'}
 				style={{
 					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.7,
+					fontSize: SYMBOL_SIZE * 0.7 * FONT_SCALE,
 					fill: 0xffd147,
 					fontWeight: '800',
 				}}
@@ -130,10 +152,12 @@
 			<BitmapText
 				anchor={{ x: 0.5, y: 0.5 }}
 				y={SYMBOL_SIZE * 1.2}
-				text={`${totalFreeSpins} SPINS AWARDED`}
+				text={mode === 'retrigger'
+					? `+${extraFreeSpins} FREE SPINS (${totalFreeSpins} TOTAL)`
+					: `${totalFreeSpins} SPINS AWARDED`}
 				style={{
 					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.42,
+					fontSize: SYMBOL_SIZE * 0.42 * FONT_SCALE,
 					fill: 0xffffff,
 					fontWeight: '700',
 				}}

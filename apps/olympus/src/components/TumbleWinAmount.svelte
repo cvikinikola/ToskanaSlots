@@ -23,16 +23,24 @@
 	const PANEL_H = SYMBOL_SIZE * 0.55;
 	const CORNER = 12;
 
+	const isStacked = $derived(context.stateLayoutDerived.isStacked());
+
 	/**
-	 * Centered horizontally on the board, positioned BELOW the bottom of the
-	 * reel frame (in the gap between the frame and the bottom UI strip).
-	 * Lives inside <BoardContainer/> so it always scales with the board and
-	 * never drifts behind/above the frame at any viewport size.
+	 * On portrait/tablet: top-right corner, just above the reel frame top border.
+	 * On desktop/landscape: centred horizontally below the board.
 	 */
-	const position = $derived({
-		x: BOARD_SIZES.width / 2 - PANEL_W / 2,
-		y: BOARD_SIZES.height + SYMBOL_SIZE * 0.35,
-	});
+	const position = $derived(
+		isStacked
+			? {
+					// Right-aligned with the board, floating above the frame top
+					x: BOARD_SIZES.width - PANEL_W,
+					y: -(SYMBOL_SIZE * 0.9),
+				}
+			: {
+					x: BOARD_SIZES.width / 2 - PANEL_W / 2,
+					y: BOARD_SIZES.height + SYMBOL_SIZE * 0.35,
+				},
+	);
 
 	let show = $state(false);
 	const countUpAmount = new Tween(0);

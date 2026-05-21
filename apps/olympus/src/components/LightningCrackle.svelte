@@ -1,6 +1,7 @@
 <script lang="ts" module>
 	export type EmitterEventLightningCrackle =
-		| { type: 'lightningStrike'; durationMs?: number };
+		| { type: 'lightningStrike'; durationMs?: number }
+		| { type: 'scatterStorm' };
 </script>
 
 <script lang="ts">
@@ -12,40 +13,67 @@
 
 	const context = getContext();
 
-	type Bolt = { id: number; x1: number; y1: number; x2: number; y2: number; born: number; life: number; jagged: { x: number; y: number }[] };
+	type Pt = { x: number; y: number };
+	type Bolt = { id: number; pts: Pt[]; branches: { pts: Pt[]; alpha: number }[]; born: number; life: number; flashPeak: number };
 	let bolts = $state<Bolt[]>([]);
 	let flashAlpha = $state(0);
 	let nextId = 0;
 
+	function boltPath(ax: number, ay: number, bx: number, by: number, jx: number, jy: number, steps: number): Pt[] {
+		const pts: Pt[] = [{ x: ax, y: ay }];
+		for (let i = 1; i < steps; i++) {
+			const t = i / steps;
+			pts.push({
+				x: ax + (bx - ax) * t + (Math.random() - 0.5) * jx,
+				y: ay + (by - ay) * t + (Math.random() - 0.5) * jy,
+			});
+		}
+		pts.push({ x: bx, y: by });
+		return pts;
+	}
+
 	function makeBolt(): Bolt {
 		const bw = BOARD_SIZES.width;
 		const bh = BOARD_SIZES.height;
-		// Strike from above the frame to a random point inside the board
 		const tx = (Math.random() - 0.5) * bw * 0.7;
-		const ty = bh / 2 - bw * 0.1;
-		const sx = tx + (Math.random() - 0.5) * bw * 0.5;
-		const sy = -bh * 0.6;
-		// Build jagged segments
-		const steps = 8 + Math.floor(Math.random() * 4);
-		const jagged: { x: number; y: number }[] = [];
-		for (let i = 1; i < steps; i++) {
-			const t = i / steps;
-			const baseX = sx + (tx - sx) * t;
-			const baseY = sy + (ty - sy) * t;
-			jagged.push({
-				x: baseX + (Math.random() - 0.5) * 30,
-				y: baseY + (Math.random() - 0.5) * 12,
+		const ty = bh * 0.5 - bw * 0.1;
+		const sx = tx + (Math.random() - 0.5) * bw * 0.6;
+		const sy = -bh * 0.65;
+		const steps = 14 + Math.floor(Math.random() * 6);
+		const pts = boltPath(sx, sy, tx, ty, 48, 20, steps);
+
+		// 1–2 sub-branches for realism
+		const branches: { pts: Pt[]; alpha: number }[] = [];
+		const nBranches = 1 + Math.floor(Math.random() * 2);
+		for (let i = 0; i < nBranches; i++) {
+			const fi = 4 + Math.floor(Math.random() * (pts.length - 6));
+			if (fi >= pts.length) continue;
+			const sp = pts[fi];
+			const bex = sp.x + (Math.random() - 0.5) * bw * 0.42;
+			const bey = sp.y + bh * (0.05 + Math.random() * 0.18);
+			branches.push({
+				pts: boltPath(sp.x, sp.y, bex, bey, 28, 12, 5 + Math.floor(Math.random() * 4)),
+				alpha: 0.55 + Math.random() * 0.35,
 			});
 		}
-		return { id: nextId++, x1: sx, y1: sy, x2: tx, y2: ty, born: performance.now(), life: 320 + Math.random() * 220, jagged };
+
+		return {
+			id: nextId++,
+			pts,
+			branches,
+			born: performance.now(),
+			life: 380 + Math.random() * 260,
+			flashPeak: 0.70 + Math.random() * 0.25,
+		};
 	}
 
 	context.eventEmitter.subscribeOnMount({
 		lightningStrike: (e) => {
 			const dur = e.durationMs ?? 600;
 			const fire = () => {
-				bolts = [...bolts, makeBolt()];
-				flashAlpha = 0.55;
+				const b = makeBolt();
+				bolts = [...bolts, b];
+				flashAlpha = Math.min(0.92, (flashAlpha || 0) + b.flashPeak * 0.85);
 			};
 			fire();
 			setTimeout(fire, 90);
@@ -57,10 +85,24 @@
 			if (e.winLevelData?.type === 'big') {
 				for (let i = 0; i < 3; i++) {
 					setTimeout(() => {
-						bolts = [...bolts, makeBolt()];
-						flashAlpha = 0.6;
+						const b = makeBolt();
+						bolts = [...bolts, b];
+						flashAlpha = Math.min(0.88, (flashAlpha || 0) + b.flashPeak * 0.7);
 					}, i * 220);
 				}
+			}
+		},
+
+		/** Scatter trigger — escalating barrage of board bolts over ~1.8 s */
+		scatterStorm: () => {
+			const schedule = [0, 120, 250, 390, 530, 680, 840, 1010, 1200, 1420, 1660];
+			for (const ms of schedule) {
+				setTimeout(() => {
+					const b1 = makeBolt();
+					bolts = [...bolts, b1];
+					if (Math.random() < 0.55) bolts = [...bolts, makeBolt()];
+					flashAlpha = Math.min(0.92, flashAlpha + b1.flashPeak * 0.45);
+				}, ms);
 			}
 		},
 	});
@@ -73,7 +115,10 @@
 			if (bolts.length) {
 				bolts = bolts.filter((b) => now - b.born < b.life);
 			}
-			if (flashAlpha > 0) flashAlpha = Math.max(0, flashAlpha - 0.04);
+			if (flashAlpha > 0) {
+				const decay = flashAlpha > 0.45 ? 0.09 : 0.022;
+				flashAlpha = Math.max(0, flashAlpha - decay);
+			}
 			// Reassign to trigger reactivity for fading bolts (alpha derived from `now - born`)
 			if (bolts.length) bolts = bolts;
 			raf = requestAnimationFrame(tick);
@@ -108,20 +153,30 @@
 				draw={(g) => {
 					g.clear();
 					const age = (performance.now() - b.born) / b.life;
-					const a = Math.max(0, 1 - age);
-					const pts = [{ x: b.x1, y: b.y1 }, ...b.jagged, { x: b.x2, y: b.y2 }];
-					// Outer glow stroke
-					g.moveTo(pts[0].x, pts[0].y);
-					for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
-					g.stroke({ color: 0x7df0ff, width: 14, alpha: a * 0.35, cap: 'round', join: 'round' });
-					// Mid stroke
-					g.moveTo(pts[0].x, pts[0].y);
-					for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
-					g.stroke({ color: 0xaaeeff, width: 6, alpha: a * 0.85, cap: 'round', join: 'round' });
-					// White-hot core
-					g.moveTo(pts[0].x, pts[0].y);
-					for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
-					g.stroke({ color: 0xffffff, width: 2, alpha: a, cap: 'round', join: 'round' });
+					// Instant peak, then slow decay
+					const a = age < 0.15 ? 1 : Math.max(0, 1 - (age - 0.15) / 0.85);
+
+					const drawPath = (pts: { x: number; y: number }[], wMul: number, aMul: number) => {
+						// Wide corona
+						g.moveTo(pts[0].x, pts[0].y);
+						for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
+						g.stroke({ color: 0x44aaff, width: 32 * wMul, alpha: a * aMul * 0.10, cap: 'round', join: 'round' });
+						// Outer glow
+						g.moveTo(pts[0].x, pts[0].y);
+						for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
+						g.stroke({ color: 0x7df0ff, width: 14 * wMul, alpha: a * aMul * 0.38, cap: 'round', join: 'round' });
+						// Mid glow
+						g.moveTo(pts[0].x, pts[0].y);
+						for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
+						g.stroke({ color: 0xaaeeff, width: 6 * wMul, alpha: a * aMul * 0.88, cap: 'round', join: 'round' });
+						// White-hot core
+						g.moveTo(pts[0].x, pts[0].y);
+						for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
+						g.stroke({ color: 0xffffff, width: 2 * wMul, alpha: a * aMul, cap: 'round', join: 'round' });
+					};
+
+					drawPath(b.pts, 1, 1);
+					for (const br of b.branches) drawPath(br.pts, 0.6, br.alpha);
 				}}
 			/>
 		{/each}

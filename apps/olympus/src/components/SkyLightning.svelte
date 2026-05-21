@@ -29,6 +29,28 @@
 
 	const canvas = $derived(context.stateLayoutDerived.canvasSizes());
 
+	/** Scatter trigger — rapid cluster of full-canvas strikes over ~1.8 s */
+	context.eventEmitter.subscribeOnMount({
+		scatterStorm: () => {
+			const schedule = [0, 160, 340, 530, 730, 980, 1260, 1560];
+			for (const ms of schedule) {
+				setTimeout(() => {
+					const s = makeStrike();
+					strikes = [...strikes, s];
+					flashColor = 0xaaddff;
+					flashAlpha = Math.min(0.92, (flashAlpha || 0) + s.flashPeak * 0.65);
+					// ~50 % chance of a quick double-strike thunderclap
+					if (Math.random() < 0.5) {
+						setTimeout(() => {
+							strikes = [...strikes, makeStrike()];
+							flashAlpha = Math.min(0.92, flashAlpha + 0.18);
+						}, 75 + Math.random() * 110);
+					}
+				}, ms);
+			}
+		},
+	});
+
 	function jagged(
 		ax: number,
 		ay: number,
@@ -58,7 +80,7 @@
 		const sy = -40;
 		const tx = sx + (Math.random() - 0.5) * w * 0.25;
 		const ty = h * (0.35 + Math.random() * 0.3);
-		const main = jagged(sx, sy, tx, ty, 26, 14);
+		const main = jagged(sx, sy, tx, ty, 36, 18 + Math.floor(Math.random() * 4));
 		const branches: Branch[] = [{ pts: main, width: 5, alpha: 1 }];
 
 		// 1-3 forks splitting off the main bolt
@@ -67,12 +89,12 @@
 			const fi = 3 + Math.floor(Math.random() * (main.length - 5));
 			if (fi >= main.length) continue;
 			const start = main[fi];
-			const fx = start.x + (Math.random() - 0.5) * w * 0.25;
+			const fx = start.x + (Math.random() - 0.5) * w * 0.28;
 			const fy = start.y + h * (0.05 + Math.random() * 0.18);
 			branches.push({
-				pts: jagged(start.x, start.y, fx, fy, 18, 6 + Math.floor(Math.random() * 4)),
-				width: 3,
-				alpha: 0.85,
+				pts: jagged(start.x, start.y, fx, fy, 24, 7 + Math.floor(Math.random() * 4)),
+				width: 3.5,
+				alpha: 0.90,
 			});
 		}
 
@@ -80,8 +102,8 @@
 			id: nextId++,
 			branches,
 			born: performance.now(),
-			life: 520 + Math.random() * 260,
-			flashPeak: 0.55 + Math.random() * 0.3,
+			life: 580 + Math.random() * 300,
+			flashPeak: 0.65 + Math.random() * 0.25,
 		};
 	}
 
@@ -120,7 +142,10 @@
 		const tick = () => {
 			const now = performance.now();
 			if (strikes.length) strikes = strikes.filter((s) => now - s.born < s.life);
-			if (flashAlpha > 0) flashAlpha = Math.max(0, flashAlpha - 0.045);
+		if (flashAlpha > 0) {
+				const decay = flashAlpha > 0.5 ? 0.09 : 0.022;
+				flashAlpha = Math.max(0, flashAlpha - decay);
+			}
 			if (strikes.length) strikes = strikes;
 			raf = requestAnimationFrame(tick);
 		};
@@ -148,13 +173,23 @@
 				// Bright in first 30% of life, then quick fade
 				const a = age < 0.3 ? 1 : Math.max(0, 1 - (age - 0.3) / 0.7);
 				for (const br of s.branches) {
+					// Corona
+					g.moveTo(br.pts[0].x, br.pts[0].y);
+					for (let i = 1; i < br.pts.length; i++) g.lineTo(br.pts[i].x, br.pts[i].y);
+					g.stroke({
+						color: 0x44aaff,
+						width: br.width * 8,
+						alpha: a * br.alpha * 0.09,
+						cap: 'round',
+						join: 'round',
+					});
 					// Outer glow
 					g.moveTo(br.pts[0].x, br.pts[0].y);
 					for (let i = 1; i < br.pts.length; i++) g.lineTo(br.pts[i].x, br.pts[i].y);
 					g.stroke({
 						color: 0x7df0ff,
 						width: br.width * 4,
-						alpha: a * br.alpha * 0.22,
+						alpha: a * br.alpha * 0.28,
 						cap: 'round',
 						join: 'round',
 					});
@@ -164,7 +199,7 @@
 					g.stroke({
 						color: 0xaaeeff,
 						width: br.width * 2,
-						alpha: a * br.alpha * 0.7,
+						alpha: a * br.alpha * 0.80,
 						cap: 'round',
 						join: 'round',
 					});

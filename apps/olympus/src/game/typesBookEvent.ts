@@ -98,6 +98,20 @@ type BookEventFreeSpinTrigger = {
 	positions: Position[];
 };
 
+/**
+ * 3+ scatters landed DURING free spins.
+ * Client should animate the scatters, show a "+N FREE SPINS" panel,
+ * and bump the free-spin counter total.
+ * (Math: extra spins are appended to the running free-spin loop.)
+ */
+type BookEventFreeSpinRetrigger = {
+	index: number;
+	type: 'freeSpinRetrigger';
+	extraFs: number;
+	totalFs: number;
+	positions: Position[];
+};
+
 /** Free spin counter update – sent before each free spin. */
 type BookEventUpdateFreeSpin = {
 	index: number;
@@ -159,6 +173,7 @@ export type BookEvent =
 	| BookEventUpdateTumbleWin
 	| BookEventSetTotalWin
 	| BookEventFreeSpinTrigger
+	| BookEventFreeSpinRetrigger
 	| BookEventUpdateFreeSpin
 	| BookEventUpdateGlobalMult
 	| BookEventFreeSpinEnd
