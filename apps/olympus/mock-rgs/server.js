@@ -1,0 +1,167 @@
+/**
+ * Mock RGS server (Vite middleware plugin) for local development.
+ *
+ * Intercepts `/wallet/authenticate`, `/wallet/play`, `/wallet/end-round`,
+ * `/bet/event` so the game runs without a real RGS backend. The play
+ * endpoint delegates to the math module (mock-rgs/math/) — the SAME math
+ * used by `scripts/gen-books.mjs`, so storybook books and DEV-mode play
+ * cannot drift apart.
+ *
+ * RTP is calibrated at boot per bet-mode (BASE / BONUS) by simulating
+ * `CALIBRATION_ROUNDS` rounds at scale=1 then deriving a constant scale
+ * factor so the long-run average payout converges to TARGET_RTP.
+ */
+
+import { runBaseSpin, runBonusBuy } from './math/index.js';
+
+// ─── Tuning ──────────────────────────────────────────────────────────────────
+
+const TARGET_RTP = 0.97;
+const CALIBRATION_ROUNDS = 20000;
+const BONUS_BUY_COST_MULT = 100;
+
+// ─── RTP calibration ─────────────────────────────────────────────────────────
+
+const calibrateMode = (mode) => {
+  let totalWin = 0;
+  for (let i = 0; i < CALIBRATION_ROUNDS; i++) {
+    const r = mode === 'BONUS'
+      ? runBonusBuy({ betAmount: 1, scale: 1 })
+      : runBaseSpin({ betAmount: 1, scale: 1 });
+    totalWin += r.totalWin;
+  }
+  const denominator = mode === 'BONUS' ? BONUS_BUY_COST_MULT : 1;
+  const rawRtp = totalWin / CALIBRATION_ROUNDS / denominator;
+  if (rawRtp <= 0) return 1;
+  const scale = TARGET_RTP / rawRtp;
+  // eslint-disable-next-line no-console
+  console.log(
+    '[mock-rgs] RTP calibration mode=%s raw=%s%% target=%s%% scale=%s',
+    mode,
+    (rawRtp * 100).toFixed(2),
+    (TARGET_RTP * 100).toFixed(2),
+    scale.toFixed(4),
+  );
+  return scale;
+};
+
+let CACHED_SCALES = null;
+export const getScale = (mode) => {
+  if (CACHED_SCALES === null) {
+    CACHED_SCALES = { BASE: calibrateMode('BASE'), BONUS: calibrateMode('BONUS') };
+  }
+  return CACHED_SCALES[mode] ?? CACHED_SCALES.BASE;
+};
+
+// ─── Round (used by both the Vite plugin and gen-books.mjs) ──────────────────
+
+export const playMockRound = ({ mode = 'BASE', scale } = {}) => {
+  const s = scale ?? getScale(mode);
+  return mode === 'BONUS'
+    ? runBonusBuy({ betAmount: 1, scale: s })
+    : runBaseSpin({ betAmount: 1, scale: s });
+};
+
+// ─── Vite plugin ─────────────────────────────────────────────────────────────
+
+export const mockRgsPlugin = () => ({
+  name: 'mock-rgs',
+  apply: 'serve',
+
+  configureServer(server) {
+    // Pre-warm calibration scales at server startup so the first /wallet/play
+    // request doesn't block the event loop while running 20 000 simulated rounds.
+    getScale('BASE');
+    getScale('BONUS');
+
+    const sendJson = (res, data) => {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.end(JSON.stringify(data));
+    };
+
+    const readJson = (req) => new Promise((resolve) => {
+      let body = '';
+      req.on('data', (c) => (body += c));
+      req.on('end', () => {
+        try { resolve(JSON.parse(body || '{}')); } catch { resolve({}); }
+      });
+    });
+
+    server.middlewares.use('/wallet/authenticate', (req, res) => {
+      if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
+      // eslint-disable-next-line no-console
+      console.log('[mock-rgs] /wallet/authenticate');
+      sendJson(res, {
+        balance: { amount: 100000000000, currency: 'USD' },
+        config: {
+          gameID: 'thor-1000',
+          minBet: 100000,
+          maxBet: 1000000000,
+          stepBet: 100000,
+          defaultBetLevel: 1000000,
+          betLevels: [100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000],
+          betModes: {
+            BASE: { mode: 'BASE', costMultiplier: 1, feature: false },
+            BONUS: { mode: 'BONUS', costMultiplier: BONUS_BUY_COST_MULT, feature: true },
+          },
+          jurisdiction: {
+            socialCasino: false, disabledFullscreen: false, disabledTurbo: false,
+            disabledSuperTurbo: false, disabledAutoplay: false, disabledSlamstop: false,
+            disabledSpacebar: false, disabledBuyFeature: false, displayNetPosition: false,
+            displayRTP: false, displaySessionTimer: false, minimumRoundDuration: 0,
+          },
+        },
+        round: null,
+      });
+    });
+
+    let lastBalanceAmount = 100000000000;
+
+    server.middlewares.use('/wallet/play', async (req, res) => {
+      if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
+      const body = await readJson(req);
+      const mode = body?.mode || 'BASE';
+      const amount = Number(body?.amount) || 1000000;
+      const cost = mode === 'BONUS' ? amount * BONUS_BUY_COST_MULT : amount;
+
+      const { bookEvents, totalWin } = playMockRound({ mode });
+
+      const payoutApi = Math.round(totalWin * amount);
+      const balanceAfterDebit = lastBalanceAmount - cost;
+      lastBalanceAmount = balanceAfterDebit + payoutApi;
+
+      // eslint-disable-next-line no-console
+      console.log('[mock-rgs] /wallet/play mode=%s cost=%s win=%sx events=%d',
+        mode, cost, totalWin.toFixed(2), bookEvents.length);
+
+      sendJson(res, {
+        balance: { amount: balanceAfterDebit, currency: 'USD' },
+        round: {
+          roundID: Date.now(),
+          amount,
+          payout: payoutApi,
+          payoutMultiplier: totalWin,
+          active: false,
+          mode,
+          event: '0',
+          state: bookEvents,
+        },
+      });
+    });
+
+    server.middlewares.use('/wallet/end-round', (req, res) => {
+      if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
+      // eslint-disable-next-line no-console
+      console.log('[mock-rgs] /wallet/end-round');
+      sendJson(res, { balance: { amount: lastBalanceAmount, currency: 'USD' } });
+    });
+
+    server.middlewares.use('/bet/event', (req, res) => {
+      if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
+      sendJson(res, { ok: true });
+    });
+  },
+});

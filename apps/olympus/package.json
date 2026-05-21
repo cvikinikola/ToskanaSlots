@@ -34,7 +34,7 @@
 		"constants-shared": "workspace:*",
 		"envs": "workspace:*",
 		"lodash": "4.17.16",
-		"pixi-svelte": "workspace:*",
+		"pixi-svelte": "^2.1.0",
 		"pixi.js": "8.8.1",
 		"rgs-requests": "workspace:*",
 		"state-shared": "workspace:*",
