@@ -1,5 +1,4 @@
 <script lang="ts" module>
-	import * as PIXI from 'pixi.js';
 	import { Graphics, type GraphicsProps, anchorToPivot } from 'pixi-svelte';
 	import type { PixiPoint } from 'pixi-svelte';
 
@@ -17,11 +16,11 @@
 		width: number;
 		height: number;
 		borderRadius?: number;
-		backgroundColor?: PIXI.FillStyle['color'];
-		backgroundAlpha?: PIXI.FillStyle['alpha'];
-		borderColor?: PIXI.StrokeStyle['color'];
-		borderWidth?: PIXI.StrokeStyle['width'];
-		borderAlpha?: PIXI.StrokeStyle['alpha'];
+		backgroundColor?: number;
+		backgroundAlpha?: number;
+		borderColor?: number;
+		borderWidth?: number;
+		borderAlpha?: number;
 	};
 </script>
 

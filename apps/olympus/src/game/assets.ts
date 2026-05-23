@@ -10,6 +10,7 @@ const sprite = (path: string, preload = true) =>
 	({ type: 'sprite' as const, src: path, preload });
 
 const BASE = '/assets/sprites/thor';
+const MENU_BAR = '/assets/sprites/menuBar';
 
 const assets = {
 	// Symbols (photo-realistic transparent PNGs)
@@ -36,6 +37,23 @@ const assets = {
 	frame:        sprite(`${BASE}/frame.svg`),
 	logo:         sprite(`${BASE}/logo.png`),
 	warrior:      sprite(`${BASE}/warrior.png`),
+
+	// Menu bar replacement art
+	menu_panel_lg: sprite(`${MENU_BAR}/panel_lg.png`),
+	menu_panel_md: sprite(`${MENU_BAR}/panel_md.png`),
+	menu_panel_sm: sprite(`${MENU_BAR}/panel_sm.png`),
+	menu_plus: sprite(`${MENU_BAR}/plus_icon.png`),
+	menu_minus: sprite(`${MENU_BAR}/minus_icon.png`),
+	menu_stop: sprite(`${MENU_BAR}/stop_icon.png`),
+	menu_turbo: sprite(`${MENU_BAR}/turbo_icon.png`),
+	menu_spin: sprite(`${MENU_BAR}/btn_spin.png`),
+	menu_auto_spin: sprite(`${MENU_BAR}/auto_spin_icon.png`),
+	menu_buy_bonus: sprite(`${MENU_BAR}/buy_bonus.png`),
+	menu_logo: sprite(`${MENU_BAR}/humer_logo.png`),
+	menu_balance: sprite(`${MENU_BAR}/icon_balance.png`),
+	menu_win: sprite(`${MENU_BAR}/icon_win.png`),
+	menu_menu: sprite(`${MENU_BAR}/menu.png`),
+	menu_bet: sprite(`${MENU_BAR}/icon_bet.png`),
 };
 
 export default assets;

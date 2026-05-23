@@ -42,9 +42,17 @@
 			canvasSizes.height * 0.5 +
 			(mainLayout.height * board.center.y - mainLayout.height * 0.5) * scale;
 
-		// Portrait / tablet: hammer hidden — Thor alone appears above the frame.
 		if (layoutType === 'portrait' || layoutType === 'tablet') {
-			return { mode: 'hidden' };
+			const TOP_PAD = 6;
+			const GAP = 22;
+			const frameTop = frameCy - frameH / 2;
+			const availableH = Math.max(70, frameTop - TOP_PAD - GAP);
+			const h = Math.min(availableH * 0.92, canvasSizes.height * 0.19);
+			const w = h * 0.72;
+			const left = Math.max(0, frameCx - w / 2);
+			const top = Math.max(TOP_PAD, frameTop - h - GAP);
+
+			return { mode: 'side', left, top, width: w, height: h };
 		}
 
 		// Desktop / landscape: touch the LEFT edge of the reel frame.

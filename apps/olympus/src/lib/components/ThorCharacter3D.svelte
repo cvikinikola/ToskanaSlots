@@ -40,24 +40,7 @@
 			(mainLayout.height * board.center.y - mainLayout.height * 0.5) * scale;
 
 		if (layoutType === 'portrait' || layoutType === 'tablet') {
-			// Portrait / tablet: Thor centered above the reel frame.
-			//
-			// KEY: the canvas div bottom must sit ABOVE frameTop.
-			//   top + h = frameTop - GAP  →  top = frameTop - h - GAP
-			// (FOOT_FRACTION was wrong: top + h*0.93 leaves 7% of h *below* frameTop.)
-			//
-			// Aspect 0.65 (w/h) keeps shoulders inside the frustum.
-			const TOP_PAD = 4;
-			const GAP = 55; // px gap between canvas bottom and frame top
-			const frameTop = frameCy - frameH / 2;
-			// Use 82% of the available band so the model isn't too tall.
-			const maxH = (frameTop - TOP_PAD - GAP) * 0.82;
-			const w = Math.min(maxH * 0.65, canvasSizes.width * 0.42);
-			const h = w / 0.65;
-			const left = Math.max(0, frameCx - w / 2);
-			// Canvas bottom = frameTop - GAP (never overlaps the frame).
-			const top = Math.max(TOP_PAD, frameTop - h - GAP);
-			return { mode: 'side', left, top, width: w, height: h };
+			return { mode: 'hidden' };
 		}
 
 		// Desktop / landscape: touch the RIGHT edge of the reel frame.

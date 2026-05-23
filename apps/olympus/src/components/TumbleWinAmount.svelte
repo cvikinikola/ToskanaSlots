@@ -8,8 +8,9 @@
 
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
-	import { Container, Graphics, BitmapText } from 'pixi-svelte';
+	import { Container, BitmapText } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
+	import { UiAssetSprite } from 'components-ui-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { SECOND } from 'constants-shared/time';
 
@@ -20,8 +21,7 @@
 	const context = getContext();
 
 	const PANEL_W = SYMBOL_SIZE * 2.4;
-	const PANEL_H = SYMBOL_SIZE * 0.55;
-	const CORNER = 12;
+	const PANEL_H = SYMBOL_SIZE * 0.64;
 
 	const isStacked = $derived(context.stateLayoutDerived.isStacked());
 
@@ -65,39 +65,34 @@
 <FadeContainer {show}>
 	<BoardContainer>
 		<Container {...position}>
-			<!-- Panel background -->
-			<Graphics
-				draw={(g) => {
-					g.clear();
-					g.roundRect(0, 0, PANEL_W, PANEL_H, CORNER);
-					g.fill({ color: 0x0a0c1a, alpha: 0.85 });
-					g.stroke({ color: 0xd4a64a, width: 2 });
-				}}
+			<UiAssetSprite
+				assetKey="menu_panel_md"
+				anchor={{ x: 0, y: 0 }}
+				width={PANEL_W}
+				height={PANEL_H}
 			/>
 
-			<!-- Label -->
 			<BitmapText
 				anchor={{ x: 0, y: 0.5 }}
-				x={SYMBOL_SIZE * 0.18}
+				x={SYMBOL_SIZE * 0.24}
 				y={PANEL_H / 2}
 				text="TUMBLE WIN"
 				style={{
 					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.16,
-					fill: 0xccaa44,
-					fontWeight: '600',
+					fontSize: SYMBOL_SIZE * 0.14,
+					fill: 0xffd147,
+					fontWeight: '700',
 				}}
 			/>
 
-			<!-- Amount -->
 			<BitmapText
 				anchor={{ x: 1, y: 0.5 }}
-				x={PANEL_W - SYMBOL_SIZE * 0.18}
+				x={PANEL_W - SYMBOL_SIZE * 0.24}
 				y={PANEL_H / 2}
 				text={bookEventAmountToCurrencyString(countUpAmount.current)}
 				style={{
 					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.28,
+					fontSize: SYMBOL_SIZE * 0.25,
 					fill: 0xffd700,
 					fontWeight: '700',
 				}}

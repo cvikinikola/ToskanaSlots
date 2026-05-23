@@ -178,6 +178,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// ── setTotalWin ────────────────────────────────────────────────────────────
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
+		if (bookEvent.amount > 0) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_coin_clink' });
+		}
 	},
 
 	// ── updateGlobalMult ──────────────────────────────────────────────────────
@@ -344,7 +347,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 
 	// ── finalWin ──────────────────────────────────────────────────────────────
-	finalWin: async () => {
+	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
+		if (bookEvent.amount > 0) {
+			setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_coin_clink' }), 420);
+		}
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
 	},

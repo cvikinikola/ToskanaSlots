@@ -19,6 +19,15 @@ import { runBaseSpin, runBonusBuy } from './math/index.js';
 const TARGET_RTP = 0.97;
 const CALIBRATION_ROUNDS = 20000;
 const BONUS_BUY_COST_MULT = 100;
+const BET_MODE_COST_MULTIPLIER = {
+  BASE: 1,
+  ANTE: 1.2,
+  SUPERANTE: 5,
+  SUPERSPIN: 25,
+  BONUS: BONUS_BUY_COST_MULT,
+  SUPER: 200,
+};
+const BONUS_ROUND_MODES = new Set(['BONUS', 'SUPER']);
 
 // ─── RTP calibration ─────────────────────────────────────────────────────────
 
@@ -56,8 +65,10 @@ export const getScale = (mode) => {
 // ─── Round (used by both the Vite plugin and gen-books.mjs) ──────────────────
 
 export const playMockRound = ({ mode = 'BASE', scale } = {}) => {
-  const s = scale ?? getScale(mode);
-  return mode === 'BONUS'
+  const normalizedMode = String(mode).toUpperCase();
+  const mathMode = BONUS_ROUND_MODES.has(normalizedMode) ? 'BONUS' : 'BASE';
+  const s = scale ?? getScale(mathMode);
+  return mathMode === 'BONUS'
     ? runBonusBuy({ betAmount: 1, scale: s })
     : runBaseSpin({ betAmount: 1, scale: s });
 };
@@ -105,7 +116,11 @@ export const mockRgsPlugin = () => ({
           betLevels: [100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000],
           betModes: {
             BASE: { mode: 'BASE', costMultiplier: 1, feature: false },
+            ANTE: { mode: 'ANTE', costMultiplier: BET_MODE_COST_MULTIPLIER.ANTE, feature: false },
+            SUPERANTE: { mode: 'SUPERANTE', costMultiplier: BET_MODE_COST_MULTIPLIER.SUPERANTE, feature: false },
+            SUPERSPIN: { mode: 'SUPERSPIN', costMultiplier: BET_MODE_COST_MULTIPLIER.SUPERSPIN, feature: false },
             BONUS: { mode: 'BONUS', costMultiplier: BONUS_BUY_COST_MULT, feature: true },
+            SUPER: { mode: 'SUPER', costMultiplier: BET_MODE_COST_MULTIPLIER.SUPER, feature: true },
           },
           jurisdiction: {
             socialCasino: false, disabledFullscreen: false, disabledTurbo: false,
@@ -123,9 +138,10 @@ export const mockRgsPlugin = () => ({
     server.middlewares.use('/wallet/play', async (req, res) => {
       if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
       const body = await readJson(req);
-      const mode = body?.mode || 'BASE';
+      const mode = String(body?.mode || 'BASE').toUpperCase();
       const amount = Number(body?.amount) || 1000000;
-      const cost = mode === 'BONUS' ? amount * BONUS_BUY_COST_MULT : amount;
+      const costMultiplier = BET_MODE_COST_MULTIPLIER[mode] ?? 1;
+      const cost = Math.round(amount * costMultiplier);
 
       const { bookEvents, totalWin } = playMockRound({ mode });
 

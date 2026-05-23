@@ -4,10 +4,10 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, Text, REM } from 'pixi-svelte';
+	import { App, REM } from 'pixi-svelte';
 	import { stateModal } from 'state-shared';
 
-	import { UI } from 'components-ui-pixi';
+	import { UI, UiAssetSprite } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
@@ -90,25 +90,11 @@
 			{/snippet}
 			{#snippet logo()}
 				{#if !isStacked}
-					<Text
+					<UiAssetSprite
+						assetKey="menu_logo"
 						anchor={{ x: 1, y: 0 }}
-						text="HAMMER OF THOR"
-						style={{
-							fontFamily: 'serif',
-							fontSize: REM * 1.7 * titleScale,
-							fontWeight: '900',
-							lineHeight: REM * 2 * titleScale,
-							fill: 0xffd147,
-							stroke: { color: 0x2a0d0d, width: 4 },
-							letterSpacing: 4,
-							dropShadow: {
-								color: 0x7df0ff,
-								alpha: 0.55,
-								blur: 6,
-								distance: 0,
-								angle: 0,
-							},
-						}}
+						width={REM * 13.8 * titleScale}
+						height={REM * 2.95 * titleScale}
 					/>
 				{/if}
 			{/snippet}

@@ -6,8 +6,9 @@
 </script>
 
 <script lang="ts">
-	import { Container, Graphics, BitmapText } from 'pixi-svelte';
+	import { Container, BitmapText } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
+	import { UiAssetSprite } from 'components-ui-pixi';
 	import { waitForTimeout } from 'utils-shared/wait';
 
 	import BoardContainer from './BoardContainer.svelte';
@@ -16,16 +17,11 @@
 
 	const context = getContext();
 
-	const PANEL_W = SYMBOL_SIZE * 1.4;
-	const PANEL_H = SYMBOL_SIZE * 0.9;
-	const CORNER = 12;
+	const PANEL_W = SYMBOL_SIZE * 1.65;
+	const PANEL_H = SYMBOL_SIZE * 0.78;
 
-	// Frame extends 9% beyond board width on each side (FRAME_PADDING_X=1.18).
-	// BoardContainer coords are in native (pre-scale) units, so board right edge
-	// = BOARD_SIZES.width (600) and frame right edge = 600 + 54 = 654.
-	// Place the panel just outside: 600 + 74 = 674.
 	const position = $derived({
-		x: BOARD_SIZES.width + SYMBOL_SIZE * 0.74,
+		x: BOARD_SIZES.width + SYMBOL_SIZE * 0.68,
 		y: SYMBOL_SIZE * 0.2,
 	});
 
@@ -38,11 +34,6 @@
 
 		globalMultiplierHide: () => (show = false),
 
-		/**
-		 * When multiplier increases or resets: short flash + delay before the
-		 * displayed value changes, then resolve.
-		 * Otherwise: just set the value immediately.
-		 */
 		globalMultiplierUpdate: async (emitterEvent) => {
 			if (emitterEvent.multiplier === 1 && multiplier !== 1) {
 				flash = true;
@@ -64,39 +55,35 @@
 <FadeContainer {show}>
 	<BoardContainer>
 		<Container {...position}>
-			<!-- Panel background -->
-			<Graphics
-				draw={(g) => {
-					g.clear();
-					g.roundRect(0, 0, PANEL_W, PANEL_H, CORNER);
-					g.fill({ color: 0x1a1a2e, alpha: 0.85 });
-					g.stroke({ color: flash ? 0xffd700 : 0x886600, width: 2 });
-				}}
+			<UiAssetSprite
+				assetKey="menu_panel_sm"
+				anchor={{ x: 0, y: 0 }}
+				width={PANEL_W}
+				height={PANEL_H}
+				alpha={flash ? 1 : 0.94}
 			/>
 
-			<!-- Label -->
 			<BitmapText
 				anchor={{ x: 0.5, y: 0 }}
 				x={PANEL_W / 2}
-				y={PANEL_H * 0.1}
+				y={PANEL_H * 0.18}
 				text="MULTIPLIER"
 				style={{
 					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.16,
-					fill: 0xccaa44,
-					fontWeight: '600',
+					fontSize: SYMBOL_SIZE * 0.13,
+					fill: flash ? 0xffffff : 0xffd147,
+					fontWeight: '700',
 				}}
 			/>
 
-			<!-- Multiplier value -->
 			<BitmapText
 				anchor={{ x: 0.5, y: 0.5 }}
 				x={PANEL_W / 2}
-				y={PANEL_H * 0.65}
-				text={`×${multiplier}`}
+				y={PANEL_H * 0.62}
+				text={`x${multiplier}`}
 				style={{
 					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.45,
+					fontSize: SYMBOL_SIZE * 0.36,
 					fill: flash ? 0xffffff : 0xffd700,
 					fontWeight: '700',
 				}}

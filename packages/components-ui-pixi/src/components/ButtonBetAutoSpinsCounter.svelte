@@ -1,33 +1,43 @@
 <script lang="ts">
-	import { Text, Rectangle } from 'pixi-svelte';
+	import { Rectangle, Text } from 'pixi-svelte';
 	import { stateBet } from 'state-shared';
 	import { WHITE } from 'constants-shared/colors';
 
 	import { UI_BASE_SIZE } from '../constants';
 
-	const fontSizeMultiplier = $derived.by(() => {
-		if (stateBet.autoSpinsCounter === Infinity) return 3;
-		if (stateBet.autoSpinsCounter > 99) return 1.5;
-		if (stateBet.autoSpinsCounter > 9) return 2;
-		return 2.5;
+	const counterText = $derived(
+		stateBet.autoSpinsCounter === Infinity ? '∞' : `${stateBet.autoSpinsCounter}`,
+	);
+	const fontSize = $derived.by(() => {
+		if (stateBet.autoSpinsCounter === Infinity) return UI_BASE_SIZE * 0.42;
+		if (stateBet.autoSpinsCounter > 99) return UI_BASE_SIZE * 0.28;
+		if (stateBet.autoSpinsCounter > 9) return UI_BASE_SIZE * 0.32;
+		return UI_BASE_SIZE * 0.4;
 	});
 </script>
 
 {#if stateBet.autoSpinsCounter > 0}
 	<Rectangle
 		anchor={0.5}
-		width={UI_BASE_SIZE * 0.9}
-		height={UI_BASE_SIZE * 0.9}
-		borderRadius={50}
+		y={UI_BASE_SIZE * 0.08}
+		width={UI_BASE_SIZE * 0.86}
+		height={UI_BASE_SIZE * 0.52}
+		borderRadius={UI_BASE_SIZE * 0.1}
+		backgroundColor={0x02040a}
+		alpha={1}
 	/>
 	<Text
 		anchor={0.5}
-		text={stateBet.autoSpinsCounter === Infinity ? '∞' : stateBet.autoSpinsCounter}
+		y={UI_BASE_SIZE * 0.08}
+		text={counterText}
 		style={{
 			fontFamily: 'proxima-nova',
 			fill: WHITE,
 			fontWeight: 'bold',
-			fontSize: fontSizeMultiplier * UI_BASE_SIZE * 0.2,
+			fontSize,
+			letterSpacing: 0,
+			stroke: { color: 0x071226, width: 5 },
+			dropShadow: { color: 0x000000, alpha: 0.85, blur: 4, distance: 1, angle: Math.PI / 2 },
 		}}
 	/>
 {/if}
