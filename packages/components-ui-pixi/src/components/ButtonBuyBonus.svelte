@@ -36,8 +36,8 @@
 			<UiAssetSprite
 				assetKey="menu_buy_bonus"
 				anchor={0.5}
-				width={sizes.width * 1.05}
-				height={sizes.height * 0.72}
+				width={sizes.width * 1.14}
+				height={sizes.height * 0.82}
 			/>
 		</Container>
 	{/snippet}

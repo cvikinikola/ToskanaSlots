@@ -35,6 +35,7 @@
 	);
 
 	const scale = $derived(props.state === 'win' ? 1.05 : 1);
+	const symbolSpriteSize = SYMBOL_SIZE * 1.04;
 
 	// Trigger oncomplete for animation states that have no real spine track yet.
 	$effect(() => {
@@ -54,8 +55,9 @@
 	<Sprite
 		key={spriteKey}
 		anchor={0.5}
-		width={SYMBOL_SIZE * 0.9}
-		height={SYMBOL_SIZE * 0.9}
+		width={symbolSpriteSize}
+		height={symbolSpriteSize}
+		roundPixels
 		tint={tint}
 	/>
 

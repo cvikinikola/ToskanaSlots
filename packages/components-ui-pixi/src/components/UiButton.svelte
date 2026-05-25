@@ -35,8 +35,8 @@
 
 	const imageKey = $derived(iconAssetMap[icon]);
 	const isWideImage = $derived(['turbo', 'autoSpin'].includes(icon));
-	const imageWidth = $derived(buttonProps.sizes.width * (isWideImage ? 1.05 : 0.82));
-	const imageHeight = $derived(buttonProps.sizes.height * (isWideImage ? 0.72 : 0.82));
+	const imageWidth = $derived(buttonProps.sizes.width * (isWideImage ? 1.12 : 0.92));
+	const imageHeight = $derived(buttonProps.sizes.height * (isWideImage ? 0.8 : 0.92));
 </script>
 
 <Button {...buttonProps}>

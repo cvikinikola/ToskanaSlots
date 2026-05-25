@@ -14,12 +14,13 @@
 		if (stateBet.autoSpinsCounter > 9) return UI_BASE_SIZE * 0.32;
 		return UI_BASE_SIZE * 0.4;
 	});
+	const counterY = -UI_BASE_SIZE * 0.03;
 </script>
 
 {#if stateBet.autoSpinsCounter > 0}
 	<Rectangle
 		anchor={0.5}
-		y={UI_BASE_SIZE * 0.08}
+		y={counterY}
 		width={UI_BASE_SIZE * 0.86}
 		height={UI_BASE_SIZE * 0.52}
 		borderRadius={UI_BASE_SIZE * 0.1}
@@ -28,7 +29,7 @@
 	/>
 	<Text
 		anchor={0.5}
-		y={UI_BASE_SIZE * 0.08}
+		y={counterY}
 		text={counterText}
 		style={{
 			fontFamily: 'proxima-nova',

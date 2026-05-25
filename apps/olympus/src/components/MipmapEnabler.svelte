@@ -53,7 +53,8 @@
 				key === 'bg_portrait' ||
 				key === 'bg_freespins' ||
 				key === 'warrior' ||
-				key === 'logo'
+				key === 'logo' ||
+				key.startsWith('menu_')
 			) {
 				tuneTexture(val);
 			}

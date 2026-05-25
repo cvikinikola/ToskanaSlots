@@ -26,8 +26,8 @@
 					<UiAssetSprite
 						assetKey={isSpinKey(key) ? 'menu_spin' : 'menu_stop'}
 						anchor={0.5}
-						width={sizes.width * (isSpinKey(key) ? 0.82 : 0.94)}
-						height={sizes.height * (isSpinKey(key) ? 0.82 : 0.4)}
+						width={sizes.width * (isSpinKey(key) ? 0.96 : 1.04)}
+						height={sizes.height * (isSpinKey(key) ? 0.96 : 0.52)}
 						alpha={disabled || ['spin_disabled', 'stop_disabled'].includes(key) ? 0.5 : 1}
 					/>
 				</Container>
