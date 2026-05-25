@@ -17,6 +17,7 @@ function createSound<TSoundName extends string>() {
 	let loadedAudio: LoadedAudio<TSoundName>;
 	let audioContextState = $state<AudioContext['state']>('running');
 	let visibilityState = $state<DocumentVisibilityState>('visible');
+	let pageFocused = $state(true);
 	let players: {
 		music: Player<TSoundName, PlayMusic>;
 		loop: Player<TSoundName, PlayLoop>;
@@ -42,13 +43,23 @@ function createSound<TSoundName extends string>() {
 		// audioContextState and visibilityState
 		const onAudioContextChange = () => (audioContextState = Howler.ctx.state);
 		const onVisibilityStateChange = () => (visibilityState = document.visibilityState);
+		const onFocusStateChange = () => (pageFocused = document.hasFocus());
+		const onPageHide = () => disable();
 
+		onVisibilityStateChange();
+		onFocusStateChange();
 		Howler.ctx.addEventListener('statechange', onAudioContextChange);
 		document.addEventListener('visibilitychange', onVisibilityStateChange);
+		window.addEventListener('focus', onFocusStateChange);
+		window.addEventListener('blur', onFocusStateChange);
+		window.addEventListener('pagehide', onPageHide);
 
 		const destroy = () => {
 			Howler.ctx.removeEventListener('statechange', onAudioContextChange);
 			document.removeEventListener('visibilitychange', onVisibilityStateChange);
+			window.removeEventListener('focus', onFocusStateChange);
+			window.removeEventListener('blur', onFocusStateChange);
+			window.removeEventListener('pagehide', onPageHide);
 
 			if (players) {
 				players.music.howl.unload();
@@ -102,7 +113,7 @@ function createSound<TSoundName extends string>() {
 
 	const enableEffect = () => {
 		$effect(() => {
-			if (audioContextState === 'running' && visibilityState === 'visible') {
+			if (audioContextState === 'running' && visibilityState === 'visible' && pageFocused) {
 				enable();
 			} else {
 				disable();

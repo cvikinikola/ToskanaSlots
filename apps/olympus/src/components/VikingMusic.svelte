@@ -58,8 +58,13 @@
 
 		const updatePageActive = () => {
 			pageActive = document.visibilityState === 'visible' && document.hasFocus();
+			if (!pageActive) pauseImmediately();
 		};
-		const pauseImmediately = () => fadeTo(0);
+		const pauseImmediately = () => {
+			if (!audio) return;
+			audio.pause();
+			audio.volume = 0;
+		};
 
 		updatePageActive();
 		document.addEventListener('visibilitychange', updatePageActive);

@@ -8,7 +8,10 @@
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
-	const sizes = { width: UI_BASE_SIZE * 1.8, height: UI_BASE_SIZE * 1.3 };
+	const sizes = $derived({
+		width: UI_BASE_SIZE * 1.3,
+		height: UI_BASE_SIZE * 1.3,
+	});
 
 	const onpress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });

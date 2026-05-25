@@ -7,6 +7,7 @@
 	import { stateGame } from '../../game/stateGame.svelte';
 
 	let container = $state<HTMLDivElement | null>(null);
+	let modelReady = $state(false);
 
 	const HAMMER_GLB_URL = '/models/thor-hammer.glb';
 
@@ -15,7 +16,10 @@
 	// reels are already on screen. Before that we render nothing so
 	// the loading screen stays clean.
 	const { stateLayout, stateLayoutDerived } = getContextLayout();
-	const visible = $derived(!stateLayout.showLoadingScreen);
+	const sceneOverlayActive = $derived(
+		stateGame.transitionActive || stateGame.freeSpinIntroActive || stateGame.freeSpinOutroActive,
+	);
+	const visible = $derived(!stateLayout.showLoadingScreen && modelReady);
 
 	// Anchor the hammer to the right edge of the reel frame so it scales
 	// and re-positions together with the board on every device size.
@@ -43,8 +47,8 @@
 			(mainLayout.height * board.center.y - mainLayout.height * 0.5) * scale;
 
 		if (layoutType === 'portrait' || layoutType === 'tablet') {
-			const TOP_PAD = 6;
-			const GAP = 22;
+			const TOP_PAD = 2;
+			const GAP = 64;
 			const frameTop = frameCy - frameH / 2;
 			const availableH = Math.max(70, frameTop - TOP_PAD - GAP);
 			const h = Math.min(availableH * 0.92, canvasSizes.height * 0.19);
@@ -87,7 +91,10 @@
 			canvas.getContext('webgl') ||
 			canvas.getContext('experimental-webgl');
 
-		if (!gl) return;
+		if (!gl) {
+			stateGame.hammer3DReady = true;
+			return;
+		}
 
 		let disposed = false;
 		let raf = 0;
@@ -265,8 +272,11 @@
 				
 
 				scene.add(hammer);
+				modelReady = true;
+				stateGame.hammer3DReady = true;
 			} catch (err) {
 				console.warn('[ThorHammer3D] failed to load GLB:', err);
+				stateGame.hammer3DReady = true;
 			}
 
 			const onResize = () => {
@@ -347,6 +357,7 @@
 
 		init().catch((err) => {
 			console.warn('[ThorHammer3D] disabled:', err);
+			stateGame.hammer3DReady = true;
 		});
 
 		return () => {
@@ -362,6 +373,7 @@
 	class:visible
 	class:hidden
 	class:behind-modal={modalOpen}
+	class:behind-game-overlay={sceneOverlayActive}
 	class:during-free-spins={inFreeSpins}
 	class:dimmed
 	style={styleStr}
@@ -399,6 +411,12 @@
 
 		&.behind-modal {
 			z-index: 0;
+		}
+
+		&.behind-game-overlay {
+			z-index: 0;
+			opacity: 0;
+			transform: translate3d(0, 0, 0) scale(1);
 		}
 
 		&.during-free-spins {

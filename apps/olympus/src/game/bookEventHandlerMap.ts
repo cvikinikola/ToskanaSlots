@@ -47,6 +47,12 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 	await eventEmitter.broadcastAsync({ type: 'boardWithAnimateSymbols', symbolPositions: positions });
 };
 
+const playWinToBalanceCoins = () => {
+	[0, 160, 320, 520].forEach((delay) => {
+		setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_coin_clink' }), delay);
+	});
+};
+
 // ─── Book event handler map ───────────────────────────────────────────────────
 
 /**
@@ -85,6 +91,20 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_coin_clink' });
+		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
+		await eventEmitter.broadcastAsync({
+			type: 'tumbleWinAmountUpdate',
+			amount: bookEvent.totalWin,
+			animate: false,
+		});
+		eventEmitter.broadcast({
+			type: 'tumbleWinBreakdownShow',
+			lines: bookEvent.wins.map((win) => ({
+				count: win.positions.length,
+				symbol: win.symbol,
+				amount: win.win,
+			})),
+		});
 		await sequence(bookEvent.wins, async (win) => {
 			await animateSymbols({ positions: win.positions });
 		});
@@ -211,12 +231,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// All scatters confirmed — unleash the storm before transition.
 		eventEmitter.broadcast({ type: 'scatterStorm' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
-		if (bookEvent.positions.length >= 4) {
-			// First boom — thunder travels slower than lightning
-			setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' }), 420);
-			// Second rolling thunder as the storm builds
-			setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' }), 1050);
-		}
 		await waitForTimeout(1500);
 
 		// Transition to free spins mode
@@ -349,7 +363,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// ── finalWin ──────────────────────────────────────────────────────────────
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
 		if (bookEvent.amount > 0) {
-			setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_coin_clink' }), 420);
+			playWinToBalanceCoins();
 		}
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });

@@ -39,11 +39,23 @@
 </script>
 
 <script lang="ts">
-	const { children, sizes, anchor, disabled, onpress, debug, ...containerProps }: Props = $props();
+	import { Rectangle as PixiRectangle } from 'pixi.js';
+
+	const {
+		children,
+		sizes,
+		anchor,
+		disabled,
+		onpress,
+		debug,
+		hitArea: customHitArea,
+		...containerProps
+	}: Props = $props();
 	const center = $derived({
 		x: sizes.width * 0.5,
 		y: sizes.height * 0.5,
 	});
+	const hitArea = $derived(customHitArea ?? new PixiRectangle(0, 0, sizes.width, sizes.height));
 
 	let hovered = $state(false);
 	let pressed = $state(false);
@@ -58,8 +70,9 @@
 
 <Container
 	{...containerProps}
-	eventMode="static"
+	eventMode={disabled ? 'none' : 'static'}
 	cursor={disabled ? 'not-allowed' : 'pointer'}
+	{hitArea}
 	pivot={anchorToPivot({ sizes, anchor })}
 	onpointerover={() => {
 		if (disabled) return;

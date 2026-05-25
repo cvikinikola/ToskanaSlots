@@ -8,6 +8,7 @@
 	import { CanvasSizeRectangle } from 'components-layout';
 
 	import { getContext } from '../game/context';
+	import { stateGame } from '../game/stateGame.svelte';
 	import { SECOND } from 'constants-shared/time';
 
 	const context = getContext();
@@ -23,6 +24,7 @@
 	context.eventEmitter.subscribeOnMount({
 		transition: async () => {
 			visible = true;
+			stateGame.transitionActive = true;
 			// Fade to black
 			alpha = 1;
 			await waitForTimeout(300);
@@ -33,6 +35,7 @@
 			alpha = 0;
 			await waitForTimeout(300);
 			visible = false;
+			stateGame.transitionActive = false;
 		},
 	});
 </script>

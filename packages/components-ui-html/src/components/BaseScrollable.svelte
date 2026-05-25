@@ -29,6 +29,8 @@
 		text-align: center;
 		display: flex;
 		gap: 1rem;
+		width: 100%;
+		min-height: 0;
 
 		&.column {
 			flex-direction: column;
@@ -40,6 +42,14 @@
 			flex-direction: row;
 			justify-content: center;
 			max-width: 100%;
+		}
+
+		@media screen and (max-width: 500px) {
+			gap: 0.75rem;
+
+			&.row {
+				justify-content: flex-start;
+			}
 		}
 	}
 </style>

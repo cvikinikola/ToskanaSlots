@@ -46,17 +46,20 @@
 	$effect(() => {
 		let timer: ReturnType<typeof setTimeout>;
 		const schedule = () => {
-			timer = setTimeout(() => {
-				bolts = [...bolts, makeBolt()];
-				flashAlpha = 0.18 + Math.random() * 0.18;
-				if (Math.random() < 0.35) {
-					setTimeout(() => {
-						bolts = [...bolts, makeBolt()];
-						flashAlpha = 0.22;
-					}, 110);
-				}
-				schedule();
-			}, 2500 + Math.random() * 4000);
+			timer = setTimeout(
+				() => {
+					bolts = [...bolts, makeBolt()];
+					flashAlpha = 0.1 + Math.random() * 0.12;
+					if (Math.random() < 0.12) {
+						setTimeout(() => {
+							bolts = [...bolts, makeBolt()];
+							flashAlpha = 0.14;
+						}, 150);
+					}
+					schedule();
+				},
+				12000 + Math.random() * 12000,
+			);
 		};
 		schedule();
 		return () => clearTimeout(timer);

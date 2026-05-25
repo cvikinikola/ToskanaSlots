@@ -26,39 +26,43 @@
 	let flashAlpha = $state(0);
 	let flashColor = $state(0xffffff);
 	let nextId = 0;
+	let lastThunderClapAt = 0;
 
 	const canvas = $derived(context.stateLayoutDerived.canvasSizes());
+
+	function playThunderClap() {
+		const now = performance.now();
+		if (now - lastThunderClapAt < 4500) return;
+		lastThunderClapAt = now;
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder_clap' });
+	}
 
 	/** Scatter trigger — rapid cluster of full-canvas strikes over ~1.8 s */
 	context.eventEmitter.subscribeOnMount({
 		scatterStorm: () => {
-			const schedule = [0, 160, 340, 530, 730, 980, 1260, 1560];
+			const schedule = [0, 420, 960];
 			for (const ms of schedule) {
 				setTimeout(() => {
 					const s = makeStrike();
 					strikes = [...strikes, s];
 					flashColor = 0xaaddff;
-					flashAlpha = Math.min(0.92, (flashAlpha || 0) + s.flashPeak * 0.65);
-					// ~50 % chance of a quick double-strike thunderclap
-					if (Math.random() < 0.5) {
-						setTimeout(() => {
-							strikes = [...strikes, makeStrike()];
-							flashAlpha = Math.min(0.92, flashAlpha + 0.18);
-						}, 75 + Math.random() * 110);
+					flashAlpha = Math.min(0.72, (flashAlpha || 0) + s.flashPeak * 0.42);
+					playThunderClap();
+					if (Math.random() < 0.16) {
+						setTimeout(
+							() => {
+								strikes = [...strikes, makeStrike()];
+								flashAlpha = Math.min(0.72, flashAlpha + 0.12);
+							},
+							120 + Math.random() * 160,
+						);
 					}
 				}, ms);
 			}
 		},
 	});
 
-	function jagged(
-		ax: number,
-		ay: number,
-		bx: number,
-		by: number,
-		jitter: number,
-		segs: number,
-	) {
+	function jagged(ax: number, ay: number, bx: number, by: number, jitter: number, segs: number) {
 		const pts = [{ x: ax, y: ay }];
 		for (let i = 1; i < segs; i++) {
 			const t = i / segs;
@@ -94,7 +98,7 @@
 			branches.push({
 				pts: jagged(start.x, start.y, fx, fy, 24, 7 + Math.floor(Math.random() * 4)),
 				width: 3.5,
-				alpha: 0.90,
+				alpha: 0.9,
 			});
 		}
 
@@ -110,27 +114,27 @@
 	$effect(() => {
 		let timer: ReturnType<typeof setTimeout>;
 		const schedule = () => {
-			// Storm cadence: 3.5–9s between primary strikes
+			// Keep idle lightning atmospheric instead of constant.
 			timer = setTimeout(
 				() => {
 					const s = makeStrike();
 					strikes = [...strikes, s];
 					flashColor = Math.random() < 0.7 ? 0xffffff : 0xc8e8ff;
-					flashAlpha = s.flashPeak;
-					// Possible double-strike thunderclap
-					if (Math.random() < 0.45) {
+					flashAlpha = s.flashPeak * 0.72;
+					if (Math.random() < 0.55) playThunderClap();
+					if (Math.random() < 0.12) {
 						setTimeout(
 							() => {
 								const s2 = makeStrike();
 								strikes = [...strikes, s2];
-								flashAlpha = Math.max(flashAlpha, s2.flashPeak * 0.85);
+								flashAlpha = Math.max(flashAlpha, s2.flashPeak * 0.55);
 							},
-							140 + Math.random() * 220,
+							180 + Math.random() * 260,
 						);
 					}
 					schedule();
 				},
-				3500 + Math.random() * 5500,
+				14000 + Math.random() * 14000,
 			);
 		};
 		schedule();
@@ -142,7 +146,7 @@
 		const tick = () => {
 			const now = performance.now();
 			if (strikes.length) strikes = strikes.filter((s) => now - s.born < s.life);
-		if (flashAlpha > 0) {
+			if (flashAlpha > 0) {
 				const decay = flashAlpha > 0.5 ? 0.09 : 0.022;
 				flashAlpha = Math.max(0, flashAlpha - decay);
 			}
@@ -199,7 +203,7 @@
 					g.stroke({
 						color: 0xaaeeff,
 						width: br.width * 2,
-						alpha: a * br.alpha * 0.80,
+						alpha: a * br.alpha * 0.8,
 						cap: 'round',
 						join: 'round',
 					});

@@ -33,6 +33,13 @@
 		min-width: 155px;
 		max-width: 180px;
 		gap: 0.5rem;
+
+		@media screen and (max-width: 500px) {
+			min-width: 12rem;
+			max-width: 13rem;
+			padding: 0.75rem;
+			gap: 0.75rem;
+		}
 	}
 
 	.info {

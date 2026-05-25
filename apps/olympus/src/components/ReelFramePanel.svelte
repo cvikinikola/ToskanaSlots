@@ -6,29 +6,14 @@
 
 	const context = getContext();
 
-	// Board layout in MAIN-LOCAL coords (same space we render in).
 	const board = $derived(context.stateGameDerived.boardLayout());
 
-	// Outer panel rect in board-native pixels (drawn around the symbols
-	// then scaled together with the board, so the gold border stays at a
-	// constant visual thickness regardless of viewport).
 	const panel = $derived({
 		w: BOARD_SIZES.width + FRAME_PANEL_PAD * 2,
 		h: BOARD_SIZES.height + FRAME_PANEL_PAD * 2,
 	});
 </script>
 
-<!--
-	Ornate "royale" reel-frame:
-	  • outer dark bevel ring (drop shadow)
-	  • main gold border with subtle inner tint
-	  • inner thin highlight stroke
-	  • gold + jewel medallion at every corner
-	  • small crown cartouche centred on the top edge
-	Drawn purely with Graphics so it stays crisp at every viewport and
-	wraps the 6×5 grid exactly. Sits behind the symbols (zIndex -1) and
-	shares the board's transform via MainContainer.
--->
 <Graphics
 	x={board.x}
 	y={board.y}
@@ -42,7 +27,6 @@
 		const hh = h / 2;
 		const r = S.cornerRadius;
 
-		// 1. Outer dark bevel — soft drop-shadow ring outside the gold.
 		g.roundRect(
 			-hw - S.bevelOffset,
 			-hh - S.bevelOffset,
@@ -52,85 +36,56 @@
 		);
 		g.stroke({ color: S.bevelColor, alpha: S.bevelAlpha, width: S.bevelWidth });
 
-		// 2. Dark interior fill — strong contrast for the symbols.
 		g.roundRect(-hw, -hh, w, h, r);
-		g.fill({ color: S.fillColor, alpha: S.fillAlpha });
+		g.fill({ color: 0x061427, alpha: 0.88 });
 
-		// 3. Subtle inner tint band (depth) just inside the border.
-		g.roundRect(-hw + 3, -hh + 3, w - 6, h - 6, r - 3);
-		g.stroke({ color: S.innerTintColor, alpha: S.innerTintAlpha, width: 6 });
+		g.roundRect(-hw + 10, -hh + 10, w - 20, h - 20, r - 8);
+		g.stroke({ color: 0x15365c, alpha: 0.72, width: 12 });
 
-		// 4. Main gold border.
+		g.roundRect(-hw + 22, -hh + 22, w - 44, h - 44, r - 14);
+		g.stroke({ color: 0x07101f, alpha: 0.55, width: 18 });
+
 		g.roundRect(-hw, -hh, w, h, r);
-		g.stroke({ color: S.strokeColor, width: S.strokeWidth });
+		g.stroke({ color: S.cornerOrnamentDark, width: 10 });
 
-		// 5. Thin inner highlight border (catches the eye, royal feel).
+		g.roundRect(-hw + 4, -hh + 4, w - 8, h - 8, r - 4);
+		g.stroke({ color: S.strokeColor, width: 5 });
+
 		g.roundRect(
-			-hw + S.innerStrokeInset,
-			-hh + S.innerStrokeInset,
-			w - S.innerStrokeInset * 2,
-			h - S.innerStrokeInset * 2,
+			-hw + S.innerStrokeInset + 4,
+			-hh + S.innerStrokeInset + 4,
+			w - (S.innerStrokeInset + 4) * 2,
+			h - (S.innerStrokeInset + 4) * 2,
 			S.innerStrokeRadius,
 		);
 		g.stroke({ color: S.innerStrokeColor, width: S.innerStrokeWidth });
 
-		// 6. Corner medallions — diamond + jewel at each rounded corner.
-		const cs = S.cornerOrnamentSize;
-		const corners: Array<[number, number]> = [
-			[-hw + r * 0.55, -hh + r * 0.55],
-			[ hw - r * 0.55, -hh + r * 0.55],
-			[-hw + r * 0.55,  hh - r * 0.55],
-			[ hw - r * 0.55,  hh - r * 0.55],
-		];
-		for (const [cx, cy] of corners) {
-			// Diamond plate (rotated square) — dark backing then gold face.
+		const drawKnot = (cx: number, cy: number, cs: number) => {
 			g.poly([cx, cy - cs, cx + cs, cy, cx, cy + cs, cx - cs, cy]);
+			g.fill({ color: 0x3c2709 });
+			g.poly([cx, cy - cs + 3, cx + cs - 3, cy, cx, cy + cs - 3, cx - cs + 3, cy]);
 			g.fill({ color: S.cornerOrnamentDark });
-			g.poly([
-				cx, cy - cs + 2,
-				cx + cs - 2, cy,
-				cx, cy + cs - 2,
-				cx - cs + 2, cy,
-			]);
+			g.poly([cx, cy - cs + 7, cx + cs - 7, cy, cx, cy + cs - 7, cx - cs + 7, cy]);
 			g.fill({ color: S.cornerOrnamentColor });
-			// Centre jewel.
-			g.circle(cx, cy, cs * 0.34);
-			g.fill({ color: S.cornerJewelColor });
-			// Jewel highlight glint.
-			g.circle(cx - cs * 0.12, cy - cs * 0.14, cs * 0.12);
-			g.fill({ color: S.cornerJewelHighlight, alpha: 0.85 });
-		}
+			g.circle(cx, cy, cs * 0.22);
+			g.fill({ color: 0x45b8ff });
+			g.circle(cx - cs * 0.08, cy - cs * 0.1, cs * 0.08);
+			g.fill({ color: 0xe6faff, alpha: 0.9 });
+		};
 
-		// 7. Crown cartouche — centred on the top edge.
-		const cw = S.crownWidth;
-		const ch = S.crownHeight;
-		const cyTop = -hh; // sits straddling the top border
-		// Dark backing plate (slightly larger).
-		g.roundRect(-cw / 2 - 2, cyTop - ch / 2 - 2, cw + 4, ch + 4, ch / 2 + 2);
-		g.fill({ color: S.crownDark });
-		// Gold plate.
-		g.roundRect(-cw / 2, cyTop - ch / 2, cw, ch, ch / 2);
-		g.fill({ color: S.crownColor });
-		// Three crown peaks rising above the plate.
-		const peakBaseY = cyTop - ch / 2;
-		const peakH = ch * 0.85;
-		const peakHW = ch * 0.55;
-		const peakXs = [-cw * 0.32, 0, cw * 0.32];
-		for (const px of peakXs) {
-			g.poly([
-				px - peakHW, peakBaseY,
-				px,          peakBaseY - peakH,
-				px + peakHW, peakBaseY,
-			]);
-			g.fill({ color: S.crownColor });
-			// Tiny jewel on each peak tip.
-			g.circle(px, peakBaseY - peakH + 2.5, 2.4);
-			g.fill({ color: S.crownJewelColor });
-		}
-		// Central larger jewel on the gold plate.
-		g.circle(0, cyTop, ch * 0.34);
-		g.fill({ color: S.crownJewelColor });
-		g.circle(-ch * 0.08, cyTop - ch * 0.1, ch * 0.13);
-		g.fill({ color: S.crownJewelHighlight, alpha: 0.9 });
+		const cornerSize = S.cornerOrnamentSize;
+		const edgeSize = S.cornerOrnamentSize * 0.78;
+		const knots: Array<[number, number, number]> = [
+			[-hw + r * 0.55, -hh + r * 0.55, cornerSize],
+			[hw - r * 0.55, -hh + r * 0.55, cornerSize],
+			[-hw + r * 0.55, hh - r * 0.55, cornerSize],
+			[hw - r * 0.55, hh - r * 0.55, cornerSize],
+			[0, -hh + 5, edgeSize],
+			[0, hh - 5, edgeSize],
+			[-hw + 5, 0, edgeSize],
+			[hw - 5, 0, edgeSize],
+		];
+
+		for (const [cx, cy, cs] of knots) drawKnot(cx, cy, cs);
 	}}
 />

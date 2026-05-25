@@ -46,7 +46,6 @@
 	);
 	// On portrait/tablet Thor is rendered above the frame — hide the text title
 	// to avoid clashing with the 3-D character in the same area.
-	const isStacked = $derived(context.stateLayoutDerived.isStacked());
 </script>
 
 <App>
@@ -89,14 +88,13 @@
 				<!-- Single title used (logo snippet renders 'HAMMER OF THOR' top-right) -->
 			{/snippet}
 			{#snippet logo()}
-				{#if !isStacked}
-					<UiAssetSprite
-						assetKey="menu_logo"
-						anchor={{ x: 1, y: 0 }}
-						width={REM * 13.8 * titleScale}
-						height={REM * 2.95 * titleScale}
-					/>
-				{/if}
+				<UiAssetSprite
+					assetKey="menu_logo"
+					anchor={{ x: 1, y: 0 }}
+					y={context.stateLayoutDerived.isStacked() ? REM * 0.5 : 0}
+					width={REM * 13.8 * titleScale}
+					height={REM * 2.95 * titleScale}
+				/>
 			{/snippet}
 		</UI>
 

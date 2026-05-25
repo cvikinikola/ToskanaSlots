@@ -16,6 +16,7 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { stateGame } from '../game/stateGame.svelte';
 
 	const context = getContext();
 
@@ -35,9 +36,13 @@
 	context.eventEmitter.subscribeOnMount({
 		freeSpinIntroShow: () => {
 			mode = 'trigger';
+			stateGame.freeSpinIntroActive = true;
 			show = true;
 		},
-		freeSpinIntroHide: () => (show = false),
+		freeSpinIntroHide: () => {
+			show = false;
+			stateGame.freeSpinIntroActive = false;
+		},
 		freeSpinIntroUpdate: async (e) => {
 			totalFreeSpins = e.totalFreeSpins;
 			await waitForTimeout(2200);
@@ -45,9 +50,13 @@
 		},
 		freeSpinRetriggerShow: () => {
 			mode = 'retrigger';
+			stateGame.freeSpinIntroActive = true;
 			show = true;
 		},
-		freeSpinRetriggerHide: () => (show = false),
+		freeSpinRetriggerHide: () => {
+			show = false;
+			stateGame.freeSpinIntroActive = false;
+		},
 		freeSpinRetriggerUpdate: async (e) => {
 			extraFreeSpins = e.extraFreeSpins;
 			totalFreeSpins = e.totalFreeSpins;

@@ -45,7 +45,8 @@ export type SoundEffectName =
 	| 'sfx_btn_spin'
 	// Win
 	| 'sfx_coin_clink'
-	| 'sfx_thunder';
+	| 'sfx_thunder'
+	| 'sfx_thunder_clap';
 
 export type SoundName = MusicName | SoundEffectName;
 

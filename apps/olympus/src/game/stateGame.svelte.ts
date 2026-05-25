@@ -92,6 +92,12 @@ export const stateGame = $state({
 	globalMultiplier: 1,
 	/** Scatter land counter for progressive scatter landing sounds */
 	scatterCounter: 0,
+	/** 3-D model loading gates; loading screen waits for these before start. */
+	hammer3DReady: false,
+	thor3DReady: false,
+	/** True while full-screen Pixi transition/intro panels should own the scene. */
+	transitionActive: false,
+	freeSpinIntroActive: false,
 	/** True while the free-spin outro panel is visible (used by 3-D overlays to dim) */
 	freeSpinOutroActive: false,
 });

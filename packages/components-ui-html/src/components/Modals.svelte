@@ -36,7 +36,7 @@
 	:global(html) {
 		font-size: 16px; /* you can chose any size here 16 is default */
 		@media screen and (max-width: 500px) {
-			font-size: 50%;
+			font-size: 15px;
 		}
 	}
 </style>

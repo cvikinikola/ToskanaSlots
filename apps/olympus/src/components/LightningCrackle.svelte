@@ -14,12 +14,35 @@
 	const context = getContext();
 
 	type Pt = { x: number; y: number };
-	type Bolt = { id: number; pts: Pt[]; branches: { pts: Pt[]; alpha: number }[]; born: number; life: number; flashPeak: number };
+	type Bolt = {
+		id: number;
+		pts: Pt[];
+		branches: { pts: Pt[]; alpha: number }[];
+		born: number;
+		life: number;
+		flashPeak: number;
+	};
 	let bolts = $state<Bolt[]>([]);
 	let flashAlpha = $state(0);
 	let nextId = 0;
+	let lastThunderClapAt = 0;
 
-	function boltPath(ax: number, ay: number, bx: number, by: number, jx: number, jy: number, steps: number): Pt[] {
+	function playThunderClap() {
+		const now = performance.now();
+		if (now - lastThunderClapAt < 3500) return;
+		lastThunderClapAt = now;
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder_clap' });
+	}
+
+	function boltPath(
+		ax: number,
+		ay: number,
+		bx: number,
+		by: number,
+		jx: number,
+		jy: number,
+		steps: number,
+	): Pt[] {
 		const pts: Pt[] = [{ x: ax, y: ay }];
 		for (let i = 1; i < steps; i++) {
 			const t = i / steps;
@@ -63,31 +86,32 @@
 			branches,
 			born: performance.now(),
 			life: 380 + Math.random() * 260,
-			flashPeak: 0.70 + Math.random() * 0.25,
+			flashPeak: 0.7 + Math.random() * 0.25,
 		};
 	}
 
 	context.eventEmitter.subscribeOnMount({
 		lightningStrike: (e) => {
 			const dur = e.durationMs ?? 600;
-			const fire = () => {
+			const fire = (forceThunder = false) => {
 				const b = makeBolt();
 				bolts = [...bolts, b];
 				flashAlpha = Math.min(0.92, (flashAlpha || 0) + b.flashPeak * 0.85);
+				if (forceThunder || b.flashPeak > 0.82) playThunderClap();
 			};
-			fire();
-			setTimeout(fire, 90);
-			if (dur > 400) setTimeout(fire, 280);
+			fire(true);
+			if (dur > 400) setTimeout(fire, 180);
 		},
 
 		/** Auto-strike on big/super/mega/epic/max wins */
 		winUpdate: (e) => {
 			if (e.winLevelData?.type === 'big') {
-				for (let i = 0; i < 3; i++) {
+				for (let i = 0; i < 2; i++) {
 					setTimeout(() => {
 						const b = makeBolt();
 						bolts = [...bolts, b];
 						flashAlpha = Math.min(0.88, (flashAlpha || 0) + b.flashPeak * 0.7);
+						if (b.flashPeak > 0.82) playThunderClap();
 					}, i * 220);
 				}
 			}
@@ -95,13 +119,13 @@
 
 		/** Scatter trigger — escalating barrage of board bolts over ~1.8 s */
 		scatterStorm: () => {
-			const schedule = [0, 120, 250, 390, 530, 680, 840, 1010, 1200, 1420, 1660];
+			const schedule = [0, 360, 760, 1160];
 			for (const ms of schedule) {
 				setTimeout(() => {
 					const b1 = makeBolt();
 					bolts = [...bolts, b1];
-					if (Math.random() < 0.55) bolts = [...bolts, makeBolt()];
-					flashAlpha = Math.min(0.92, flashAlpha + b1.flashPeak * 0.45);
+					if (Math.random() < 0.18) bolts = [...bolts, makeBolt()];
+					flashAlpha = Math.min(0.72, flashAlpha + b1.flashPeak * 0.32);
 				}, ms);
 			}
 		},
@@ -160,19 +184,43 @@
 						// Wide corona
 						g.moveTo(pts[0].x, pts[0].y);
 						for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
-						g.stroke({ color: 0x44aaff, width: 32 * wMul, alpha: a * aMul * 0.10, cap: 'round', join: 'round' });
+						g.stroke({
+							color: 0x44aaff,
+							width: 32 * wMul,
+							alpha: a * aMul * 0.1,
+							cap: 'round',
+							join: 'round',
+						});
 						// Outer glow
 						g.moveTo(pts[0].x, pts[0].y);
 						for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
-						g.stroke({ color: 0x7df0ff, width: 14 * wMul, alpha: a * aMul * 0.38, cap: 'round', join: 'round' });
+						g.stroke({
+							color: 0x7df0ff,
+							width: 14 * wMul,
+							alpha: a * aMul * 0.38,
+							cap: 'round',
+							join: 'round',
+						});
 						// Mid glow
 						g.moveTo(pts[0].x, pts[0].y);
 						for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
-						g.stroke({ color: 0xaaeeff, width: 6 * wMul, alpha: a * aMul * 0.88, cap: 'round', join: 'round' });
+						g.stroke({
+							color: 0xaaeeff,
+							width: 6 * wMul,
+							alpha: a * aMul * 0.88,
+							cap: 'round',
+							join: 'round',
+						});
 						// White-hot core
 						g.moveTo(pts[0].x, pts[0].y);
 						for (let i = 1; i < pts.length; i++) g.lineTo(pts[i].x, pts[i].y);
-						g.stroke({ color: 0xffffff, width: 2 * wMul, alpha: a * aMul, cap: 'round', join: 'round' });
+						g.stroke({
+							color: 0xffffff,
+							width: 2 * wMul,
+							alpha: a * aMul,
+							cap: 'round',
+							join: 'round',
+						});
 					};
 
 					drawPath(b.pts, 1, 1);

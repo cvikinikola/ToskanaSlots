@@ -70,14 +70,30 @@ export const mockRgsPlugin = () => ({
       // eslint-disable-next-line no-console
       console.log('[mock-rgs] /wallet/authenticate');
       sendJson(res, {
-        balance: { amount: 100000000000, currency: 'USD' },
+        balance: { amount: 1000000000000, currency: 'USD' },
         config: {
           gameID: 'thor-1000',
           minBet: 100000,
           maxBet: 1000000000,
           stepBet: 100000,
           defaultBetLevel: 1000000,
-          betLevels: [100000, 200000, 500000, 1000000, 2000000, 5000000, 10000000],
+          betLevels: [
+            100000,
+            200000,
+            500000,
+            1000000,
+            2000000,
+            5000000,
+            10000000,
+            25000000,
+            50000000,
+            75000000,
+            100000000,
+            200000000,
+            500000000,
+            800000000,
+            1000000000,
+          ],
           betModes: {
             BASE: { mode: 'BASE', costMultiplier: 1, feature: false },
             ANTE: { mode: 'ANTE', costMultiplier: BET_MODE_COST_MULTIPLIER.ANTE, feature: false },
@@ -97,7 +113,7 @@ export const mockRgsPlugin = () => ({
       });
     });
 
-    let lastBalanceAmount = 100000000000;
+    let lastBalanceAmount = 1000000000000;
 
     server.middlewares.use('/wallet/play', async (req, res) => {
       if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }

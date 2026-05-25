@@ -7,7 +7,7 @@
 	import type { ButtonIcon } from '../types';
 	import type { Snippet } from 'svelte';
 	import { i18nDerived } from '../i18n/i18nDerived';
-	import { UI_BASE_FONT_SIZE } from '../constants';
+	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from '../constants';
 
 	type Props = Omit<ButtonProps, 'children'> & {
 		icon: ButtonIcon;
@@ -37,6 +37,9 @@
 	const isWideImage = $derived(['turbo', 'autoSpin'].includes(icon));
 	const imageWidth = $derived(buttonProps.sizes.width * (isWideImage ? 1.12 : 0.92));
 	const imageHeight = $derived(buttonProps.sizes.height * (isWideImage ? 0.8 : 0.92));
+	const text = $derived(i18nDerived[icon]());
+	const compactText = $derived(buttonProps.sizes.width <= UI_BASE_SIZE * 1.35);
+	const textFontSize = $derived(UI_BASE_FONT_SIZE * (compactText ? 0.56 : 0.85));
 </script>
 
 <Button {...buttonProps}>
@@ -82,15 +85,14 @@
 			<Text
 				{...center}
 				anchor={0.5}
-				text={i18nDerived[icon]()}
+				{text}
 				style={{
 					align: 'center',
-					wordWrap: true,
-					wordWrapWidth: 200,
+					wordWrap: false,
 					fontFamily: 'serif',
 					fontWeight: '900',
 					letterSpacing: 1.5,
-					fontSize: UI_BASE_FONT_SIZE * 0.85,
+					fontSize: textFontSize,
 					fill: variant === 'dark' ? 0xffd147 : 0x2a0d0d,
 					stroke:
 						variant === 'dark'

@@ -51,6 +51,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		reelState.symbols.map((reelSymbol, symbolIndex) => {
 			reelSymbol.rawSymbol = value[symbolIndex];
 			reelSymbol.symbolState = 'static' as TSymbolState;
+			reelSymbol.oncomplete = () => {};
 		});
 
 	// constants
@@ -173,6 +174,10 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		});
 
 		reelState.motion = 'stopped';
+		reelState.symbols.forEach((reelSymbol) => {
+			reelSymbol.symbolState = 'static' as TSymbolState;
+			reelSymbol.oncomplete = () => {};
+		});
 	};
 
 	const generalSpin = async () => {

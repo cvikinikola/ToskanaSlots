@@ -87,4 +87,18 @@
 		text-align: center;
 		white-space: nowrap;
 	}
+
+	@media screen and (max-width: 500px) {
+		.title,
+		.price {
+			font-size: 1.05rem;
+			line-height: 1.15rem;
+		}
+
+		.description {
+			font-size: 0.9rem;
+			line-height: 1.15rem;
+			min-height: 4.75rem;
+		}
+	}
 </style>

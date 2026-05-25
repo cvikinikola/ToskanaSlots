@@ -21,10 +21,22 @@
 
 	let show = $state(true);
 
+	const resetBoardSymbolStates = () => {
+		context.stateGame.board.forEach((reel) => {
+			reel.reelState.symbols.forEach((reelSymbol) => {
+				reelSymbol.symbolState = 'static';
+				reelSymbol.oncomplete = () => {};
+			});
+		});
+	};
+
 	context.eventEmitter.subscribeOnMount({
 		stopButtonClick: () => context.stateGameDerived.enhancedBoard.stop(),
 
-		boardSettle: ({ board }) => context.stateGameDerived.enhancedBoard.settle(board),
+		boardSettle: ({ board }) => {
+			context.stateGameDerived.enhancedBoard.settle(board);
+			resetBoardSymbolStates();
+		},
 
 		boardShow: () => (show = true),
 
@@ -56,9 +68,11 @@
 					reelSymbol.symbolState = 'win';
 					await waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
 					reelSymbol.symbolState = 'static';
+					reelSymbol.oncomplete = () => {};
 				});
 
 			await Promise.all(getPromises());
+			resetBoardSymbolStates();
 		},
 	});
 

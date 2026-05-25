@@ -7,12 +7,16 @@
 	import { stateGame } from '../../game/stateGame.svelte';
 
 	let container = $state<HTMLDivElement | null>(null);
+	let modelReady = $state(false);
 
 	const THOR_GLB_URL = '/models/thor.glb';
 
 	// Match ThorHammer3D — only render once the loading/intro screen is gone.
 	const { stateLayout, stateLayoutDerived } = getContextLayout();
-	const visible = $derived(!stateLayout.showLoadingScreen);
+	const sceneOverlayActive = $derived(
+		stateGame.transitionActive || stateGame.freeSpinIntroActive || stateGame.freeSpinOutroActive,
+	);
+	const visible = $derived(!stateLayout.showLoadingScreen && modelReady);
 
 	const layoutType = $derived(stateLayoutDerived.layoutType());
 	const mainLayout = $derived(stateLayoutDerived.mainLayout());
@@ -76,7 +80,10 @@
 			canvas.getContext('webgl') ||
 			canvas.getContext('experimental-webgl');
 
-		if (!gl) return;
+		if (!gl) {
+			stateGame.thor3DReady = true;
+			return;
+		}
 
 		let disposed = false;
 		let raf = 0;
@@ -278,8 +285,11 @@
 				}
 
 				scene.add(thor);
+				modelReady = true;
+				stateGame.thor3DReady = true;
 			} catch (err) {
 				console.warn('[ThorCharacter3D] failed to load GLB:', err);
+				stateGame.thor3DReady = true;
 			}
 
 			const onResize = () => {
@@ -376,6 +386,7 @@
 
 		init().catch((err) => {
 			console.warn('[ThorCharacter3D] disabled:', err);
+			stateGame.thor3DReady = true;
 		});
 
 		return () => {
@@ -391,6 +402,7 @@
 	class:visible
 	class:hidden
 	class:behind-modal={modalOpen}
+	class:behind-game-overlay={sceneOverlayActive}
 	class:dimmed
 	style={styleStr}
 	aria-hidden="true"
@@ -427,6 +439,12 @@
 
 		&.behind-modal {
 			z-index: 0;
+		}
+
+		&.behind-game-overlay {
+			z-index: 0;
+			opacity: 0;
+			transform: translate3d(0, 0, 0) scale(1);
 		}
 
 		&.dimmed {
