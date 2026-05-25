@@ -15,14 +15,14 @@
  */
 
 export const PAYOUT_TABLE = {
-  H1: [10, 25, 50],
-  H2: [5,  15, 25],
-  H3: [4,  10, 20],
-  H4: [3,  8,  15],
-  L1: [1.5, 2.0,  12],
-  L2: [1.2, 1.5,  10],
-  L3: [1.0, 1.25, 8],
-  L4: [0.4, 0.9,  4],
+  H1: [[8, 10], [9, 25], [12, 50], [15, 125], [20, 250], [30, 2500]],
+  H2: [[8, 8], [9, 20], [12, 40], [15, 100], [20, 200], [30, 2000]],
+  H3: [[8, 5], [9, 12], [12, 25], [15, 75], [20, 150], [30, 1500]],
+  H4: [[8, 3], [9, 8], [12, 15], [15, 50], [20, 100], [30, 1000]],
+  L1: [[8, 2], [9, 5], [12, 10], [15, 25], [20, 50], [30, 500]],
+  L2: [[8, 1.5], [9, 4], [12, 8], [15, 20], [20, 40], [30, 400]],
+  L3: [[8, 1], [9, 3], [12, 6], [15, 15], [20, 30], [30, 300]],
+  L4: [[8, 0.5], [9, 2], [12, 4], [15, 10], [20, 20], [30, 200]],
 };
 
 /** Symbols that count toward pay-anywhere wins (excludes S / M). */
@@ -31,14 +31,15 @@ export const PAYING_SYMBOLS = Object.keys(PAYOUT_TABLE);
 /** Minimum cluster size required for a win. */
 export const MIN_CLUSTER_SIZE = 8;
 
-const tierIndex = (count) => (count >= 12 ? 2 : count >= 10 ? 1 : 0);
-
 /** Per-unit-bet payout multiplier for `count` of `symbol`. */
 export const getPayoutMultiplier = (symbol, count) => {
   if (count < MIN_CLUSTER_SIZE) return 0;
   const tiers = PAYOUT_TABLE[symbol];
   if (!tiers) return 0;
-  return tiers[tierIndex(count)] ?? 0;
+  return tiers.reduce(
+    (best, [threshold, multiplier]) => (count >= threshold ? multiplier : best),
+    0,
+  );
 };
 
 /** Bet × paytable multiplier. */

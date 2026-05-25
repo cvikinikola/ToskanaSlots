@@ -81,6 +81,14 @@
 	onMount(() => {
 		if (!container) return;
 
+		const canvas = document.createElement('canvas');
+		const gl =
+			canvas.getContext('webgl2') ||
+			canvas.getContext('webgl') ||
+			canvas.getContext('experimental-webgl');
+
+		if (!gl) return;
+
 		let disposed = false;
 		let raf = 0;
 		let cleanup: (() => void) | null = null;
@@ -337,7 +345,9 @@
 			};
 		};
 
-		init();
+		init().catch((err) => {
+			console.warn('[ThorHammer3D] disabled:', err);
+		});
 
 		return () => {
 			disposed = true;

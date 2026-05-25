@@ -17,8 +17,10 @@
 
 	let audio: HTMLAudioElement | undefined = $state();
 	let armed = $state(false);
+	let pageActive = $state(true);
 
 	const musicVolume = $derived(stateSoundDerived.volumeMusic());
+	const targetVolume = $derived(pageActive ? Math.max(0, Math.min(1, musicVolume)) : 0);
 
 	function fadeTo(target: number) {
 		if (!audio) return;
@@ -42,7 +44,7 @@
 
 	$effect(() => {
 		if (!armed || !audio) return;
-		fadeTo(Math.max(0, Math.min(1, musicVolume)));
+		fadeTo(targetVolume);
 	});
 
 	onMount(() => {
@@ -53,7 +55,25 @@
 			events.forEach((e) => window.removeEventListener(e, handler));
 		};
 		events.forEach((e) => window.addEventListener(e, handler, { passive: true }));
-		return () => events.forEach((e) => window.removeEventListener(e, handler));
+
+		const updatePageActive = () => {
+			pageActive = document.visibilityState === 'visible' && document.hasFocus();
+		};
+		const pauseImmediately = () => fadeTo(0);
+
+		updatePageActive();
+		document.addEventListener('visibilitychange', updatePageActive);
+		window.addEventListener('focus', updatePageActive);
+		window.addEventListener('blur', updatePageActive);
+		window.addEventListener('pagehide', pauseImmediately);
+
+		return () => {
+			events.forEach((e) => window.removeEventListener(e, handler));
+			document.removeEventListener('visibilitychange', updatePageActive);
+			window.removeEventListener('focus', updatePageActive);
+			window.removeEventListener('blur', updatePageActive);
+			window.removeEventListener('pagehide', pauseImmediately);
+		};
 	});
 </script>
 

@@ -32,7 +32,7 @@
 
 		/**
 		 * Set each requested symbol to 'win' state, await its animation callback,
-		 * then put it back to 'postWinStatic'.
+		 * then restore normal rendering.
 		 * All symbols animate in parallel.
 		 */
 		boardWithAnimateSymbols: async ({ symbolPositions }) => {
@@ -52,9 +52,10 @@
 					// visible row 0 is at array index 1.
 					const reelSymbol =
 						context.stateGame.board[position.reel].reelState.symbols[position.row + 1];
+					if (!reelSymbol) return;
 					reelSymbol.symbolState = 'win';
 					await waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
-					reelSymbol.symbolState = 'postWinStatic';
+					reelSymbol.symbolState = 'static';
 				});
 
 			await Promise.all(getPromises());

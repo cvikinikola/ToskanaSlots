@@ -20,7 +20,7 @@
 	/**
 	 * Visual feedback per state:
 	 *  - win:           bright tint + slight scale-up
-	 *  - postWinStatic: dimmed
+	 *  - postWinStatic: full colour fallback after win animation
 	 *  - explosion:     red flash, fires oncomplete after 400ms
 	 *  - default:       full colour
 	 */
@@ -28,7 +28,7 @@
 		props.state === 'win'
 			? 0xffffff
 			: props.state === 'postWinStatic'
-				? 0x666666
+				? 0xffffff
 				: props.state === 'explosion'
 					? 0xff5555
 					: 0xffffff,

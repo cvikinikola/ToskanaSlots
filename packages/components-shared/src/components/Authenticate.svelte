@@ -63,9 +63,14 @@
 				stateConfig.betAmountOptions = (authenticateData.config?.betLevels || []).map(
 					(level) => level / API_AMOUNT_MULTIPLIER,
 				);
-				stateConfig.betMenuOptions = stateConfig.betAmountOptions.filter((_, index) =>
+				const commonBetMenuOptions = stateConfig.betAmountOptions.filter((_, index) =>
 					MOST_USED_BET_INDEXES.includes(index),
 				);
+				const maxBetOption = stateConfig.betAmountOptions.at(-1);
+				stateConfig.betMenuOptions =
+					maxBetOption === undefined || commonBetMenuOptions.includes(maxBetOption)
+						? commonBetMenuOptions
+						: [...commonBetMenuOptions, maxBetOption];
 			}
 
 			// round

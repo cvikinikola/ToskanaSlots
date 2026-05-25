@@ -16,8 +16,6 @@ import { runBaseSpin, runBonusBuy } from './math/index.js';
 
 // ─── Tuning ──────────────────────────────────────────────────────────────────
 
-const TARGET_RTP = 0.97;
-const CALIBRATION_ROUNDS = 20000;
 const BONUS_BUY_COST_MULT = 100;
 const BET_MODE_COST_MULTIPLIER = {
   BASE: 1,
@@ -31,36 +29,7 @@ const BONUS_ROUND_MODES = new Set(['BONUS', 'SUPER']);
 
 // ─── RTP calibration ─────────────────────────────────────────────────────────
 
-const calibrateMode = (mode) => {
-  let totalWin = 0;
-  for (let i = 0; i < CALIBRATION_ROUNDS; i++) {
-    const r = mode === 'BONUS'
-      ? runBonusBuy({ betAmount: 1, scale: 1 })
-      : runBaseSpin({ betAmount: 1, scale: 1 });
-    totalWin += r.totalWin;
-  }
-  const denominator = mode === 'BONUS' ? BONUS_BUY_COST_MULT : 1;
-  const rawRtp = totalWin / CALIBRATION_ROUNDS / denominator;
-  if (rawRtp <= 0) return 1;
-  const scale = TARGET_RTP / rawRtp;
-  // eslint-disable-next-line no-console
-  console.log(
-    '[mock-rgs] RTP calibration mode=%s raw=%s%% target=%s%% scale=%s',
-    mode,
-    (rawRtp * 100).toFixed(2),
-    (TARGET_RTP * 100).toFixed(2),
-    scale.toFixed(4),
-  );
-  return scale;
-};
-
-let CACHED_SCALES = null;
-export const getScale = (mode) => {
-  if (CACHED_SCALES === null) {
-    CACHED_SCALES = { BASE: calibrateMode('BASE'), BONUS: calibrateMode('BONUS') };
-  }
-  return CACHED_SCALES[mode] ?? CACHED_SCALES.BASE;
-};
+export const getScale = () => 1;
 
 // ─── Round (used by both the Vite plugin and gen-books.mjs) ──────────────────
 
@@ -80,11 +49,6 @@ export const mockRgsPlugin = () => ({
   apply: 'serve',
 
   configureServer(server) {
-    // Pre-warm calibration scales at server startup so the first /wallet/play
-    // request doesn't block the event loop while running 20 000 simulated rounds.
-    getScale('BASE');
-    getScale('BONUS');
-
     const sendJson = (res, data) => {
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*');
