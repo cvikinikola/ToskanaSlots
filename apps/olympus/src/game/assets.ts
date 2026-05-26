@@ -42,6 +42,7 @@ const assets = {
 	menu_panel_lg: sprite(`${MENU_BAR}/panel_lg.png`),
 	menu_panel_md: sprite(`${MENU_BAR}/panel_md.png`),
 	menu_panel_sm: sprite(`${MENU_BAR}/panel_sm.png`),
+	menu_frame: sprite(`${MENU_BAR}/frame.png`),
 	menu_plus: sprite(`${MENU_BAR}/plus_icon.png`),
 	menu_minus: sprite(`${MENU_BAR}/minus_icon.png`),
 	menu_stop: sprite(`${MENU_BAR}/stop_icon.png`),

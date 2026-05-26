@@ -4,8 +4,6 @@
 	import { gameActor } from '../game/actor';
 	import { getContext } from '../game/context';
 
-	type Props = { debug?: boolean };
-	const props: Props = $props();
 	const context = getContext();
 
 	onMount(() => {

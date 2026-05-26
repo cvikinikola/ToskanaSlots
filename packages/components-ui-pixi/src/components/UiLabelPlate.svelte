@@ -31,12 +31,12 @@
 		anchor,
 		width,
 		height,
-		borderRadius,
-		backgroundColor = 0x0a0c1a,
-		backgroundAlpha = 0.94,
-		borderColor = 0xffd147,
-		borderWidth = 2.5,
-		borderAlpha = 1,
+		borderRadius: _borderRadius,
+		backgroundColor: _backgroundColor,
+		backgroundAlpha: _backgroundAlpha,
+		borderColor: _borderColor,
+		borderWidth: _borderWidth,
+		borderAlpha: _borderAlpha,
 		...spriteProps
 	}: Props = $props();
 </script>

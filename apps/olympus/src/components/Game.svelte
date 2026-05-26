@@ -5,7 +5,6 @@
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
 	import { App, REM } from 'pixi-svelte';
-	import { stateModal } from 'state-shared';
 
 	import { UI, UiAssetSprite } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
@@ -69,12 +68,12 @@
 		<MainContainer>
 			<ReelFramePanel />
 			<Board />
-			<TumbleWinAmount />
 			<GlobalMultiplier />
 		</MainContainer>
 
 		<MainContainer>
 			<TumbleBoard />
+			<TumbleWinAmount />
 		</MainContainer>
 
 		<WinSparks />

@@ -33,7 +33,7 @@
 					/>
 				{/snippet}
 			</BaseScrollable>
-			<BaseButtonWrap type="full-width">
+			<BaseButtonWrap type="max-width">
 				<AutoSpinsStartButton />
 			</BaseButtonWrap>
 		</BaseContent>

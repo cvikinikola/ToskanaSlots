@@ -15,9 +15,7 @@
 
 	const props: Props = $props();
 
-	let showLoader = $state(false);
-
-	const loaderUrlStakeEngine = new URL('../../stake-engine-loader.gif', import.meta.url).href;
+	const loaderUrlStakeEngine = '/stake-engine-loader.gif';
 
 	setContext();
 </script>
@@ -42,7 +40,7 @@
      hammer appears to spin *behind* the card rather than over it. -->
 <FreeSpinCounterHTML />
 
-<LoaderStakeEngine src={loaderUrlStakeEngine} oncomplete={() => (showLoader = true)} />
+<LoaderStakeEngine src={loaderUrlStakeEngine} />
 
 <VikingMusic />
 

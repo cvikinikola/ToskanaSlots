@@ -12,6 +12,7 @@
 	import { getContext } from '../game/context';
 	import type { Position } from '../game/types';
 	import { SYMBOL_SIZE, BOARD_SIZES } from '../game/constants';
+	import { getSymbolX, getSymbolY } from '../game/utils';
 
 	const context = getContext();
 
@@ -56,8 +57,8 @@
 
 	function symCenter(reel: number, row: number) {
 		return {
-			x: -BOARD_SIZES.width / 2 + reel * SYMBOL_SIZE + SYMBOL_SIZE / 2,
-			y: -BOARD_SIZES.height / 2 + row * SYMBOL_SIZE + SYMBOL_SIZE / 2,
+			x: getSymbolX(reel) - BOARD_SIZES.width / 2,
+			y: getSymbolY(row) - BOARD_SIZES.height / 2,
 		};
 	}
 </script>
@@ -77,7 +78,7 @@
 					const r = SYMBOL_SIZE * (0.55 + pulse * 0.08);
 					// Outer soft halo
 					g.circle(c.x, c.y, r * 1.25);
-					g.fill({ color: 0xffd147, alpha: 0.10 + pulse * 0.10 });
+					g.fill({ color: 0xffd147, alpha: 0.1 + pulse * 0.1 });
 					// Mid halo
 					g.circle(c.x, c.y, r);
 					g.fill({ color: 0xffd147, alpha: 0.18 + pulse * 0.18 });

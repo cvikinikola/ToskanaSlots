@@ -25,35 +25,48 @@
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, BOARD_SIZES, FRAME_PANEL_PAD } from '../game/constants';
+	import { SYMBOL_SIZE, BOARD_SIZES, REEL_FRAME_OFFSET, REEL_FRAME_SIZES } from '../game/constants';
 
 	const context = getContext();
 
 	const PANEL_W = SYMBOL_SIZE * 3.55;
 	const PANEL_H = SYMBOL_SIZE * 0.92;
+	const FREE_SPINS_TOP_GAP = SYMBOL_SIZE * 0.11;
 
 	const HEADER_Y = SYMBOL_SIZE * 0.34;
 	const BREAKDOWN_Y = SYMBOL_SIZE * 0.61;
 	const BREAKDOWN_ICON_SIZE = SYMBOL_SIZE * 0.22;
 
 	const isStacked = $derived(context.stateLayoutDerived.isStacked());
+	const isFreeSpins = $derived(context.stateGame.gameType === 'freeSpins');
 
 	let show = $state(false);
 	let breakdownLines: TumbleWinBreakdownLine[] = $state([]);
 
 	const countUpAmount = new Tween(0);
 
-	const position = $derived(
-		isStacked
-			? {
-					x: BOARD_SIZES.width + FRAME_PANEL_PAD + SYMBOL_SIZE * 0.04 - PANEL_W,
-					y: -PANEL_H - SYMBOL_SIZE * 0.42,
-				}
-			: {
-					x: BOARD_SIZES.width / 2 - PANEL_W / 2,
-					y: BOARD_SIZES.height + SYMBOL_SIZE * 0.32, // povecano sa 0.2 na 0.32
-				},
-	);
+	const frameBounds = $derived({
+		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
+		right: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
+		top: BOARD_SIZES.height / 2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
+		bottom: BOARD_SIZES.height / 2 + REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
+	});
+
+	const position = $derived.by(() => {
+		const x = BOARD_SIZES.width / 2 - PANEL_W / 2;
+
+		if (isFreeSpins) {
+			return {
+				x,
+				y: frameBounds.top + FREE_SPINS_TOP_GAP,
+			};
+		}
+
+		return {
+			x,
+			y: frameBounds.bottom + SYMBOL_SIZE * (isStacked ? 0.1 : 0.08),
+		};
+	});
 
 	context.eventEmitter.subscribeOnMount({
 		tumbleWinAmountShow: () => {
@@ -89,6 +102,7 @@
 	<BoardContainer>
 		<Container {...position}>
 			<UiAssetSprite
+				key="menu_panel_md"
 				assetKey="menu_panel_md"
 				anchor={{ x: 0, y: 0 }}
 				width={PANEL_W}
@@ -139,6 +153,7 @@
 				/>
 
 				<UiAssetSprite
+					key={`sym_${line.symbol.toLowerCase()}`}
 					assetKey={`sym_${line.symbol.toLowerCase()}`}
 					anchor={0.5}
 					x={SYMBOL_SIZE * 1.44}
@@ -149,7 +164,7 @@
 
 				<BitmapText
 					anchor={{ x: 0, y: 0.5 }}
-					x={SYMBOL_SIZE * 1.70}
+					x={SYMBOL_SIZE * 1.7}
 					y={BREAKDOWN_Y}
 					text={`Pays ${bookEventAmountToCurrencyString(line.amount)}`}
 					style={{

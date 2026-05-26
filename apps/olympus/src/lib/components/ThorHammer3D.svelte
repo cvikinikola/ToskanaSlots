@@ -47,16 +47,19 @@
 			(mainLayout.height * board.center.y - mainLayout.height * 0.5) * scale;
 
 		if (layoutType === 'portrait' || layoutType === 'tablet') {
-			const TOP_PAD = 2;
-			const GAP = 64;
+			   const TOP_PAD = 2;
+			   const GAP = 0;
 			const frameTop = frameCy - frameH / 2;
 			const availableH = Math.max(70, frameTop - TOP_PAD - GAP);
 			const h = Math.min(availableH * 0.92, canvasSizes.height * 0.19);
 			const w = h * 0.72;
-			const left = Math.max(0, frameCx - w / 2);
-			const top = Math.max(TOP_PAD, frameTop - h - GAP);
+			   // Centriraj čekić iznad frame-a
+			   const left = frameCx - w / 2;
+			   // Spusti čekić da mu donji deo bude tik iznad frame-a
+			   const OVERLAP = 0.18 * h; // veće preklapanje
+			   const top = frameTop - h + OVERLAP;
 
-			return { mode: 'side', left, top, width: w, height: h };
+			   return { mode: 'side', left, top, width: w, height: h };
 		}
 
 		// Desktop / landscape: touch the LEFT edge of the reel frame.
@@ -105,7 +108,6 @@
 		let camera: import('three').PerspectiveCamera | null = null;
 		let hammer: import('three').Object3D | null = null;
 
-		let baseY = 0;
 		const startTime = performance.now();
 
 		const init = async () => {
@@ -266,10 +268,6 @@
 				// Pose: stand vertical, very subtle lean towards camera.
 				hammer.rotation.x = -0.05;
 				hammer.rotation.z = 0;
-
-				baseY = hammer.position.y;
-
-				
 
 				scene.add(hammer);
 				modelReady = true;

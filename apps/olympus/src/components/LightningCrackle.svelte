@@ -134,7 +134,7 @@
 	// Animation loop — fade bolts and flash.
 	$effect(() => {
 		let raf = 0;
-		const tick = (t: number) => {
+		const tick = () => {
 			const now = performance.now();
 			if (bolts.length) {
 				bolts = bolts.filter((b) => now - b.born < b.life);

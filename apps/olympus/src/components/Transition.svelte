@@ -4,12 +4,10 @@
 
 <script lang="ts">
 	import { waitForTimeout } from 'utils-shared/wait';
-	import { Rectangle } from 'pixi-svelte';
 	import { CanvasSizeRectangle } from 'components-layout';
 
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
-	import { SECOND } from 'constants-shared/time';
 
 	const context = getContext();
 

@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import { sound, type MusicName, type SoundEffectName, type SoundName } from '../game/sound';
+	import type { MusicName, SoundEffectName, SoundName } from '../game/sound';
 
 	export type EmitterEventSound =
 		| { type: 'soundMusic'; name: MusicName }

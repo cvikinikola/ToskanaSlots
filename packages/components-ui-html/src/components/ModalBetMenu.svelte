@@ -29,7 +29,7 @@
 				<BetMenuAmountToggle />
 				<BetMenuAmountGrid />
 			</BaseScrollable>
-			<BaseButtonWrap type="full-width">
+			<BaseButtonWrap type="max-width">
 				<Button data-test="confirm-button" onclick={confirm}>
 					<BaseIcon width="100%" height="3rem" />
 					<BaseButtonContent>

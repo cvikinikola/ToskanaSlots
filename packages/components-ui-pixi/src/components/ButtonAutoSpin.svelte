@@ -23,7 +23,8 @@
 	const openModal = () => (stateModal.modal = { name: 'autoSpin' });
 	const onpress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		stateBetDerived.hasAutoBetCounter() ? stopAutoSpin() : openModal();
+		if (stateBetDerived.hasAutoBetCounter()) stopAutoSpin();
+		else openModal();
 	};
 </script>
 

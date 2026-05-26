@@ -12,9 +12,23 @@ export const REEL_PADDING = 0.53;
 /** Visible grid: 6 reels × 5 rows */
 export const BOARD_DIMENSIONS = { x: 6, y: 5 };
 
+export const SYMBOL_STEP_X = SYMBOL_SIZE * 1.15;
+
 export const BOARD_SIZES = {
-	width: SYMBOL_SIZE * BOARD_DIMENSIONS.x,
+	width: SYMBOL_STEP_X * (BOARD_DIMENSIONS.x - 1) + SYMBOL_SIZE,
 	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
+};
+
+/** Artwork footprint for the wide menuBar/frame.png reel surround. */
+export const REEL_FRAME_SIZES = {
+	width: SYMBOL_SIZE * 10.7,
+	height: SYMBOL_SIZE * 7.25, // povećano za 0.5 * SYMBOL_SIZE
+};
+
+/** Native offset for the wide frame art relative to the slot grid centre. */
+export const REEL_FRAME_OFFSET = {
+	x: 0,
+	y: 0,
 };
 
 /**
@@ -74,10 +88,10 @@ export const BOARD_LAYOUT_BY_TYPE: Record<
 	// Tighter desktop/landscape sizing: matches the original sprite-frame
 	// footprint (~45% canvas width, ~55% canvas height) and sits clearly
 	// above the BALANCE / WIN / BET row + button row at the bottom.
-	desktop:   { center: { x: 0.5, y: 0.36 }, fit: { w: 0.42, h: 0.55 } },
-	landscape: { center: { x: 0.5, y: 0.36 }, fit: { w: 0.42, h: 0.55 } },
-	tablet:    { center: { x: 0.5, y: 0.44 }, fit: { w: 0.72, h: 0.46 } },
-	portrait:  { center: { x: 0.5, y: 0.50 }, fit: { w: 0.86, h: 0.42 } },
+	desktop:   { center: { x: 0.5, y: 0.35 }, fit: { w: 0.68, h: 0.70 } },
+	landscape: { center: { x: 0.5, y: 0.35 }, fit: { w: 0.68, h: 0.70 } },
+	tablet:    { center: { x: 0.5, y: 0.44 }, fit: { w: 0.97, h: 0.68 } },
+	portrait:  { center: { x: 0.5, y: 0.44 }, fit: { w: 0.99, h: 0.68 } },
 };
 
 export const getBoardCenterFraction = (layoutType: LayoutType) =>
@@ -178,7 +192,7 @@ export const getBoardCenterMain = (
 	const cfg = BOARD_LAYOUT_BY_TYPE[layoutType];
 	const fitW = mainLayout.width * cfg.fit.w;
 	const fitH = mainLayout.height * cfg.fit.h;
-	const scale = Math.min(fitW / BOARD_SIZES.width, fitH / BOARD_SIZES.height);
+	const scale = Math.min(fitW / REEL_FRAME_SIZES.width, fitH / REEL_FRAME_SIZES.height);
 	return {
 		x: mainLayout.width * cfg.center.x,
 		y: mainLayout.height * cfg.center.y,

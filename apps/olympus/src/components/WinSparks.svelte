@@ -1,6 +1,10 @@
 <script lang="ts" module>
-	export type EmitterEventWinSparks =
-		| { type: 'winSparksBurst'; x: number; y: number; intensity?: number };
+	export type EmitterEventWinSparks = {
+		type: 'winSparksBurst';
+		x: number;
+		y: number;
+		intensity?: number;
+	};
 </script>
 
 <script lang="ts">
@@ -8,7 +12,8 @@
 	import { MainContainer } from 'components-layout';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, BOARD_SIZES } from '../game/constants';
+	import { BOARD_SIZES } from '../game/constants';
+	import { getSymbolX, getSymbolY } from '../game/utils';
 
 	const context = getContext();
 
@@ -58,8 +63,8 @@
 		const boardX0 = board.x - (BOARD_SIZES.width * s) / 2;
 		const boardY0 = board.y - (BOARD_SIZES.height * s) / 2;
 		return {
-			x: boardX0 + (reel * SYMBOL_SIZE + SYMBOL_SIZE / 2) * s,
-			y: boardY0 + (row * SYMBOL_SIZE + SYMBOL_SIZE / 2) * s,
+			x: boardX0 + getSymbolX(reel) * s,
+			y: boardY0 + getSymbolY(row) * s,
 		};
 	}
 

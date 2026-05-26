@@ -24,7 +24,6 @@
 	import BoardMask from './BoardMask.svelte';
 	import { getSymbolY } from '../game/utils';
 	import { getContext } from '../game/context';
-	import type { TumbleSymbol } from '../game/stateGame.svelte';
 	import type { RawSymbol } from '../game/types';
 
 	const context = getContext();

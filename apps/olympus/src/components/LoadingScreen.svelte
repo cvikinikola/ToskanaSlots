@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Container, BitmapText, Sprite } from 'pixi-svelte';
-	import { FadeContainer, LoadingProgress } from 'components-pixi';
+	import { FadeContainer } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
 	import { OnHotkey } from 'components-shared';
 	import { OnPressFullScreen } from 'components-layout';
