@@ -94,8 +94,18 @@
 		let camera: import('three').PerspectiveCamera | null = null;
 		let thor: import('three').Object3D | null = null;
 		let mixer: import('three').AnimationMixer | null = null;
+		let heroBones: {
+			spine?: import('three').Object3D;
+			chest?: import('three').Object3D;
+			neck?: import('three').Object3D;
+			head?: import('three').Object3D;
+			leftClavicle?: import('three').Object3D;
+			rightClavicle?: import('three').Object3D;
+		} = {};
 
 		let baseY = 0;
+		let baseScale = 1;
+		const HERO_ROTATION_Y = 0.18;
 		const startTime = performance.now();
 		let lastTime = startTime;
 
@@ -237,6 +247,7 @@
 				// flanking the frame visually align.
 				const targetHeight = 2.2;
 				const scale = targetHeight / (size.y || 1);
+				baseScale = scale;
 
 				thor.scale.setScalar(scale);
 
@@ -268,9 +279,17 @@
 
 				// Face the camera directly so the player meets his eyes — a
 				// micro-rotation toward the reels keeps him from looking static.
-				thor.rotation.y = -0.08;
+				thor.rotation.y = HERO_ROTATION_Y;
 
 				baseY = thor.position.y;
+				heroBones = {
+					spine: thor.getObjectByName('spine_03_425') ?? undefined,
+					chest: thor.getObjectByName('spine_05_419') ?? undefined,
+					neck: thor.getObjectByName('neck_01_407') ?? undefined,
+					head: thor.getObjectByName('head_405') ?? undefined,
+					leftClavicle: thor.getObjectByName('clavicle_l_93') ?? undefined,
+					rightClavicle: thor.getObjectByName('clavicle_r_201') ?? undefined,
+				};
 
 				// Play any baked-in animations so he feels alive (idle / breathing).
 				if (gltf.animations && gltf.animations.length > 0) {
@@ -278,10 +297,14 @@
 					// Play every clip at half weight blended — for most rigged Thor
 					// exports there's a single idle clip; the loop still works fine
 					// when multiple are present.
-					for (const clip of gltf.animations) {
-						const action = mixer.clipAction(clip);
-						action.play();
-					}
+					const clip =
+						gltf.animations.find((animation) => animation.name === 'Like_Personality') ??
+						gltf.animations.find((animation) => animation.name === 'Idle_C') ??
+						gltf.animations[0];
+					const action = mixer.clipAction(clip);
+					action.setEffectiveWeight(1);
+					action.timeScale = 0.85;
+					action.play();
 				}
 
 				scene.add(thor);
@@ -323,17 +346,30 @@
 				if (thor) {
 					// Gentle walk cycle — head bob + shoulder sway, nothing else
 					const WALK = 2.2; // rad/s → ~1 stride every 2.9 s (majestic pace)
-					const bobY = Math.sin(t * WALK * 2) * 0.009; // bobs twice per stride
-					const rotY = -0.08 + Math.sin(t * WALK) * 0.022; // shoulder sway
-					const rotX = Math.sin(t * WALK * 2) * 0.005; // subtle forward/back nod
+					const breath = Math.sin(t * WALK * 0.7);
+					const stance = Math.sin(t * WALK * 0.28);
+					const accent = Math.max(0, Math.sin(t * WALK * 0.37)) ** 4;
 
-					thor.position.y = baseY + bobY;
-					thor.rotation.y = rotY;
-					thor.rotation.x = rotX;
-					thor.scale.set(1, 1, 1);
+					thor.position.y = baseY + breath * 0.012 + accent * 0.018;
+					thor.rotation.y = HERO_ROTATION_Y + stance * 0.035;
+					thor.rotation.x = -0.015 + breath * 0.012;
+					thor.rotation.z = Math.sin(t * WALK * 0.22) * 0.012;
+					thor.scale.set(
+						baseScale * (1 + accent * 0.014),
+						baseScale * (1 + breath * 0.018 + accent * 0.02),
+						baseScale * (1 - breath * 0.01),
+					);
+
+					if (heroBones.spine) heroBones.spine.rotation.z += stance * 0.025;
+					if (heroBones.chest) heroBones.chest.rotation.x += breath * 0.025;
+					if (heroBones.neck) heroBones.neck.rotation.x += -0.035 + accent * 0.025;
+					if (heroBones.head) heroBones.head.rotation.y += -stance * 0.035;
+					if (heroBones.leftClavicle) heroBones.leftClavicle.rotation.z += 0.035 + accent * 0.04;
+					if (heroBones.rightClavicle) heroBones.rightClavicle.rotation.z -= 0.025 + accent * 0.035;
 				}
 
-				lightningGlow.intensity = 1.4 + Math.sin(t * 5) * 0.6;
+				lightningGlow.intensity =
+					1.35 + Math.sin(t * 5) * 0.45 + Math.max(0, Math.sin(t * 0.82)) ** 4 * 0.9;
 
 				if (renderer && scene && camera) {
 					renderer.render(scene, camera);
