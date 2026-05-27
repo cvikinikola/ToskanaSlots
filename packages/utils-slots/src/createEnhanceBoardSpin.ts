@@ -63,9 +63,9 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 				noStop,
 				spinType,
 				symbols,
-				// @ts-ignore Ignored because paddingReel is not required by createCascadingReel
+				// @ts-expect-error Ignored because paddingReel is not required by createCascadingReel
 				paddingReel,
-				// @ts-ignore Ignored because paddingPosition is not required by createCascadingReel
+				// @ts-expect-error Ignored because paddingPosition is not required by createCascadingReel
 				paddingPosition,
 				previousPaddingSize,
 				onSpinFinishing: () => {

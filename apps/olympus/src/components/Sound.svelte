@@ -13,6 +13,7 @@
 
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { stateSoundDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -21,6 +22,9 @@
 	const activeAudios = new Set<HTMLAudioElement>();
 	let pageActive = $state(true);
 	let lastThunderAt = 0;
+	const soundEffectVolume = $derived(
+		Math.max(0, Math.min(1, stateSoundDerived.volumeSoundEffect())),
+	);
 
 	const updatePageActive = () => {
 		pageActive = document.visibilityState === 'visible' && document.hasFocus();
@@ -37,9 +41,10 @@
 
 	const playAudio = (src: string, volume = 1) => {
 		if (!pageActive) return;
+		if (soundEffectVolume <= 0) return;
 
 		const audio = new Audio(src);
-		audio.volume = volume;
+		audio.volume = Math.max(0, Math.min(1, volume * soundEffectVolume));
 		activeAudios.add(audio);
 
 		const cleanup = () => activeAudios.delete(audio);
@@ -47,6 +52,10 @@
 		audio.addEventListener('pause', cleanup, { once: true });
 		audio.play().catch(cleanup);
 	};
+
+	$effect(() => {
+		if (soundEffectVolume <= 0) pauseActiveAudios();
+	});
 
 	onMount(() => {
 		updatePageActive();

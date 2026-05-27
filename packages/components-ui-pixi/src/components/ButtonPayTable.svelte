@@ -9,8 +9,8 @@
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
 	const sizes = $derived({
-		width: UI_BASE_SIZE * 1.3,
-		height: UI_BASE_SIZE * 1.3,
+		width: UI_BASE_SIZE,
+		height: UI_BASE_SIZE,
 	});
 
 	const onpress = () => {

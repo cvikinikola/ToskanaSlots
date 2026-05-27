@@ -33,10 +33,11 @@
 		autoSpin: 'menu_auto_spin',
 	};
 
-	const imageKey = $derived(iconAssetMap[icon]);
+	const defaultImageKey = $derived(iconAssetMap[icon]);
+	const imageKey = $derived(active && icon === 'turbo' ? 'menu_turbo_active' : defaultImageKey);
 	const isWideImage = $derived(['turbo', 'autoSpin'].includes(icon));
-	const imageWidth = $derived(buttonProps.sizes.width * (isWideImage ? 1.12 : 0.92));
-	const imageHeight = $derived(buttonProps.sizes.height * (isWideImage ? 0.8 : 0.92));
+	const imageWidth = $derived(buttonProps.sizes.width * (isWideImage ? 1.12 : 1.14));
+	const imageHeight = $derived(buttonProps.sizes.height * 0.82);
 	const text = $derived(i18nDerived[icon]());
 	const compactText = $derived(buttonProps.sizes.width <= UI_BASE_SIZE * 1.35);
 	const textFontSize = $derived(UI_BASE_FONT_SIZE * (compactText ? 0.56 : 0.85));
@@ -50,7 +51,13 @@
 				scale={(pressed ? 0.94 : hovered ? 1.04 : 1) * (active ? 1.04 : 1)}
 				alpha={buttonProps.disabled ? 0.48 : 1}
 			>
-				<UiAssetSprite assetKey={imageKey} anchor={0.5} width={imageWidth} height={imageHeight} />
+				<UiAssetSprite
+					assetKey={imageKey}
+					fallbackAssetKey={defaultImageKey}
+					anchor={0.5}
+					width={imageWidth}
+					height={imageHeight}
+				/>
 			</Container>
 		{:else}
 			<UiButtonPlate

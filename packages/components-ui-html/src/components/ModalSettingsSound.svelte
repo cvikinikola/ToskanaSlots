@@ -15,7 +15,6 @@
 
 	let { value = $bindable(), children }: Props = $props();
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
-	const ICONS = { on: 'volumeOn', off: 'volumeOff' } as const;
 </script>
 
 <div class="col">
@@ -60,22 +59,26 @@
 		display: flex;
 		flex-direction: row;
 		gap: 0.5rem;
+		align-items: center;
 	}
 
 	.button-wrap {
-		width: 15%;
+		width: 5.25rem;
+		height: 3rem;
+		flex: 0 0 5.25rem;
 		display: flex;
 		align-items: center;
 	}
 
 	.range {
-		width: 70%;
+		flex: 1 1 auto;
 		display: flex;
 		align-items: center;
 	}
 
 	.value {
-		width: 15%;
+		width: 3.5rem;
+		flex: 0 0 3.5rem;
 		display: flex;
 		justify-content: center;
 		align-items: center;

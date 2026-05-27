@@ -2,6 +2,7 @@ import type { EmitterEventBoard } from '../components/Board.svelte';
 import type { EmitterEventTumbleBoard } from '../components/TumbleBoard.svelte';
 import type { EmitterEventGlobalMultiplier } from '../components/GlobalMultiplier.svelte';
 import type { EmitterEventTumbleWinAmount } from '../components/TumbleWinAmount.svelte';
+import type { EmitterEventTumbleHistory } from '../components/TumbleHistory.svelte';
 import type { EmitterEventFreeSpinIntro } from '../components/FreeSpinIntro.svelte';
 import type { EmitterEventFreeSpinCounter } from '../components/FreeSpinCounter.svelte';
 import type { EmitterEventFreeSpinOutro } from '../components/FreeSpinOutro.svelte';
@@ -21,6 +22,7 @@ export type EmitterEventGame =
 	| EmitterEventTumbleBoard
 	| EmitterEventGlobalMultiplier
 	| EmitterEventTumbleWinAmount
+	| EmitterEventTumbleHistory
 	| EmitterEventFreeSpinIntro
 	| EmitterEventFreeSpinCounter
 	| EmitterEventFreeSpinOutro

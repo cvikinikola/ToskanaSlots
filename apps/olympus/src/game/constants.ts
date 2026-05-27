@@ -91,7 +91,7 @@ export const BOARD_LAYOUT_BY_TYPE: Record<
 	desktop:   { center: { x: 0.5, y: 0.35 }, fit: { w: 0.68, h: 0.70 } },
 	landscape: { center: { x: 0.5, y: 0.35 }, fit: { w: 0.68, h: 0.70 } },
 	tablet:    { center: { x: 0.5, y: 0.44 }, fit: { w: 0.97, h: 0.68 } },
-	portrait:  { center: { x: 0.5, y: 0.44 }, fit: { w: 0.99, h: 0.68 } },
+	portrait:  { center: { x: 0.5, y: 0.48 }, fit: { w: 1.2, h: 1.0 } },
 };
 
 export const getBoardCenterFraction = (layoutType: LayoutType) =>
@@ -247,16 +247,16 @@ export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 // ─── Cascade (fall) physics ───────────────────────────────────────────────────
 
 export const SPIN_OPTIONS_DEFAULT = {
-	symbolFallInSpeed: 5,
-	symbolFallInInterval: 40,
-	symbolFallInBounceSpeed: 2,
-	symbolFallInBounceSizeMulti: 0.1,
-	symbolFallOutSpeed: 8,
-	symbolFallOutInterval: 20,
-	reelFallInDelay: 60,
-	reelPaddingMultiplierNormal: 1.5,
-	reelPaddingMultiplierAnticipated: 3,
-	reelFallOutDelay: 40,
+    symbolFallInSpeed: 5,
+    symbolFallInInterval: 80,
+    symbolFallInBounceSpeed: 2,
+    symbolFallInBounceSizeMulti: 0.1,
+    symbolFallOutSpeed: 8,
+    symbolFallOutInterval: 40,
+    reelFallInDelay: 120,
+    reelPaddingMultiplierNormal: 1.5,
+    reelPaddingMultiplierAnticipated: 3,
+    reelFallOutDelay: 80,
 };
 
 export const SPIN_OPTIONS_FAST = {

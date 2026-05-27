@@ -122,7 +122,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		updateSymbols(targetSymbols);
 
 		await moveAllSymbolsWith(async (reelSymbol) => {
-			const newSymbolY = getSymbolY(reelSymbol.symbolIndexOfBoard - reelLength + 0.5);
+			const newSymbolY = getSymbolY(reelSymbol.symbolIndexOfBoard - reelLength);
 			const duration = 0;
 
 			await reelSymbol.symbolY.set(newSymbolY, { duration });
@@ -164,15 +164,13 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 			});
 			reelSymbol.symbolState = 'land' as TSymbolState;
 			reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol });
-			if (reelSymbol.symbolIndexOfBoard === reelLengthInBoard - 1) {
-				onSpinFinishing();
-			}
 			await reelSymbol.symbolY.set(newSymbolY, {
 				duration: bounceDuration,
 				easing: backOut,
 			});
 		});
 
+		onSpinFinishing();
 		reelState.motion = 'stopped';
 		reelState.symbols.forEach((reelSymbol) => {
 			reelSymbol.symbolState = 'static' as TSymbolState;

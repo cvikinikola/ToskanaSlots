@@ -8,13 +8,12 @@
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
-	const sizes = { width: UI_BASE_SIZE * 1.3, height: UI_BASE_SIZE * 1.3 };
+	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
 
 	const onpress = () => {
-		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-
 		if (stateSound.volumeValueMaster === 0) {
 			stateSound.volumeValueMaster = 50;
+			context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
 		} else {
 			stateSound.volumeValueMaster = 0;
 		}

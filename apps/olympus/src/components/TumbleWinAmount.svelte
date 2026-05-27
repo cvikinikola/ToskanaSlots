@@ -16,12 +16,10 @@
 </script>
 
 <script lang="ts">
-	import { Tween } from 'svelte/motion';
 	import { Container, BitmapText } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { UiAssetSprite } from 'components-ui-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
-	import { SECOND } from 'constants-shared/time';
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
@@ -29,21 +27,28 @@
 
 	const context = getContext();
 
-	const PANEL_W = SYMBOL_SIZE * 3.55;
-	const PANEL_H = SYMBOL_SIZE * 0.92;
-	const FREE_SPINS_TOP_GAP = SYMBOL_SIZE * 0.11;
-
-	const HEADER_Y = SYMBOL_SIZE * 0.34;
-	const BREAKDOWN_Y = SYMBOL_SIZE * 0.61;
-	const BREAKDOWN_ICON_SIZE = SYMBOL_SIZE * 0.22;
+	const PANEL_W = SYMBOL_SIZE * 3.85;
+	const PANEL_H = SYMBOL_SIZE * 1.05;
+	const PANEL_W_STACKED = SYMBOL_SIZE * 3.34;
+	const PANEL_H_STACKED = SYMBOL_SIZE * 0.88;
+	const SYMBOL_ICON_SIZE = SYMBOL_SIZE * 0.34;
 
 	const isStacked = $derived(context.stateLayoutDerived.isStacked());
-	const isFreeSpins = $derived(context.stateGame.gameType === 'freeSpins');
 
 	let show = $state(false);
 	let breakdownLines: TumbleWinBreakdownLine[] = $state([]);
 
-	const countUpAmount = new Tween(0);
+	const panelWidth = $derived(isStacked ? PANEL_W_STACKED : PANEL_W);
+	const panelHeight = $derived(isStacked ? PANEL_H_STACKED : PANEL_H);
+	const currentTumbleAmount = $derived(
+		breakdownLines.reduce((total, line) => total + line.amount, 0),
+	);
+	const displayText = $derived.by(() => {
+		if (breakdownLines.length === 0) return '';
+		if (breakdownLines.length === 1) return '';
+		return `WIN WIN ${bookEventAmountToCurrencyString(currentTumbleAmount)}`;
+	});
+	const singleWinLine = $derived(breakdownLines.length === 1 ? breakdownLines[0] : undefined);
 
 	const frameBounds = $derived({
 		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
@@ -53,18 +58,11 @@
 	});
 
 	const position = $derived.by(() => {
-		const x = BOARD_SIZES.width / 2 - PANEL_W / 2;
-
-		if (isFreeSpins) {
-			return {
-				x,
-				y: frameBounds.top + FREE_SPINS_TOP_GAP,
-			};
-		}
+		const x = BOARD_SIZES.width / 2 - panelWidth / 2;
 
 		return {
 			x,
-			y: frameBounds.bottom + SYMBOL_SIZE * (isStacked ? 0.1 : 0.08),
+			y: frameBounds.bottom + SYMBOL_SIZE * (isStacked ? 0.04 : 0.05),
 		};
 	});
 
@@ -79,7 +77,6 @@
 		},
 
 		tumbleWinAmountReset: () => {
-			countUpAmount.set(0, { duration: 0 });
 			breakdownLines = [];
 		},
 
@@ -88,13 +85,7 @@
 			show = true;
 		},
 
-		tumbleWinAmountUpdate: async (emitterEvent) => {
-			if (countUpAmount.target === emitterEvent.amount) return;
-
-			await countUpAmount.set(emitterEvent.amount, {
-				duration: emitterEvent.animate ? 0.8 * SECOND : 0,
-			});
-		},
+		tumbleWinAmountUpdate: async () => {},
 	});
 </script>
 
@@ -105,72 +96,57 @@
 				key="menu_panel_md"
 				assetKey="menu_panel_md"
 				anchor={{ x: 0, y: 0 }}
-				width={PANEL_W}
-				height={PANEL_H}
+				width={panelWidth}
+				height={panelHeight}
 				alpha={0.98}
 			/>
 
-			<BitmapText
-				anchor={{ x: 0, y: 0.5 }}
-				x={SYMBOL_SIZE * 0.26}
-				y={HEADER_Y}
-				text="TUMBLE WIN"
-				style={{
-					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.16,
-					fill: 0xffd147,
-					fontWeight: '900',
-				}}
-			/>
-
-			<BitmapText
-				anchor={{ x: 1, y: 0.5 }}
-				x={PANEL_W - SYMBOL_SIZE * 0.28}
-				y={HEADER_Y}
-				text={bookEventAmountToCurrencyString(countUpAmount.current)}
-				style={{
-					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.28,
-					fill: 0xffd700,
-					fontWeight: '900',
-				}}
-			/>
-
-			{#if breakdownLines.length > 0}
-				{@const line = breakdownLines[0]}
-
+			{#if singleWinLine}
 				<BitmapText
-					anchor={{ x: 0, y: 0.5 }}
-					x={SYMBOL_SIZE * 0.96}
-					y={BREAKDOWN_Y}
-					text={`${line.count}x`}
+					anchor={{ x: 1, y: 0.5 }}
+					x={panelWidth * (isStacked ? 0.32 : 0.34)}
+					y={panelHeight * 0.52}
+					text={`${singleWinLine.count}x`}
 					style={{
 						fontFamily: 'proxima-nova',
-						fontSize: SYMBOL_SIZE * 0.16,
-						fill: 0xffffff,
+						fontSize: SYMBOL_SIZE * (isStacked ? 0.16 : 0.21),
+						fill: 0xffd700,
 						fontWeight: '900',
 					}}
 				/>
 
 				<UiAssetSprite
-					key={`sym_${line.symbol.toLowerCase()}`}
-					assetKey={`sym_${line.symbol.toLowerCase()}`}
+					key={`tumble_win_${singleWinLine.symbol.toLowerCase()}`}
+					assetKey={`sym_${singleWinLine.symbol.toLowerCase()}`}
 					anchor={0.5}
-					x={SYMBOL_SIZE * 1.44}
-					y={BREAKDOWN_Y}
-					width={BREAKDOWN_ICON_SIZE}
-					height={BREAKDOWN_ICON_SIZE}
+					x={panelWidth * (isStacked ? 0.4 : 0.42)}
+					y={panelHeight * 0.52}
+					width={SYMBOL_ICON_SIZE * (isStacked ? 0.82 : 1)}
+					height={SYMBOL_ICON_SIZE * (isStacked ? 0.82 : 1)}
 				/>
 
 				<BitmapText
 					anchor={{ x: 0, y: 0.5 }}
-					x={SYMBOL_SIZE * 1.7}
-					y={BREAKDOWN_Y}
-					text={`Pays ${bookEventAmountToCurrencyString(line.amount)}`}
+					x={panelWidth * (isStacked ? 0.48 : 0.5)}
+					y={panelHeight * 0.52}
+					text={`Pays ${bookEventAmountToCurrencyString(singleWinLine.amount)}`}
 					style={{
 						fontFamily: 'proxima-nova',
-						fontSize: SYMBOL_SIZE * 0.16,
-						fill: 0xfff0b8,
+						fontSize: SYMBOL_SIZE * (isStacked ? 0.16 : 0.21),
+						fill: 0xffd700,
+						fontWeight: '900',
+					}}
+				/>
+			{:else if displayText}
+				<BitmapText
+					anchor={{ x: 0.5, y: 0.5 }}
+					x={panelWidth / 2}
+					y={panelHeight * 0.52}
+					text={displayText}
+					style={{
+						fontFamily: 'proxima-nova',
+						fontSize: SYMBOL_SIZE * (isStacked ? 0.16 : 0.21),
+						fill: 0xffd700,
 						fontWeight: '900',
 					}}
 				/>

@@ -71,6 +71,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// `isBonusGame` is true during free spins (multiple reveal events).
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
+		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
 
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
 		if (isBonusGame) {
@@ -89,6 +90,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// ── winInfo ────────────────────────────────────────────────────────────────
 	// One or more winning clusters found. Animate each winning group in sequence.
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
+		stateBet.winBookEventAmount = bookEvent.totalWin;
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_coin_clink' });
 		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
@@ -99,6 +101,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 		eventEmitter.broadcast({
 			type: 'tumbleWinBreakdownShow',
+			lines: bookEvent.wins.map((win) => ({
+				count: win.positions.length,
+				symbol: win.symbol,
+				amount: win.win,
+			})),
+		});
+		eventEmitter.broadcast({
+			type: 'tumbleHistoryAdd',
 			lines: bookEvent.wins.map((win) => ({
 				count: win.positions.length,
 				symbol: win.symbol,
@@ -119,6 +129,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	//  4. Update the global multiplier display
 	//  5. Animate the win amount jumping to post-multiplier total
 	boardMultiplierInfo: async (bookEvent: BookEventOfType<'boardMultiplierInfo'>) => {
+		stateBet.winBookEventAmount = bookEvent.winInfo.tumbleWin;
 		// Show the pre-multiplier tumble win
 		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
 		await eventEmitter.broadcastAsync({
@@ -139,6 +150,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		// Animate the tumble win counter to the post-multiplier total
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
+		stateBet.winBookEventAmount = bookEvent.winInfo.totalWin;
 		await eventEmitter.broadcastAsync({
 			type: 'tumbleWinAmountUpdate',
 			amount: bookEvent.winInfo.totalWin,
@@ -186,6 +198,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// ── updateTumbleWin ────────────────────────────────────────────────────────
 	updateTumbleWin: async (bookEvent: BookEventOfType<'updateTumbleWin'>) => {
 		if (bookEvent.amount > 0) {
+			stateBet.winBookEventAmount = bookEvent.amount;
 			eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
 			eventEmitter.broadcast({
 				type: 'tumbleWinAmountUpdate',

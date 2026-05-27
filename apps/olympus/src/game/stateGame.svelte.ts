@@ -93,7 +93,7 @@ export const stateGame = $state({
 	/** Scatter land counter for progressive scatter landing sounds */
 	scatterCounter: 0,
 	/** 3-D model loading gates; loading screen waits for these before start. */
-	hammer3DReady: false,
+	// hammer3DReady: false,
 	thor3DReady: false,
 	/** True while full-screen Pixi transition/intro panels should own the scene. */
 	transitionActive: false,

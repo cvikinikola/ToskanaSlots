@@ -59,8 +59,6 @@ export const runTumbleSequence = ({
   const emit = (e) => events.push({ index: indexRef.value++, ...e });
 
   const scattersOnInitialBoard = countScatters(initialBoard);
-  const collected = [];
-
   let tumbleWin = 0; // × bet
   let cur = initialBoard;
 
@@ -89,18 +87,15 @@ export const runTumbleSequence = ({
     });
     emit({ type: 'updateTumbleWin', amount: toBookAmount(tumbleWin) });
 
-    // Collect multipliers from the CURRENT board (before tumble).
-    const mults = collectMultipliers(cur);
-    if (mults.length > 0) collected.push(...mults);
-
     const exploding = wins.flatMap((w) => w.positions);
     const { board: next, newSymbols } = tumble(cur, exploding, { freeSpinMode });
     emit({ type: 'tumbleBoard', explodingSymbols: exploding, newSymbols });
     cur = next;
   }
 
-  // Apply collected multipliers at the end of the chain.
-  if (collected.length > 0 && tumbleWin > 0) {
+  // Apply visible multipliers once at the end of the chain.
+  const collected = tumbleWin > 0 ? collectMultipliers(cur) : [];
+  if (collected.length > 0) {
     const boardMult = collected.reduce((a, m) => a + m.multiplier, 0);
     if (freeSpinMode) {
       globalMultRef.value += boardMult;

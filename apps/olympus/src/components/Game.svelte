@@ -21,6 +21,7 @@
 	import Board from './Board.svelte';
 	import TumbleBoard from './TumbleBoard.svelte';
 	import TumbleWinAmount from './TumbleWinAmount.svelte';
+	import TumbleHistory from './TumbleHistory.svelte';
 	import GlobalMultiplier from './GlobalMultiplier.svelte';
 	import ReelFramePanel from './ReelFramePanel.svelte';
 	import Win from './Win.svelte';
@@ -73,6 +74,7 @@
 
 		<MainContainer>
 			<TumbleBoard />
+			<TumbleHistory />
 			<TumbleWinAmount />
 		</MainContainer>
 

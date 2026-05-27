@@ -13,16 +13,16 @@
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, BOARD_SIZES } from '../game/constants';
+	import { SYMBOL_SIZE, BOARD_SIZES, REEL_FRAME_OFFSET, REEL_FRAME_SIZES } from '../game/constants';
 
 	const context = getContext();
 
-	const PANEL_W = SYMBOL_SIZE * 1.65;
-	const PANEL_H = SYMBOL_SIZE * 0.78;
+	const PANEL_W = SYMBOL_SIZE * 1.85;
+	const PANEL_H = SYMBOL_SIZE * 1.18;
 
 	const position = $derived({
-		x: BOARD_SIZES.width + SYMBOL_SIZE * 0.68,
-		y: SYMBOL_SIZE * 0.2,
+		x: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x + SYMBOL_SIZE * 0.28,
+		y: BOARD_SIZES.height / 2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y + SYMBOL_SIZE * 0.76,
 	});
 
 	let show = $state(false);
@@ -56,7 +56,8 @@
 	<BoardContainer>
 		<Container {...position}>
 			<UiAssetSprite
-				assetKey="menu_panel_sm"
+				key="menu_frame_free_spins"
+				assetKey="menu_frame_free_spins"
 				anchor={{ x: 0, y: 0 }}
 				width={PANEL_W}
 				height={PANEL_H}
@@ -66,13 +67,13 @@
 			<BitmapText
 				anchor={{ x: 0.5, y: 0 }}
 				x={PANEL_W / 2}
-				y={PANEL_H * 0.18}
+				y={PANEL_H * 0.25}
 				text="MULTIPLIER"
 				style={{
 					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.13,
+					fontSize: SYMBOL_SIZE * 0.12,
 					fill: flash ? 0xffffff : 0xffd147,
-					fontWeight: '700',
+					fontWeight: '900',
 				}}
 			/>
 
@@ -83,9 +84,9 @@
 				text={`x${multiplier}`}
 				style={{
 					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.36,
+					fontSize: SYMBOL_SIZE * 0.34,
 					fill: flash ? 0xffffff : 0xffd700,
-					fontWeight: '700',
+					fontWeight: '900',
 				}}
 			/>
 		</Container>

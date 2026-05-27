@@ -4,12 +4,16 @@
 
 	type Props = Omit<SpriteProps, 'texture' | 'key'> & {
 		assetKey: string;
+		fallbackAssetKey?: string;
 		key?: string;
 	};
 
-	const { assetKey, key = assetKey, ...spriteProps }: Props = $props();
+	const { assetKey, fallbackAssetKey, key = assetKey, ...spriteProps }: Props = $props();
 	const context = getContextApp();
-	const texture = $derived(context.stateApp.loadedAssets?.[assetKey]);
+	const texture = $derived(
+		context.stateApp.loadedAssets?.[assetKey] ??
+			(fallbackAssetKey ? context.stateApp.loadedAssets?.[fallbackAssetKey] : undefined),
+	);
 </script>
 
 {#if texture}

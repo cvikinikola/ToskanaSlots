@@ -14,7 +14,7 @@
 	const context = getContext();
 
 	const loaded = $derived(
-		context.stateApp.loaded && stateGame.hammer3DReady && stateGame.thor3DReady,
+		context.stateApp.loaded && stateGame.thor3DReady,
 	);
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const centerFraction = $derived(getLoadingCenterFraction(layoutType));
