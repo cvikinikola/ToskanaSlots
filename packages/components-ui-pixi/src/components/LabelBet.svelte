@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Container } from 'pixi-svelte';
 	import { Rectangle } from 'pixi.js';
-	import { stateBetDerived, stateModal } from 'state-shared';
+	import { stateBet, stateBetDerived, stateModal } from 'state-shared';
 	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import UiLabel from './UiLabel.svelte';
@@ -16,8 +16,10 @@
 	const props: Props = $props();
 	const context = getContext();
 	const label = $derived(stateBetDerived.activeBetMode()?.text.betAmountLabel || i18nDerived.bet());
-	const value = $derived(numberToCurrencyString(stateBetDerived.betCost()));
 	const disabled = $derived(!context.stateXstateDerived.isIdle());
+	const value = $derived(
+		numberToCurrencyString(disabled ? stateBet.wageredBetAmount : stateBetDerived.betCost()),
+	);
 	const hitArea = $derived(
 		props.stacked
 			? new Rectangle(-UI_BASE_SIZE * 1.45, -UI_BASE_SIZE * 0.2, UI_BASE_SIZE * 2.9, UI_BASE_SIZE * 1.25)

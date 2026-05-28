@@ -24,8 +24,8 @@
 		(boardContext.animate && props.animating) || (!boardContext.animate && !props.animating),
 	);
 
-	const top = 0;
-	const bottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
+	const top = SYMBOL_SIZE * 0.5;
+	const bottom = SYMBOL_SIZE * (BOARD_DIMENSIONS.y - 0.5);
 	const inFrame = $derived(props.y >= top && props.y <= bottom);
 </script>
 

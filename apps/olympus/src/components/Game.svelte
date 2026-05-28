@@ -76,6 +76,7 @@
 			<TumbleBoard />
 			<TumbleHistory />
 			<TumbleWinAmount />
+			<FreeSpinCounter />
 		</MainContainer>
 
 		<WinSparks />
@@ -101,10 +102,6 @@
 
 		<Win />
 		<FreeSpinIntro />
-
-		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
-			<FreeSpinCounter />
-		{/if}
 
 		<FreeSpinOutro />
 		<Transition />

@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { Button, Popup } from 'components-shared';
 	import { zIndex } from 'constants-shared/zIndex';
-	import { stateBet, stateModal, stateUi, INFINITY_MARK } from 'state-shared';
+	import { stateBet, stateMetaDerived, stateModal, stateUi, INFINITY_MARK } from 'state-shared';
 	import { getContextEventEmitter } from 'utils-event-emitter';
+	import { numberToCurrencyString } from 'utils-shared/amount';
 
 	import BaseIcon from './BaseIcon.svelte';
 	import BaseTitle from './BaseTitle.svelte';
@@ -10,20 +11,32 @@
 	import BaseScrollable from './BaseScrollable.svelte';
 	import BaseButtonWrap from './BaseButtonWrap.svelte';
 	import BaseButtonContent from './BaseButtonContent.svelte';
-	import { stateBonus, stateBonusDerived } from '../stateBonus.svelte';
+	import { stateBonusDerived } from '../stateBonus.svelte';
 	import { i18nDerived } from '../i18n/i18nDerived';
 	import type { EmitterEventModal } from '../types';
 
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
+	const selectedBetModeData = $derived.by(() => {
+		const selected = stateBonusDerived.selectedBetModeData();
+		const buyMode = stateMetaDerived.betModeMetaList().find((item) => item.type === 'buy');
+
+		if (selected?.type === 'activate') return selected;
+
+		return buyMode ?? selected;
+	});
+	const selectedBetModeCost = $derived(stateBet.betAmount * selectedBetModeData.costMultiplier);
+	const isConfirmDisabled = $derived(
+		stateBet.betAmount <= 0 || stateBet.balanceAmount < selectedBetModeCost,
+	);
 
 	const confirm = () => {
-		stateBet.activeBetModeKey = stateBonus.selectedBetModeKey;
+		stateBet.activeBetModeKey = selectedBetModeData.mode;
 
-		if (stateBonusDerived.selectedBetModeData().type === 'buy') {
+		if (selectedBetModeData.type === 'buy') {
 			eventEmitter.broadcast({ type: 'bet' });
 		}
 
-		if (stateBonusDerived.selectedBetModeData().type === 'activate') {
+		if (selectedBetModeData.type === 'activate') {
 			stateUi.autoSpinsLossLimitText = INFINITY_MARK;
 			stateUi.autoSpinsSingleWinLimitText = INFINITY_MARK;
 		}
@@ -31,17 +44,23 @@
 </script>
 
 {#if stateModal.modal?.name === 'buyBonusConfirm'}
-	<Popup zIndex={zIndex.dialog} onclose={() => (stateModal.modal = { name: 'buyBonus' })}>
+	<Popup zIndex={zIndex.dialog} onclose={() => (stateModal.modal = null)}>
 		<BaseContent maxWidth="500px">
 			<BaseTitle>
-				{stateBonusDerived.selectedBetModeData().text.title}
+				{selectedBetModeData.text.title}
 			</BaseTitle>
 			<BaseScrollable type="column">
-				{stateBonusDerived.selectedBetModeData().text.dialog}
+				{selectedBetModeData.text.dialog}
+				{#if selectedBetModeData.type === 'buy'}
+					<div class="price">
+						{numberToCurrencyString(selectedBetModeCost)}
+					</div>
+				{/if}
 			</BaseScrollable>
 			<BaseButtonWrap type="max-width">
 				<Button
 					data-test="confirm-button"
+					disabled={isConfirmDisabled}
 					onclick={() => {
 						confirm();
 						eventEmitter.broadcast({ type: 'soundPressGeneral' });
@@ -57,3 +76,13 @@
 		</BaseContent>
 	</Popup>
 {/if}
+
+<style lang="scss">
+	.price {
+		margin-top: 1rem;
+		font-size: 1.25rem;
+		font-weight: 700;
+		text-align: center;
+		white-space: nowrap;
+	}
+</style>

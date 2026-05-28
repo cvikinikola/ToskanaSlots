@@ -4,6 +4,7 @@ import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap 
 import { stateBet, stateUi } from 'state-shared';
 import { sequence } from 'utils-shared/sequence';
 import { waitForTimeout } from 'utils-shared/wait';
+import { bookEventAmountToBetAmountMultiplier } from 'utils-shared/amount';
 
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
@@ -64,6 +65,43 @@ const playWinToBalanceCoins = () => {
  * - Handlers run sequentially via `playBookEvents()` queue.
  * - stateGame mutations here are reactive (Svelte 5 $state).
  */
+let freeSpinWinBookEventAmount = 0;
+let freeSpinTumbleWinBookEventAmount = 0;
+
+const updateRoundWinBookEventAmount = (bookEventAmount: number) => {
+	if (stateGame.gameType !== 'freeSpins') {
+		stateBet.winBookEventAmount = bookEventAmount;
+		return;
+	}
+
+	freeSpinTumbleWinBookEventAmount = bookEventAmount;
+	stateBet.winBookEventAmount = freeSpinWinBookEventAmount + freeSpinTumbleWinBookEventAmount;
+};
+
+const commitFreeSpinTumbleWin = () => {
+	freeSpinWinBookEventAmount += freeSpinTumbleWinBookEventAmount;
+	freeSpinTumbleWinBookEventAmount = 0;
+	stateBet.winBookEventAmount = freeSpinWinBookEventAmount;
+};
+
+const getFreeSpinOutroWinLevelData = (amount: number) => {
+	const multiplier = bookEventAmountToBetAmountMultiplier(amount);
+
+	if (multiplier >= 100) {
+		return { ...winLevelMap[9], presentDuration: 7000 };
+	}
+
+	if (multiplier >= 50) {
+		return { ...winLevelMap[8], presentDuration: 6000 };
+	}
+
+	if (multiplier >= 20) {
+		return { ...winLevelMap[6], presentDuration: 5000 };
+	}
+
+	return { ...winLevelMap[1], presentDuration: 3000 };
+};
+
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
 
 	// ── reveal ─────────────────────────────────────────────────────────────────
@@ -71,7 +109,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// `isBonusGame` is true during free spins (multiple reveal events).
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
-		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
 
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
 		if (isBonusGame) {
@@ -90,7 +127,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// ── winInfo ────────────────────────────────────────────────────────────────
 	// One or more winning clusters found. Animate each winning group in sequence.
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
-		stateBet.winBookEventAmount = bookEvent.totalWin;
+		updateRoundWinBookEventAmount(bookEvent.totalWin);
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_coin_clink' });
 		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
@@ -129,7 +166,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	//  4. Update the global multiplier display
 	//  5. Animate the win amount jumping to post-multiplier total
 	boardMultiplierInfo: async (bookEvent: BookEventOfType<'boardMultiplierInfo'>) => {
-		stateBet.winBookEventAmount = bookEvent.winInfo.tumbleWin;
+		updateRoundWinBookEventAmount(bookEvent.winInfo.tumbleWin);
 		// Show the pre-multiplier tumble win
 		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
 		await eventEmitter.broadcastAsync({
@@ -150,7 +187,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		// Animate the tumble win counter to the post-multiplier total
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
-		stateBet.winBookEventAmount = bookEvent.winInfo.totalWin;
+		updateRoundWinBookEventAmount(bookEvent.winInfo.totalWin);
 		await eventEmitter.broadcastAsync({
 			type: 'tumbleWinAmountUpdate',
 			amount: bookEvent.winInfo.totalWin,
@@ -198,7 +235,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// ── updateTumbleWin ────────────────────────────────────────────────────────
 	updateTumbleWin: async (bookEvent: BookEventOfType<'updateTumbleWin'>) => {
 		if (bookEvent.amount > 0) {
-			stateBet.winBookEventAmount = bookEvent.amount;
+			updateRoundWinBookEventAmount(bookEvent.amount);
 			eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
 			eventEmitter.broadcast({
 				type: 'tumbleWinAmountUpdate',
@@ -232,6 +269,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── freeSpinTrigger ───────────────────────────────────────────────────────
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
+		freeSpinWinBookEventAmount = stateBet.winBookEventAmount;
+		freeSpinTumbleWinBookEventAmount = 0;
+		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
+
 		// Animate each scatter one-by-one: individual lightning bolt + pop sound per scatter.
 		// This gives the player clear visual feedback for each one landing.
 		await sequence(bookEvent.positions, async (pos) => {
@@ -277,7 +318,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
 
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
-		await eventEmitter.broadcastAsync({ type: 'drawerButtonShow' });
+		eventEmitter.broadcast({ type: 'drawerButtonHide' });
 		eventEmitter.broadcast({ type: 'drawerFold' });
 	},
 
@@ -310,6 +351,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── updateFreeSpin ────────────────────────────────────────────────────────
 	updateFreeSpin: async (bookEvent: BookEventOfType<'updateFreeSpin'>) => {
+		commitFreeSpinTumbleWin();
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		stateUi.freeSpinCounterShow = true;
 		eventEmitter.broadcast({
@@ -323,14 +365,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── freeSpinEnd ───────────────────────────────────────────────────────────
 	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
-		// winLevel 0 is not in the map — fall back to level 1 (no win presentation)
-		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel] ?? winLevelMap[1];
+		const winLevelData = getFreeSpinOutroWinLevelData(bookEvent.amount);
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
-		stateGame.gameType = 'basegame';
-		stateGame.globalMultiplier = 1;
 
-		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		stateGame.freeSpinOutroActive = true;
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
@@ -344,13 +382,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			winLevelData,
 		});
 
+		stateBet.winBookEventAmount = bookEvent.amount;
 		winLevelSoundsStop();
 		stateGame.freeSpinOutroActive = false;
+		stateGame.gameType = 'basegame';
+		stateGame.globalMultiplier = 1;
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
+		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
 
 		await eventEmitter.broadcastAsync({ type: 'transition' });
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });

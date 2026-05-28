@@ -7,9 +7,8 @@
  * used by `scripts/gen-books.mjs`, so storybook books and DEV-mode play
  * cannot drift apart.
  *
- * RTP is calibrated at boot per bet-mode (BASE / BONUS) by simulating
- * `CALIBRATION_ROUNDS` rounds at scale=1 then deriving a constant scale
- * factor so the long-run average payout converges to TARGET_RTP.
+ * Payouts are emitted directly from the paytable. Do not apply RTP scale to
+ * individual wins; QA compares visible symbol wins against the paytable.
  */
 
 import { runBaseSpin, runBonusBuy } from './math/index.js';
@@ -27,19 +26,14 @@ const BET_MODE_COST_MULTIPLIER = {
 };
 const BONUS_ROUND_MODES = new Set(['BONUS', 'SUPER']);
 
-// ─── RTP calibration ─────────────────────────────────────────────────────────
-
-export const getScale = () => 1;
-
 // ─── Round (used by both the Vite plugin and gen-books.mjs) ──────────────────
 
-export const playMockRound = ({ mode = 'BASE', scale } = {}) => {
+export const playMockRound = ({ mode = 'BASE' } = {}) => {
   const normalizedMode = String(mode).toUpperCase();
   const mathMode = BONUS_ROUND_MODES.has(normalizedMode) ? 'BONUS' : 'BASE';
-  const s = scale ?? getScale(mathMode);
   return mathMode === 'BONUS'
-    ? runBonusBuy({ betAmount: 1, scale: s })
-    : runBaseSpin({ betAmount: 1, scale: s });
+    ? runBonusBuy({ betAmount: 1 })
+    : runBaseSpin({ betAmount: 1 });
 };
 
 // ─── Vite plugin ─────────────────────────────────────────────────────────────
@@ -67,7 +61,6 @@ export const mockRgsPlugin = () => ({
 
     server.middlewares.use('/wallet/authenticate', (req, res) => {
       if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
-      // eslint-disable-next-line no-console
       console.log('[mock-rgs] /wallet/authenticate');
       sendJson(res, {
         balance: { amount: 1000000000000, currency: 'USD' },
@@ -129,7 +122,6 @@ export const mockRgsPlugin = () => ({
       const balanceAfterDebit = lastBalanceAmount - cost;
       lastBalanceAmount = balanceAfterDebit + payoutApi;
 
-      // eslint-disable-next-line no-console
       console.log('[mock-rgs] /wallet/play mode=%s cost=%s win=%sx events=%d',
         mode, cost, totalWin.toFixed(2), bookEvents.length);
 
@@ -150,7 +142,6 @@ export const mockRgsPlugin = () => ({
 
     server.middlewares.use('/wallet/end-round', (req, res) => {
       if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
-      // eslint-disable-next-line no-console
       console.log('[mock-rgs] /wallet/end-round');
       sendJson(res, { balance: { amount: lastBalanceAmount, currency: 'USD' } });
     });

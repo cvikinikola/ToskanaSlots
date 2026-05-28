@@ -40,6 +40,7 @@ type ReelCreateOptions<TRawSymbol extends object, TSymbolState extends string> =
 	initialSymbolState: TSymbolState;
 	reelIndex: number;
 	symbolHeight: number;
+	onReelSpinStart?: () => void;
 	onReelStopping: () => void;
 	onSymbolLand: (args: { rawSymbol: TRawSymbol }) => void;
 };

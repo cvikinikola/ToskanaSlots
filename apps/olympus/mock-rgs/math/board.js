@@ -22,23 +22,21 @@ export const COLUMN_HEIGHT =
 
 // ─── Reel weights (Gates-of-Olympus style: lows dominate) ────────────────────
 //
-// Weights are tuned so wins (8+ of one paying symbol on the 30-cell visible
-// grid) land on roughly 60–70 % of all spins. With this hit-rate the RTP
-// calibrator's `scale` ends up close to 1 — so per-cascade book amounts
-// (1 unit = 0.01 × bet) don't get rounded down to 0.
+// Keep symbols fairly even. With pay-anywhere 8+ wins on a 30-cell grid,
+// heavily weighted low symbols make almost every spin a winner.
 
 const SYMBOL_WEIGHTS = [
-  ['L4', 30], ['L3', 24], ['L2', 18], ['L1', 14],
-  ['H4', 8],  ['H3', 6],  ['H2', 4],  ['H1', 3],
+  ['L4', 12], ['L3', 12], ['L2', 11], ['L1', 10],
+  ['H4', 9],  ['H3', 8],  ['H2', 7],  ['H1', 6],
 ];
 
-const SCATTER_RATE = 0.014;
-const MULTIPLIER_RATE_BASE = 0.018;
-const MULTIPLIER_RATE_FREE = MULTIPLIER_RATE_BASE * 2.5;
+const SCATTER_RATE = 0.004;
+const MULTIPLIER_RATE_BASE = 0.004;
+const MULTIPLIER_RATE_FREE = 0.012;
 
 const MULTIPLIER_WEIGHTS = [
-  [2, 30], [3, 25], [4, 18], [5, 14], [6, 10], [8, 8], [10, 6],
-  [12, 4], [15, 3], [20, 2], [25, 1.5], [50, 1], [100, 0.5], [250, 0.2], [500, 0.1],
+  [2, 45], [3, 30], [4, 16], [5, 8], [6, 4], [8, 2], [10, 1],
+  [12, 0.5], [15, 0.25], [20, 0.1], [25, 0.05], [50, 0.01],
 ];
 
 // ─── Symbol / board generation ───────────────────────────────────────────────

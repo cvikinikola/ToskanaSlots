@@ -39,12 +39,12 @@ const emptyAnticipation = () => new Array(BOARD_CONFIG.numReels).fill(0);
 // ─── Public API ──────────────────────────────────────────────────────────────
 
 /** Base spin (with optional follow-on free spins on 4+ scatters). */
-export const runBaseSpin = ({ betAmount = 1, scale = 1, rng = defaultRng } = {}) =>
-  playRound({ betAmount, scale, rng, forceBonus: false });
+export const runBaseSpin = ({ betAmount = 1, rng = defaultRng } = {}) =>
+  playRound({ betAmount, rng, forceBonus: false });
 
 /** Bonus-buy entry: forces 4 scatters on the initial board. */
-export const runBonusBuy = ({ betAmount = 1, scale = 1, rng = defaultRng } = {}) =>
-  playRound({ betAmount, scale, rng, forceBonus: true });
+export const runBonusBuy = ({ betAmount = 1, rng = defaultRng } = {}) =>
+  playRound({ betAmount, rng, forceBonus: true });
 
 /**
  * Run an isolated free-spins session.
@@ -53,7 +53,6 @@ export const runBonusBuy = ({ betAmount = 1, scale = 1, rng = defaultRng } = {})
 export const runFreeSpins = ({
   betAmount = 1,
   freeSpinCount = FREE_SPINS_AWARDED,
-  scale = 1,
   rng = defaultRng,
   indexRef = { value: 0 },
   globalMultRef = { value: 1 },
@@ -96,7 +95,6 @@ export const runFreeSpins = ({
       freeSpinMode: true,
       globalMultRef,
       indexRef,
-      scale,
     });
     bookEvents.push(...chain.events);
     totalWin += chain.tumbleWin;
@@ -107,7 +105,7 @@ export const runFreeSpins = ({
 
 // ─── Internal ────────────────────────────────────────────────────────────────
 
-const playRound = ({ betAmount, scale, rng, forceBonus }) => {
+const playRound = ({ betAmount, rng, forceBonus }) => {
   const bookEvents = [];
   const indexRef = { value: 0 };
   const emit = (e) => bookEvents.push({ index: indexRef.value++, ...e });
@@ -131,7 +129,6 @@ const playRound = ({ betAmount, scale, rng, forceBonus }) => {
     freeSpinMode: false,
     globalMultRef,
     indexRef,
-    scale,
   });
   bookEvents.push(...baseChain.events);
   let totalWin = baseChain.tumbleWin;
@@ -154,7 +151,6 @@ const playRound = ({ betAmount, scale, rng, forceBonus }) => {
     const fs = runFreeSpins({
       betAmount,
       freeSpinCount: FREE_SPINS_AWARDED,
-      scale,
       rng,
       indexRef,
       globalMultRef,

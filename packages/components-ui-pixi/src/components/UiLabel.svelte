@@ -10,6 +10,8 @@
 		value: string;
 		tiled?: boolean;
 		stacked?: boolean;
+		labelFill?: number;
+		valueFill?: number;
 	};
 
 	const props: Props = $props();
@@ -26,7 +28,7 @@
 		fontWeight: '700',
 		letterSpacing: 2,
 		fontSize: UI_BASE_FONT_SIZE * 0.74,
-		fill: 0xffd147,
+		fill: props.labelFill ?? 0xffd147,
 		stroke: { color: 0x2a0d0d, width: 2 },
 		dropShadow: { color: 0x000000, alpha: 0.8, blur: 3, distance: 1, angle: Math.PI / 2 },
 	} as const;
@@ -36,7 +38,7 @@
 		fontWeight: '900',
 		letterSpacing: 0.5,
 		fontSize: UI_BASE_FONT_SIZE * 0.82,
-		fill: 0xffe79a,
+		fill: props.valueFill ?? 0xffe79a,
 		stroke: { color: 0x2a0d0d, width: 2 },
 		dropShadow: { color: 0x000000, alpha: 0.8, blur: 3, distance: 1, angle: Math.PI / 2 },
 	} as const;

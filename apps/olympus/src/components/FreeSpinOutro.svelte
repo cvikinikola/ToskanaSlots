@@ -14,6 +14,7 @@
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { UiAssetSprite } from 'components-ui-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
+	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
@@ -29,22 +30,51 @@
 	const FONT_SCALE = $derived(PANEL_W / (SYMBOL_SIZE * 5.5));
 
 	let show = $state(false);
+	let winLevelData = $state<WinLevelData>();
 	const countUpAmount = new Tween(0);
+	const waitForDismiss = (duration: number) =>
+		new Promise<void>((resolve) => {
+			let settled = false;
+			let timeout: ReturnType<typeof setTimeout>;
+			const cleanup = () => {
+				window.removeEventListener('pointerdown', finish);
+				window.removeEventListener('keydown', finish);
+				clearTimeout(timeout);
+			};
+			const finish = () => {
+				if (settled) return;
+				settled = true;
+				cleanup();
+				resolve();
+			};
+
+			window.addEventListener('pointerdown', finish);
+			window.addEventListener('keydown', finish);
+			timeout = setTimeout(finish, duration);
+		});
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinOutroShow: () => {
 			show = true;
+			winLevelData = undefined;
 			countUpAmount.set(0, { duration: 0 });
 		},
 
 		freeSpinOutroHide: () => (show = false),
 
 		freeSpinOutroCountUp: async (e) => {
-			if (countUpAmount.target === e.amount) return;
+			winLevelData = e.winLevelData;
 			// Use a minimum 3-second count-up so the player always sees the win animate.
-			// winLevelData may be undefined when winLevel 0 is sent (no entry in map).
-			const duration = e.winLevelData?.presentDuration || 3000;
-			await countUpAmount.set(e.amount, { duration });
+			const duration = Math.max(e.winLevelData?.presentDuration || 0, 3 * SECOND);
+			const countUp =
+				countUpAmount.target === e.amount
+					? new Promise<void>((resolve) => setTimeout(resolve, duration))
+					: countUpAmount.set(e.amount, { duration });
+
+			await Promise.race([
+				countUp,
+				waitForDismiss(duration),
+			]);
 		},
 	});
 </script>
@@ -70,7 +100,7 @@
 				anchor={{ x: 0.5, y: 0.5 }}
 				x={PANEL_W / 2}
 				y={PANEL_H * 0.35}
-				text="FREE SPINS COMPLETE!"
+				text={winLevelData?.text || 'FREE SPINS COMPLETE!'}
 				style={{
 					fontFamily: 'proxima-nova',
 					fontSize: SYMBOL_SIZE * 0.34 * FONT_SCALE,

@@ -9,7 +9,8 @@
 		"dev": "vite dev --host --port 3005",
 		"build": "node scripts/build.mjs",
 		"preview": "vite preview",
-		"gen-books": "node scripts/gen-books.mjs"
+		"gen-books": "node scripts/gen-books.mjs",
+		"verify-paytable": "node scripts/verify-paytable.mjs"
 	},
 	"type": "module",
 	"devDependencies": {

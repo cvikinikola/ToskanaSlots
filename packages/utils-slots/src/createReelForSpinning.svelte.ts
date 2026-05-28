@@ -192,6 +192,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 			await preSpinPadding({ preSpinPaddingRawReel });
 			if (!started) {
 				reelState.motion = 'spinning';
+				reelOptions.onReelSpinStart?.();
 				updateAllReelSymbolState('spin');
 				started = true;
 			}
@@ -226,6 +227,7 @@ export function createReelForSpinning<TRawSymbol extends object, TSymbolState ex
 
 		if (!isSpinning) {
 			reelState.motion = 'spinning';
+			reelOptions.onReelSpinStart?.();
 			updateAllReelSymbolState('spin');
 		}
 

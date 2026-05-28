@@ -4,6 +4,9 @@
 	export type EmitterEventSound =
 		| { type: 'soundMusic'; name: MusicName }
 		| { type: 'soundOnce'; name: SoundEffectName; forcePlay?: boolean }
+		| { type: 'soundReelSpin' }
+		| { type: 'soundReelStop'; forcePlay?: boolean; playbackRate?: number }
+		| { type: 'soundSymbolDestroy' }
 		| { type: 'soundLoop'; name: SoundEffectName }
 		| { type: 'soundStop'; name: SoundName }
 		| { type: 'soundFade'; name: SoundName; from: number; to: number; duration: number }
@@ -22,12 +25,14 @@
 	const activeAudios = new Set<HTMLAudioElement>();
 	let pageActive = $state(true);
 	let lastThunderAt = 0;
+	let lastReelSpinAt = 0;
+	let lastReelStopAt = 0;
 	const soundEffectVolume = $derived(
 		Math.max(0, Math.min(1, stateSoundDerived.volumeSoundEffect())),
 	);
 
 	const updatePageActive = () => {
-		pageActive = document.visibilityState === 'visible' && document.hasFocus();
+		pageActive = document.visibilityState === 'visible';
 		if (!pageActive) pauseActiveAudios();
 	};
 
@@ -39,12 +44,13 @@
 		activeAudios.clear();
 	};
 
-	const playAudio = (src: string, volume = 1) => {
+	const playAudio = (src: string, volume = 1, playbackRate = 1) => {
 		if (!pageActive) return;
 		if (soundEffectVolume <= 0) return;
 
 		const audio = new Audio(src);
 		audio.volume = Math.max(0, Math.min(1, volume * soundEffectVolume));
+		audio.playbackRate = playbackRate;
 		activeAudios.add(audio);
 
 		const cleanup = () => activeAudios.delete(audio);
@@ -60,15 +66,13 @@
 	onMount(() => {
 		updatePageActive();
 		document.addEventListener('visibilitychange', updatePageActive);
-		window.addEventListener('focus', updatePageActive);
-		window.addEventListener('blur', updatePageActive);
+		window.addEventListener('pageshow', updatePageActive);
 		window.addEventListener('pagehide', pauseActiveAudios);
 
 		return () => {
 			pauseActiveAudios();
 			document.removeEventListener('visibilitychange', updatePageActive);
-			window.removeEventListener('focus', updatePageActive);
-			window.removeEventListener('blur', updatePageActive);
+			window.removeEventListener('pageshow', updatePageActive);
 			window.removeEventListener('pagehide', pauseActiveAudios);
 		};
 	});
@@ -83,6 +87,24 @@
 
 		// One-shot SFX
 		soundOnce: ({ name }) => {
+			if (name === 'sfx_reel_spin') {
+				const now = performance.now();
+				if (now - lastReelSpinAt < 80) return;
+				lastReelSpinAt = now;
+				playAudio('/assets/audio/spin.mp3', 0.8);
+				return;
+			}
+			if (name === 'sfx_reel_stop_1') {
+				const now = performance.now();
+				if (now - lastReelStopAt < 80) return;
+				lastReelStopAt = now;
+				playAudio('/assets/audio/zaustavljanje.mp3', 0.85);
+				return;
+			}
+			if (name === 'sfx_symbol_destroy') {
+				playAudio('/assets/audio/unistenjeSimbola.wav', 0.9);
+				return;
+			}
 			if (name === 'sfx_coin_clink') {
 				const src =
 					Math.random() < 0.5
@@ -107,6 +129,24 @@
 			}
 			// sound.players.once.play({ name });
 			console.debug('[sound] sfx →', name);
+		},
+
+		soundReelSpin: () => {
+			const now = performance.now();
+			if (now - lastReelSpinAt < 80) return;
+			lastReelSpinAt = now;
+			playAudio('/assets/audio/spin.mp3', 0.8);
+		},
+
+		soundReelStop: ({ forcePlay = false, playbackRate = 1 }) => {
+			const now = performance.now();
+			if (!forcePlay && now - lastReelStopAt < 80) return;
+			lastReelStopAt = now;
+			playAudio('/assets/audio/zaustavljanje.mp3', 0.85, playbackRate);
+		},
+
+		soundSymbolDestroy: () => {
+			playAudio('/assets/audio/unistenjeSimbola.wav', 0.9);
 		},
 
 		// Looping SFX (e.g. coin shower during big win)

@@ -6,7 +6,6 @@
 
 	import { getContext } from '../context';
 	import type { LayoutUiProps } from '../types';
-	import LabelFreeSpinCounter from './LabelFreeSpinCounter.svelte';
 	import { DESKTOP_BASE_SIZE, DESKTOP_BACKGROUND_WIDTH_LIST } from '../constants';
 
 	const props: LayoutUiProps = $props();
@@ -73,11 +72,6 @@
 			{@render props.buttonIncrease({ anchor: 0.5 })}
 		</Container>
 
-		{#if stateUi.freeSpinCounterShow}
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 320} x={668}>
-				<LabelFreeSpinCounter />
-			</Container>
-		{/if}
 	</Container>
 </MainContainer>
 

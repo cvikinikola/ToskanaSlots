@@ -14,15 +14,11 @@ export function recordBookEvent<TBookEvent extends BaseBookEvent>({
 		return;
 	}
 
-	try {
-		requestEndEvent({
+	void requestEndEvent({
 			eventIndex: bookEvent.index,
 			rgsUrl: stateUrlDerived.rgsUrl(),
 			sessionID: stateUrlDerived.sessionID(),
-		});
-	} catch (error) {
-		console.error(error);
-	}
+		}).catch((error) => console.error(error));
 }
 
 export function checkIsMultipleRevealEvents<TBookEvent extends BaseBookEvent>({

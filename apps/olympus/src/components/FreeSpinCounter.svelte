@@ -16,27 +16,30 @@
 
 	const context = getContext();
 
-	const PANEL_W = SYMBOL_SIZE * 2.95;
-	const PANEL_H = SYMBOL_SIZE * 1.62;
-	const PANEL_GAP = SYMBOL_SIZE * 0.34;
+	const PANEL_W = SYMBOL_SIZE * 3.85;
+	const PANEL_H = SYMBOL_SIZE * 1.05;
+	const PANEL_W_STACKED = SYMBOL_SIZE * 3.95;
+	const PANEL_H_STACKED = SYMBOL_SIZE * 1.08;
+	const GOLD = 0xffd147;
 
-	const isStacked = $derived(context.stateLayoutDerived.isStacked());
+	const isCompact = $derived(
+		['portrait', 'tablet'].includes(context.stateLayoutDerived.layoutType()),
+	);
+	const panelWidth = $derived(isCompact ? PANEL_W_STACKED : PANEL_W);
+	const panelHeight = $derived(isCompact ? PANEL_H_STACKED : PANEL_H);
 	const frameBounds = $derived({
-		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
 		top: BOARD_SIZES.height / 2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
-		centerX: BOARD_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
+		bottom: BOARD_SIZES.height / 2 + REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
 	});
 	const position = $derived.by(() => {
-		if (isStacked) {
-			return {
-				x: frameBounds.centerX - PANEL_W / 2,
-				y: frameBounds.top - PANEL_H - SYMBOL_SIZE * 1.52,
-			};
-		}
+		const tumbleWinY = isCompact
+			? frameBounds.bottom - PANEL_H_STACKED * 0.48
+			: frameBounds.bottom - PANEL_H * 0.35;
+		const gap = SYMBOL_SIZE * (isCompact ? 0.18 : 0.24);
 
 		return {
-			x: frameBounds.left - PANEL_W - PANEL_GAP,
-			y: frameBounds.top + SYMBOL_SIZE * 0.15,
+			x: BOARD_SIZES.width / 2 - panelWidth / 2,
+			y: tumbleWinY + panelHeight + gap,
 		};
 	});
 
@@ -58,37 +61,38 @@
 	<BoardContainer>
 		<Container {...position}>
 			<UiAssetSprite
-				key="menu_frame_free_spins"
-				assetKey="menu_frame_free_spins"
+				key="menu_panel_md"
+				assetKey="menu_panel_md"
 				anchor={{ x: 0, y: 0 }}
-				width={PANEL_W}
-				height={PANEL_H}
-			/>
-
-			<BitmapText
-				anchor={{ x: 0.5, y: 0 }}
-				x={PANEL_W / 2}
-				y={PANEL_H * 0.24}
-				text="FREE SPINS"
-				style={{
-					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.18,
-					fill: 0xffd700,
-					fontWeight: '900',
-				}}
+				width={panelWidth}
+				height={panelHeight}
+				alpha={0.98}
 			/>
 
 			<BitmapText
 				anchor={{ x: 0.5, y: 0.5 }}
-				x={PANEL_W / 2}
-				y={PANEL_H * 0.63}
-				text={`${current} / ${total}`}
-				style={{
-					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.42,
-					fill: 0xffffff,
-					fontWeight: '900',
-				}}
+				x={panelWidth * 0.36}
+				y={panelHeight * 0.52}
+					text="FREE SPINS"
+					style={{
+						fontFamily: 'serif',
+						fontSize: SYMBOL_SIZE * (isCompact ? 0.18 : 0.18),
+						fill: GOLD,
+						fontWeight: '900',
+					}}
+			/>
+
+			<BitmapText
+				anchor={{ x: 0.5, y: 0.5 }}
+				x={panelWidth * 0.74}
+				y={panelHeight * 0.52}
+					text={`${current} / ${total}`}
+					style={{
+						fontFamily: 'proxima-nova',
+						fontSize: SYMBOL_SIZE * (isCompact ? 0.21 : 0.21),
+						fill: GOLD,
+						fontWeight: '900',
+					}}
 			/>
 		</Container>
 	</BoardContainer>

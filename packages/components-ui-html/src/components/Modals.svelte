@@ -3,7 +3,6 @@
 
 	import ModalError from './ModalError.svelte';
 	import ModalBetMenu from './ModalBetMenu.svelte';
-	import ModalBuyBonus from './ModalBuyBonus.svelte';
 	import ModalBuyBonusConfirm from './ModalBuyBonusConfirm.svelte';
 	import ModalAutoSpin from './ModalAutoSpin.svelte';
 	import ModalAutoSpinMessage from './ModalAutoSpinMessage.svelte';
@@ -20,7 +19,6 @@
 
 <ModalError />
 <ModalBetMenu />
-<ModalBuyBonus />
 <ModalBuyBonusConfirm />
 <ModalAutoSpin />
 <ModalAutoSpinMessage />

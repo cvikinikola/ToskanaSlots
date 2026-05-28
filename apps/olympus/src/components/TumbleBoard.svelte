@@ -12,7 +12,6 @@
 </script>
 
 <script lang="ts">
-	import _ from 'lodash';
 	import { Tween } from 'svelte/motion';
 	import { backOut } from 'svelte/easing';
 
@@ -93,6 +92,9 @@
 					tumbleSymbol.symbolState = 'explosion';
 					await waitForResolve((resolve) => (tumbleSymbol.oncomplete = resolve));
 				});
+			if (uniquePositions.length > 0) {
+				context.eventEmitter.broadcast({ type: 'soundSymbolDestroy' });
+			}
 			await Promise.all(getPromises());
 		},
 		tumbleBoardRemoveExploded: () => {
@@ -104,9 +106,14 @@
 		},
 		tumbleBoardSlideDown: async () => {
 			const getPromises = () =>
-				_.flatten(
-					context.stateGameDerived.tumbleBoardCombined().map((tumbleReel) => {
-						return tumbleReel.map(async (tumbleSymbol, symbolIndex) => {
+				context.stateGameDerived.tumbleBoardCombined().map(async (tumbleReel, reelIndex) => {
+					const reelMoved = tumbleReel.some((tumbleSymbol, symbolIndex) => {
+						const targetY = getSymbolY(symbolIndex - 1);
+						return targetY !== tumbleSymbol.symbolY.current;
+					});
+
+					await Promise.all(
+						tumbleReel.map(async (tumbleSymbol, symbolIndex) => {
 							const targetY = getSymbolY(symbolIndex - 1);
 							if (targetY !== tumbleSymbol.symbolY.current) {
 								await tumbleSymbol.symbolY.set(targetY, {
@@ -126,9 +133,17 @@
 									});
 								}
 							}
+						}),
+					);
+
+					if (reelMoved) {
+						context.eventEmitter.broadcast({
+							type: 'soundReelStop',
+							forcePlay: true,
+							playbackRate: 1.2 + reelIndex * 0.015,
 						});
-					}),
-				);
+					}
+				});
 			await Promise.all(getPromises());
 		},
 	});

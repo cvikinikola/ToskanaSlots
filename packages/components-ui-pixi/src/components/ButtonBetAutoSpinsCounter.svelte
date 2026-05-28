@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Rectangle, Text } from 'pixi-svelte';
 	import { stateBet } from 'state-shared';
-	import { WHITE } from 'constants-shared/colors';
 
 	import { UI_BASE_SIZE } from '../constants';
 
@@ -21,8 +20,8 @@
 	<Rectangle
 		anchor={0.5}
 		y={counterY}
-		width={UI_BASE_SIZE * 0.86}
-		height={UI_BASE_SIZE * 0.52}
+		width={UI_BASE_SIZE * 0.92}
+		height={UI_BASE_SIZE * 0.58}
 		borderRadius={UI_BASE_SIZE * 0.1}
 		backgroundColor={0x02040a}
 		alpha={1}
@@ -33,7 +32,7 @@
 		text={counterText}
 		style={{
 			fontFamily: 'proxima-nova',
-			fill: WHITE,
+			fill: 0xffd147,
 			fontWeight: 'bold',
 			fontSize,
 			letterSpacing: 0,

@@ -45,11 +45,14 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		symbolHeight: SYMBOL_SIZE,
 		initialSymbols: INITIAL_BOARD[reelIndex],
 		initialSymbolState: INITIAL_SYMBOL_STATE,
+		onReelSpinStart: () => {
+			eventEmitter.broadcast({ type: 'soundReelSpin' });
+		},
 		onReelStopping: () => {
 			eventEmitter.broadcast({
-				type: 'soundOnce',
-				name: 'sfx_reel_stop_1',
+				type: 'soundReelStop',
 				forcePlay: !stateBet.isTurbo,
+				playbackRate: stateBet.isTurbo ? 1.25 : 1,
 			});
 		},
 		onSymbolLand,

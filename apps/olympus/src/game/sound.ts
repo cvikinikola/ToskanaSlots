@@ -39,7 +39,9 @@ export type SoundEffectName =
 	| 'sfx_superfreespin'
 	| 'jng_intro_fs'
 	// Reels
+	| 'sfx_reel_spin'
 	| 'sfx_reel_stop_1'
+	| 'sfx_symbol_destroy'
 	// UI
 	| 'sfx_btn_general'
 	| 'sfx_btn_spin'

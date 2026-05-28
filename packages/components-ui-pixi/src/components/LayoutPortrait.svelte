@@ -9,7 +9,6 @@
 	import { Container, Rectangle } from 'pixi-svelte';
 	import { waitForResolve } from 'utils-shared/wait';
 
-	import LabelFreeSpinCounter from './LabelFreeSpinCounter.svelte';
 	import ButtonDrawer from './ButtonDrawer.svelte';
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
@@ -131,35 +130,26 @@
 </MainContainer>
 
 <MainContainer standard alignVertical="bottom">
-	{#if stateUi.freeSpinCounterShow}
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 130}
-		>
-			<LabelFreeSpinCounter stacked />
-		</Container>
-	{:else}
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 130}
-		>
-			{@render props.amountBet({ stacked: true })}
-		</Container>
+	<Container
+		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
+		y={context.stateLayoutDerived.mainLayoutStandard().height - 130}
+	>
+		{@render props.amountBet({ stacked: true })}
+	</Container>
 
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 390}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
-		>
-			{@render props.buttonDecrease({ anchor: 0.5 })}
-		</Container>
+	<Container
+		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 390}
+		y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
+	>
+		{@render props.buttonDecrease({ anchor: 0.5 })}
+	</Container>
 
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 390}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
-		>
-			{@render props.buttonIncrease({ anchor: 0.5 })}
-		</Container>
-	{/if}
+	<Container
+		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 390}
+		y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
+	>
+		{@render props.buttonIncrease({ anchor: 0.5 })}
+	</Container>
 
 	<!-- drawer button -->
 	<FadeContainer

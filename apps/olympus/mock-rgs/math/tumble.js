@@ -21,8 +21,7 @@ import { findPayAnywhereWins, collectMultipliers, countScatters } from './wins.j
  *
  * Positive wins below 0.005 × bet would round to 0, which displays as
  * "$0.00" in the win counter and confuses the player. Floor positive wins
- * to at least 1 book unit (= $0.01 at $1 bet). The amount-level rounding
- * skew is corrected by the RTP calibrator.
+ * to at least 1 book unit (= $0.01 at $1 bet).
  */
 const BOOK_AMOUNT_MULTIPLIER = 100;
 export const toBookAmount = (xBet) => {
@@ -41,7 +40,6 @@ const MAX_CASCADES = 30;
  * @param {boolean} opts.freeSpinMode
  * @param {{ value: number }} opts.globalMultRef  persistent multiplier (free spins)
  * @param {{ value: number }} opts.indexRef       auto-incremented event index
- * @param {number} [opts.scale]           RTP calibration scale (defaults 1)
  * @returns {{ events: any[], tumbleWin: number,
  *             collectedMultipliers: any[],
  *             scattersOnInitialBoard: number,
@@ -53,7 +51,6 @@ export const runTumbleSequence = ({
   freeSpinMode,
   globalMultRef,
   indexRef,
-  scale = 1,
 }) => {
   const events = [];
   const emit = (e) => events.push({ index: indexRef.value++, ...e });
@@ -66,7 +63,7 @@ export const runTumbleSequence = ({
     const wins = findPayAnywhereWins(cur, betAmount);
     if (wins.length === 0) break;
 
-    const cascadeWinRaw = wins.reduce((a, w) => a + w.payoutMultiplier, 0) * scale;
+    const cascadeWinRaw = wins.reduce((a, w) => a + w.payoutMultiplier, 0);
     const globalMult = freeSpinMode ? globalMultRef.value : 1;
     const cascadeWin = cascadeWinRaw * globalMult;
     tumbleWin += cascadeWin;
@@ -76,11 +73,11 @@ export const runTumbleSequence = ({
       totalWin: toBookAmount(tumbleWin),
       wins: wins.map((w) => ({
         symbol: w.symbol,
-        win: toBookAmount(w.payoutMultiplier * scale * globalMult),
+        win: toBookAmount(w.payoutMultiplier * globalMult),
         positions: w.positions,
         meta: {
           globalMult,
-          winWithoutMult: toBookAmount(w.payoutMultiplier * scale),
+          winWithoutMult: toBookAmount(w.payoutMultiplier),
           overlay: w.positions[0],
         },
       })),

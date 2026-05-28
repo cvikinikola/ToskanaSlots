@@ -32,10 +32,10 @@ const BASE_BOOK_COUNT = 50;
 const BONUS_BOOK_COUNT = 25;
 const SEED = 0xc0ffee;
 
-const buildBook = (id, mode, scale, rng) => {
+const buildBook = (id, mode, rng) => {
   const round = mode === 'BONUS'
-    ? runBonusBuy({ betAmount: 1, scale, rng })
-    : runBaseSpin({ betAmount: 1, scale, rng });
+    ? runBonusBuy({ betAmount: 1, rng })
+    : runBaseSpin({ betAmount: 1, rng });
   return {
     id,
     payoutMultiplier: Number(round.totalWin.toFixed(6)),
@@ -56,12 +56,12 @@ const main = () => {
   const rng = createSeededRng(SEED);
 
   const base = [];
-  for (let i = 1; i <= BASE_BOOK_COUNT; i++) base.push(buildBook(i, 'BASE', 1, rng));
+  for (let i = 1; i <= BASE_BOOK_COUNT; i++) base.push(buildBook(i, 'BASE', rng));
   writeFileSync(path.join(OUT_DIR, 'base_books.ts'), serialize(base));
   console.log('[gen-books] wrote %d base books', base.length);
 
   const bonus = [];
-  for (let i = 1; i <= BONUS_BOOK_COUNT; i++) bonus.push(buildBook(i, 'BONUS', 1, rng));
+  for (let i = 1; i <= BONUS_BOOK_COUNT; i++) bonus.push(buildBook(i, 'BONUS', rng));
   writeFileSync(path.join(OUT_DIR, 'bonus_books.ts'), serialize(bonus));
   console.log('[gen-books] wrote %d bonus books', bonus.length);
 };

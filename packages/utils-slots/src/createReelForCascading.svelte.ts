@@ -100,6 +100,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 
 	const fallOut = async () => {
 		reelState.motion = 'fallingOut';
+		reelOptions.onReelSpinStart?.();
 
 		await moveAllSymbolsWith(async (reelSymbol) => {
 			const oldSymbolY = reelSymbol.symbolY.current;
@@ -173,6 +174,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		onSpinFinishing();
 		reelState.motion = 'stopped';
 		reelState.symbols.forEach((reelSymbol) => {
+			reelSymbol.symbolY.set(getSymbolY(reelSymbol.symbolIndexOfBoard), { duration: 0 });
 			reelSymbol.symbolState = 'static' as TSymbolState;
 			reelSymbol.oncomplete = () => {};
 		});

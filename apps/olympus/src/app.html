@@ -6,7 +6,7 @@
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
 		<link rel="stylesheet" href="https://use.typekit.net/aba0ebl.css" />
 		<meta name="viewport" content="width=device-width" />
-		<!-- DEV MOCK: redirects /wallet/* requests to the local Vite dev server. Remove before connecting to a real RGS backend. -->
+		<!-- DEV MOCK: redirects RGS requests to the local Vite dev server. Remove before connecting to a real RGS backend. -->
 		<script>
 		(function() {
 			if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return;
@@ -14,7 +14,7 @@
 			function patchFetch(fn) {
 				return function devFetch(input, init) {
 					var url = input instanceof Request ? input.url : String(input);
-					if (url.indexOf('/wallet/') !== -1) {
+					if (url.indexOf('/wallet/') !== -1 || url.indexOf('/bet/event') !== -1) {
 						var local = LOCAL + url.replace(/^https?:\/\/[^\/]*/, '');
 						console.info('[mock-rgs]', url, '->', local);
 						return fn.call(this, local, init instanceof Headers ? init : (init || {}));

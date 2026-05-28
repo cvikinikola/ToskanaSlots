@@ -19,10 +19,33 @@
 
 	const PANEL_W = SYMBOL_SIZE * 1.85;
 	const PANEL_H = SYMBOL_SIZE * 1.18;
+	const GOLD = 0xffd147;
 
-	const position = $derived({
-		x: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x + SYMBOL_SIZE * 0.28,
-		y: BOARD_SIZES.height / 2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y + SYMBOL_SIZE * 0.76,
+	const isCompact = $derived(
+		['portrait', 'tablet'].includes(context.stateLayoutDerived.layoutType()),
+	);
+	const frameBounds = $derived({
+		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
+		right: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
+		top: BOARD_SIZES.height / 2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
+		compactTop: BOARD_SIZES.height / 2.2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
+	});
+
+	const position = $derived.by(() => {
+		const insetY = SYMBOL_SIZE * (isCompact ? 0.14 : 0.22);
+
+		if (isCompact) {
+			const rowCenterY = frameBounds.compactTop - SYMBOL_SIZE * 0.22;
+			return {
+				x: frameBounds.right - PANEL_W - SYMBOL_SIZE * 0.86,
+				y: rowCenterY - PANEL_H / 2,
+			};
+		}
+
+		return {
+			x: frameBounds.right + SYMBOL_SIZE * 0.18,
+			y: frameBounds.top + insetY,
+		};
 	});
 
 	let show = $state(false);
@@ -72,7 +95,7 @@
 				style={{
 					fontFamily: 'proxima-nova',
 					fontSize: SYMBOL_SIZE * 0.12,
-					fill: flash ? 0xffffff : 0xffd147,
+					fill: flash ? 0xffffff : GOLD,
 					fontWeight: '900',
 				}}
 			/>
@@ -85,7 +108,7 @@
 				style={{
 					fontFamily: 'proxima-nova',
 					fontSize: SYMBOL_SIZE * 0.34,
-					fill: flash ? 0xffffff : 0xffd700,
+					fill: flash ? 0xffffff : GOLD,
 					fontWeight: '900',
 				}}
 			/>
