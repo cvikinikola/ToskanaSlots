@@ -10,9 +10,9 @@ import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
-import { sanitizePaddedBoard, sanitizeRawSymbol } from './constants';
+import { BOARD_DIMENSIONS, sanitizePaddedBoard, sanitizeRawSymbol } from './constants';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
-import type { Position } from './types';
+import type { Position, RawSymbol } from './types';
 import { buildTumbleBreakdownLine } from './tumbleBreakdown';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -49,6 +49,42 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 	eventEmitter.broadcast({ type: 'boardShow' });
 	await eventEmitter.broadcastAsync({ type: 'boardWithAnimateSymbols', symbolPositions: positions });
 };
+
+const animateTumbleSymbols = async ({ positions }: { positions: Position[] }) => {
+	await eventEmitter.broadcastAsync({
+		type: 'tumbleBoardWithAnimateSymbols',
+		symbolPositions: positions,
+	});
+};
+
+const emptyAddingBoard = (): RawSymbol[][] =>
+	_.range(BOARD_DIMENSIONS.x).map(() => []);
+
+/** Explode one cluster; gravity runs only after the last cluster (tumbleBoard). */
+const explodeClusterOnly = async (positions: Position[]) => {
+	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_tumble_explode' });
+	await eventEmitter.broadcastAsync({
+		type: 'tumbleBoardExplode',
+		explodingPositions: positions,
+	});
+};
+
+const settleTumbleBoard = () => {
+	eventEmitter.broadcast({
+		type: 'boardSettle',
+		board: sanitizePaddedBoard(
+			stateGameDerived
+				.tumbleBoardCombined()
+				.map((tumbleReel) => tumbleReel.map((sym) => sym.rawSymbol)),
+		),
+	});
+	eventEmitter.broadcast({ type: 'tumbleBoardReset' });
+	eventEmitter.broadcast({ type: 'tumbleBoardHide' });
+	eventEmitter.broadcast({ type: 'boardShow' });
+};
+
+/** Set when winInfo destroys clusters one-by-one; tumbleBoard only drops new symbols. */
+let sequentialClusterTumbleActive = false;
 
 const playWinToBalanceCoins = () => {
 	[0, 160, 320, 520].forEach((delay) => {
@@ -134,33 +170,55 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 
 	// ── winInfo ────────────────────────────────────────────────────────────────
-	// One or more winning clusters found. Animate each winning group in sequence.
+	// Per cluster: highlight → show this cluster's payout → destroy; tumble after last.
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
-		const hasSpotMult = bookEvent.wins.some((win) => (win.meta.spotMult ?? 1) > 1);
 		updateRoundWinBookEventAmount(bookEvent.totalWin);
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_coin_clink' });
-		if (hasSpotMult) {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
-		}
 		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
-		await eventEmitter.broadcastAsync({
-			type: 'tumbleWinAmountUpdate',
-			amount: bookEvent.totalWin,
-			animate: false,
+		eventEmitter.broadcast({ type: 'tumbleWinBreakdownShow', lines: [] });
+
+		sequentialClusterTumbleActive = bookEvent.wins.length > 0;
+
+		await sequence(bookEvent.wins, async (win, index) => {
+			const line = buildTumbleBreakdownLine(win);
+
+			if (index === 0) {
+				await animateSymbols({ positions: win.positions });
+			} else {
+				await animateTumbleSymbols({ positions: win.positions });
+			}
+
+			// One line at a time — only the cluster just highlighted.
+			eventEmitter.broadcast({ type: 'tumbleWinBreakdownShow', lines: [line] });
+			eventEmitter.broadcast({ type: 'tumbleHistoryAdd', lines: [line] });
+
+			const partialWin = bookEvent.wins.slice(0, index + 1).reduce((sum, w) => sum + w.win, 0);
+			await eventEmitter.broadcastAsync({
+				type: 'tumbleWinAmountUpdate',
+				amount: partialWin,
+				animate: false,
+			});
+
+			if ((win.meta.spotMult ?? 1) > 1) {
+				eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
+			}
+
+			if (index === 0) {
+				eventEmitter.broadcast({ type: 'boardHide' });
+				eventEmitter.broadcast({ type: 'tumbleBoardShow' });
+				eventEmitter.broadcast({ type: 'tumbleBoardInit', addingBoard: emptyAddingBoard() });
+			}
+
+			await explodeClusterOnly(win.positions);
+
+			if (index < bookEvent.wins.length - 1) {
+				await waitForTimeout(220);
+			}
 		});
-		const breakdownLines = bookEvent.wins.map((win) => buildTumbleBreakdownLine(win));
-		eventEmitter.broadcast({
-			type: 'tumbleWinBreakdownShow',
-			lines: breakdownLines,
-		});
-		eventEmitter.broadcast({
-			type: 'tumbleHistoryAdd',
-			lines: breakdownLines,
-		});
-		await sequence(bookEvent.wins, async (win) => {
-			await animateSymbols({ positions: win.positions });
-		});
+
+		if (bookEvent.wins.length > 0) {
+			eventEmitter.broadcast({ type: 'tumbleBoardRemoveExploded' });
+		}
 	},
 
 	// ── spotMultiplierUpdate ──────────────────────────────────────────────────
@@ -201,12 +259,22 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	//  5. Settle the main board with the resulting symbols
 	//  6. Hide tumble overlay, show main board
 	tumbleBoard: async (bookEvent: BookEventOfType<'tumbleBoard'>) => {
+		const addingBoard = bookEvent.newSymbols.map((reel) =>
+			reel.map((sym) => sanitizeRawSymbol(sym)),
+		);
+
+		if (sequentialClusterTumbleActive) {
+			eventEmitter.broadcast({ type: 'tumbleBoardSetAdding', addingBoard });
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_tumble_fall' });
+			await eventEmitter.broadcastAsync({ type: 'tumbleBoardSlideDown' });
+			settleTumbleBoard();
+			sequentialClusterTumbleActive = false;
+			return;
+		}
+
 		eventEmitter.broadcast({ type: 'boardHide' });
 		eventEmitter.broadcast({ type: 'tumbleBoardShow' });
-		eventEmitter.broadcast({
-			type: 'tumbleBoardInit',
-			addingBoard: bookEvent.newSymbols.map((reel) => reel.map((sym) => sanitizeRawSymbol(sym))),
-		});
+		eventEmitter.broadcast({ type: 'tumbleBoardInit', addingBoard });
 
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_tumble_explode' });
 		await eventEmitter.broadcastAsync({
@@ -218,19 +286,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_tumble_fall' });
 		await eventEmitter.broadcastAsync({ type: 'tumbleBoardSlideDown' });
 
-		// Settle the main board using the resulting tumble board symbols
-		eventEmitter.broadcast({
-			type: 'boardSettle',
-			board: sanitizePaddedBoard(
-				stateGameDerived
-					.tumbleBoardCombined()
-					.map((tumbleReel) => tumbleReel.map((sym) => sym.rawSymbol)),
-			),
-		});
-
-		eventEmitter.broadcast({ type: 'tumbleBoardReset' });
-		eventEmitter.broadcast({ type: 'tumbleBoardHide' });
-		eventEmitter.broadcast({ type: 'boardShow' });
+		settleTumbleBoard();
 	},
 
 	// ── updateTumbleWin ────────────────────────────────────────────────────────
@@ -268,6 +324,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		freeSpinWinBookEventAmount = stateBet.winBookEventAmount;
 		freeSpinTumbleWinBookEventAmount = 0;
 		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
+		eventEmitter.broadcast({ type: 'spotMultipliersClear' });
+		eventEmitter.broadcast({ type: 'winGlowHide' });
 
 		// Animate each scatter one-by-one: butterfly flutter + pop sound per scatter.
 		await sequence(bookEvent.positions, async (pos) => {
@@ -375,6 +433,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.freeSpinOutroActive = false;
 		stateGame.gameType = 'basegame';
 		eventEmitter.broadcast({ type: 'spotMultipliersClear' });
+		eventEmitter.broadcast({ type: 'winGlowHide' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;
@@ -407,6 +466,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (bookEvent.amount > 0) {
 			playWinToBalanceCoins();
 		}
+		// Spot marks (×2 / golden cells) must not linger until the next spin.
+		eventEmitter.broadcast({ type: 'spotMultipliersClear' });
+		eventEmitter.broadcast({ type: 'winGlowHide' });
 		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
 	},
 

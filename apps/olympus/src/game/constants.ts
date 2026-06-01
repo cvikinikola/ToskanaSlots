@@ -79,6 +79,9 @@ export const SYMBOL_CELL_HEIGHT = BOARD_SIZES.height / BOARD_DIMENSIONS.y;
 /** Row height for cascade reels — equals one grid cell. */
 export const SYMBOL_SIZE = SYMBOL_CELL_HEIGHT;
 
+/** Scatter (S) renders larger than paying symbols. */
+export const SCATTER_SYMBOL_SIZE_SCALE = 1.28;
+
 /** Horizontal distance between reel centres — equals one grid cell. */
 export const SYMBOL_STEP_X = SYMBOL_CELL_WIDTH;
 
@@ -524,38 +527,58 @@ export const INITIAL_BOARD: RawSymbol[][] = [
 	],
 ];
 
+export const REEL_LENGTH = BOARD_DIMENSIONS.y + 2;
+
+/** Matches createReelForCascading fallIn column start delay. */
+export const getCascadingReelFallInDelayMs = (
+	reelIndex: number,
+	spinOptions: Pick<typeof SPIN_OPTIONS_DEFAULT, 'reelFallInDelay' | 'reelPaddingMultiplierNormal'>,
+	reelLength = REEL_LENGTH,
+) => {
+	const basePadding = reelLength * spinOptions.reelPaddingMultiplierNormal;
+	const paddingSize = (reelIndex + 1) * basePadding;
+	const fallInDelayMultiplier = paddingSize / reelLength - 1;
+	return spinOptions.reelFallInDelay * fallInDelayMultiplier;
+};
+
+/** Bottom visible row index — stop sound fires once per column when this row settles. */
+export const BOTTOM_ROW_INDEX = BOARD_DIMENSIONS.y - 1;
+
+/** Lead stop SFX slightly before visual impact to compensate for audio output latency. */
+export const STOP_SOUND_LEAD_MS = 40;
+
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 
 /** Symbol / tumble animation timings (ms). */
-export const SYMBOL_WIN_DURATION_MS = 680;
-export const SYMBOL_EXPLOSION_DURATION_MS = 720;
-export const SYMBOL_LAND_DURATION_MS = 220;
-export const TUMBLE_SLIDE_DURATION_MS = 420;
+export const SYMBOL_WIN_DURATION_MS = 450;
+export const SYMBOL_EXPLOSION_DURATION_MS = 450;
+export const SYMBOL_LAND_DURATION_MS = 150;
+
+const SPIN_OPTIONS_SHARED = {
+	reelFallInDelay: 80,
+	reelPaddingMultiplierNormal: 1.25,
+	reelPaddingMultiplierAnticipated: 18,
+	reelFallOutDelay: 145,
+};
 
 export const SPIN_OPTIONS_DEFAULT = {
-	symbolFallInSpeed: 2.8,
-	symbolFallInInterval: 140,
-	symbolFallInBounceSpeed: 1.1,
-	symbolFallInBounceSizeMulti: 0.1,
-	symbolFallOutSpeed: 4.2,
-	symbolFallOutInterval: 75,
-	reelFallInDelay: 220,
-	reelPaddingMultiplierNormal: 1.5,
-	reelPaddingMultiplierAnticipated: 3,
-	reelFallOutDelay: 150,
+	...SPIN_OPTIONS_SHARED,
+	symbolFallInSpeed: 3.5,
+	symbolFallInInterval: 30,
+	symbolFallInBounceSpeed: 0.15,
+	symbolFallInBounceSizeMulti: 0.5,
+	symbolFallOutSpeed: 3.5,
+	symbolFallOutInterval: 20,
 };
 
 export const SPIN_OPTIONS_FAST = {
-	symbolFallInSpeed: 12,
-	symbolFallInInterval: 20,
-	symbolFallInBounceSpeed: 5,
-	symbolFallInBounceSizeMulti: 0.05,
-	symbolFallOutSpeed: 16,
-	symbolFallOutInterval: 10,
-	reelFallInDelay: 20,
-	reelPaddingMultiplierNormal: 1,
-	reelPaddingMultiplierAnticipated: 2,
-	reelFallOutDelay: 20,
+	...SPIN_OPTIONS_SHARED,
+	symbolFallInSpeed: 7,
+	symbolFallInInterval: 0,
+	symbolFallInBounceSpeed: 0.3,
+	symbolFallInBounceSizeMulti: 0.25,
+	symbolFallOutSpeed: 7,
+	symbolFallOutInterval: 0,
 };
 
 export const SYMBOL_COLORS: Record<string, number> = {

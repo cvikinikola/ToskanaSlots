@@ -53,12 +53,5 @@ export type SoundEffectName =
 
 export type SoundName = MusicName | SoundEffectName;
 
-/**
- * Sound player instances.
- * Placeholder – wire up to real audio files when assets are ready.
- * The `createSound` factory returns objects compatible with the SDK's sound emitter events.
- */
-export const sound = createSound<MusicName, SoundEffectName>({
-	music: {},
-	sfx: {},
-});
+/** Reserved for utils-sound if we wire the sprite sheet later; stop SFX uses local mp3 in Sound.svelte. */
+export const sound = createSound<SoundName>();

@@ -5,10 +5,12 @@
 		| { type: 'tumbleBoardShow' }
 		| { type: 'tumbleBoardHide' }
 		| { type: 'tumbleBoardInit'; addingBoard: RawSymbol[][] }
+		| { type: 'tumbleBoardSetAdding'; addingBoard: RawSymbol[][] }
 		| { type: 'tumbleBoardReset' }
 		| { type: 'tumbleBoardExplode'; explodingPositions: Position[] }
 		| { type: 'tumbleBoardRemoveExploded' }
-		| { type: 'tumbleBoardSlideDown' };
+		| { type: 'tumbleBoardSlideDown' }
+		| { type: 'tumbleBoardWithAnimateSymbols'; symbolPositions: Position[] };
 </script>
 
 <script lang="ts">
@@ -16,19 +18,152 @@
 	import { backOut } from 'svelte/easing';
 
 	import { BoardContext } from 'components-shared';
-	import { waitForResolve } from 'utils-shared/wait';
+	import { stateBet } from 'state-shared';
+	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 
 	import TumbleBoardBase from './TumbleBoardBase.svelte';
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
 	import { getSymbolY } from '../game/utils';
-	import { TUMBLE_SLIDE_DURATION_MS } from '../game/constants';
+	import {
+		BOTTOM_ROW_INDEX,
+		getCascadingReelFallInDelayMs,
+		SPIN_OPTIONS_DEFAULT,
+		SPIN_OPTIONS_FAST,
+		STOP_SOUND_LEAD_MS,
+		SYMBOL_SIZE,
+	} from '../game/constants';
 	import { getContext } from '../game/context';
 	import type { RawSymbol } from '../game/types';
+	import type { TumbleSymbol } from '../game/stateGame.svelte';
 
 	const context = getContext();
 
 	let show = $state(false);
+
+	const getFallInStartDelay = (boardRow: number, interval: number) =>
+		interval * (BOTTOM_ROW_INDEX - boardRow);
+
+	const getSymbolImpactDelayMs = ({
+		oldY,
+		targetY,
+		boardRow,
+		spinOptions,
+		isTurbo,
+	}: {
+		oldY: number;
+		targetY: number;
+		boardRow?: number;
+		spinOptions: typeof SPIN_OPTIONS_DEFAULT;
+		isTurbo: boolean;
+	}) => {
+		const distance = targetY - oldY;
+		const bounceDistance = SYMBOL_SIZE * spinOptions.symbolFallInBounceSizeMulti;
+		const landDuration = Math.max(1, (distance - bounceDistance) / spinOptions.symbolFallInSpeed);
+		const stagger =
+			!isTurbo && boardRow !== undefined
+				? getFallInStartDelay(boardRow, spinOptions.symbolFallInInterval)
+				: 0;
+		return stagger + landDuration;
+	};
+
+	const fallOneTumbleSymbol = async ({
+		tumbleSymbol,
+		targetY,
+		boardRow,
+		spinOptions,
+		isTurbo,
+	}: {
+		tumbleSymbol: TumbleSymbol;
+		targetY: number;
+		boardRow?: number;
+		spinOptions: typeof SPIN_OPTIONS_DEFAULT;
+		isTurbo: boolean;
+	}) => {
+		const oldY = tumbleSymbol.symbolY.current;
+		if (targetY === oldY) return;
+
+		const distance = targetY - oldY;
+		const bounceDistance = SYMBOL_SIZE * spinOptions.symbolFallInBounceSizeMulti;
+		const landDuration = Math.max(1, (distance - bounceDistance) / spinOptions.symbolFallInSpeed);
+		const bounceDuration = bounceDistance / spinOptions.symbolFallInBounceSpeed;
+
+		if (!isTurbo && boardRow !== undefined) {
+			const delay = getFallInStartDelay(boardRow, spinOptions.symbolFallInInterval);
+			if (delay > 0) await waitForTimeout(delay);
+		}
+
+		await tumbleSymbol.symbolY.set(targetY - bounceDistance, { duration: landDuration });
+
+		await tumbleSymbol.symbolY.set(targetY, {
+			duration: bounceDuration,
+			easing: backOut,
+		});
+	};
+
+	const slideTumbleReel = async ({
+		tumbleReel,
+		spinOptions,
+		reelIndex,
+		isTurbo,
+	}: {
+		tumbleReel: TumbleSymbol[];
+		spinOptions: typeof SPIN_OPTIONS_DEFAULT;
+		reelIndex: number;
+		isTurbo: boolean;
+	}) => {
+		if (!isTurbo) {
+			const reelDelay = getCascadingReelFallInDelayMs(reelIndex, spinOptions);
+			if (reelDelay > 0) await waitForTimeout(reelDelay);
+		}
+
+		let maxImpactMs = 0;
+		for (const [symbolIndex, tumbleSymbol] of tumbleReel.entries()) {
+			const targetY = getSymbolY(symbolIndex - 1);
+			if (targetY === tumbleSymbol.symbolY.current) continue;
+
+			const isVisible = symbolIndex > 0 && symbolIndex < tumbleReel.length - 1;
+			const boardRow = isVisible ? symbolIndex - 1 : undefined;
+			maxImpactMs = Math.max(
+				maxImpactMs,
+				getSymbolImpactDelayMs({
+					oldY: tumbleSymbol.symbolY.current,
+					targetY,
+					boardRow,
+					spinOptions,
+					isTurbo,
+				}),
+			);
+		}
+
+		if (maxImpactMs > 0) {
+			const stopDelay = Math.max(0, maxImpactMs - STOP_SOUND_LEAD_MS);
+			setTimeout(() => {
+				context.eventEmitter.broadcast({
+					type: 'soundReelStop',
+					forcePlay: !isTurbo,
+				});
+			}, stopDelay);
+		}
+
+		await Promise.all(
+			tumbleReel.map(async (tumbleSymbol, symbolIndex) => {
+				const targetY = getSymbolY(symbolIndex - 1);
+				if (targetY === tumbleSymbol.symbolY.current) return;
+
+				const isVisible = symbolIndex > 0 && symbolIndex < tumbleReel.length - 1;
+				const boardRow = isVisible ? symbolIndex - 1 : undefined;
+
+				await fallOneTumbleSymbol({
+					tumbleSymbol,
+					targetY,
+					boardRow,
+					spinOptions,
+					isTurbo,
+				});
+			}),
+		);
+	};
 
 	const createTumbleSymbol = ({ initY, rawSymbol }: { initY: number; rawSymbol: RawSymbol }) => {
 		const symbolY = new Tween(initY);
@@ -70,6 +205,30 @@
 			context.stateGame.tumbleBoardAdding = initTumbleBoardAdding({ addingBoard });
 			context.stateGame.tumbleBoardBase = initTumbleBoardBase();
 		},
+		tumbleBoardSetAdding: ({ addingBoard }) => {
+			context.stateGame.tumbleBoardAdding = initTumbleBoardAdding({ addingBoard });
+		},
+		tumbleBoardWithAnimateSymbols: async ({ symbolPositions }) => {
+			const seen = new Set<string>();
+			const uniquePositions = symbolPositions.filter((p) => {
+				const k = `${p.reel}-${p.row}`;
+				if (seen.has(k)) return false;
+				seen.add(k);
+				return true;
+			});
+			const getPromises = () =>
+				uniquePositions.map(async (position) => {
+					const tumbleSymbol =
+						context.stateGame.tumbleBoardBase[position.reel]?.[position.row + 1];
+					if (!tumbleSymbol) return;
+					tumbleSymbol.symbolState = 'win';
+					await waitForResolve((resolve) => (tumbleSymbol.oncomplete = resolve));
+					tumbleSymbol.symbolState = 'static';
+					tumbleSymbol.oncomplete = () => {};
+				});
+
+			await Promise.all(getPromises());
+		},
 		tumbleBoardReset: () => {
 			context.stateGame.tumbleBoardAdding = [];
 			context.stateGame.tumbleBoardBase = [];
@@ -107,46 +266,15 @@
 			});
 		},
 		tumbleBoardSlideDown: async () => {
-			const getPromises = () =>
-				context.stateGameDerived.tumbleBoardCombined().map(async (tumbleReel, reelIndex) => {
-					const reelMoved = tumbleReel.some((tumbleSymbol, symbolIndex) => {
-						const targetY = getSymbolY(symbolIndex - 1);
-						return targetY !== tumbleSymbol.symbolY.current;
-					});
+			const isTurbo = stateBet.isTurbo;
+			const spinOptions = isTurbo ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
+			const tumbleBoard = context.stateGameDerived.tumbleBoardCombined();
 
-					await Promise.all(
-						tumbleReel.map(async (tumbleSymbol, symbolIndex) => {
-							const targetY = getSymbolY(symbolIndex - 1);
-							if (targetY !== tumbleSymbol.symbolY.current) {
-								await tumbleSymbol.symbolY.set(targetY, {
-									duration: TUMBLE_SLIDE_DURATION_MS,
-									easing: backOut,
-								});
-								if (symbolIndex > 0 && symbolIndex < tumbleReel.length - 1) {
-									tumbleSymbol.symbolState = 'land';
-									context.stateGameDerived.onSymbolLand({
-										rawSymbol: tumbleSymbol.rawSymbol,
-									});
-									await waitForResolve((resolve) => {
-										tumbleSymbol.oncomplete = () => {
-											tumbleSymbol.symbolState = 'static';
-											resolve();
-										};
-									});
-								}
-							}
-						}),
-					);
-
-					if (reelMoved) {
-						context.eventEmitter.broadcast({
-							type: 'soundReelStop',
-							forcePlay: true,
-							playbackRate: 1.2 + reelIndex * 0.015,
-						});
-					}
-				});
-			await Promise.all(getPromises());
+			await Promise.all(
+				tumbleBoard.map((tumbleReel, reelIndex) =>
+					slideTumbleReel({ tumbleReel, spinOptions, reelIndex, isTurbo }),
+				),
+			);
 		},
 	});
 </script>

@@ -86,6 +86,15 @@ export const menuSpinHitSize = (pad = 8, scale = 1) => ({
 	height: MENU_SPIN_HEIGHT * scale + pad,
 });
 
+/** STOP icon — scale width only (height stays menuIconHeight). */
+export const MENU_STOP_WIDTH_RATIO = 0.62;
+
+export const menuStopRenderWidth = (menuIconHeight: number) =>
+	menuIconHeight * MENU_ICON_ASPECT.stop * MENU_STOP_WIDTH_RATIO;
+
+export const menuStopHitSize = (pad = 6, scale = 1) =>
+	menuIconHitSize(MENU_ICON_ASPECT.stop * MENU_STOP_WIDTH_RATIO, pad, scale);
+
 /** Landscape uniform bar — +/- same height as MENU bar icons. */
 export const LANDSCAPE_BET_CONTROL_RENDER_RATIO = 1;
 

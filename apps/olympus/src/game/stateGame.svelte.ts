@@ -19,11 +19,25 @@ import {
 	SPIN_OPTIONS_FAST,
 	INITIAL_SYMBOL_STATE,
 	SCATTER_LAND_SOUND_MAP,
+	BOTTOM_ROW_INDEX,
 } from './constants';
 
 // ─── Symbol land callbacks ────────────────────────────────────────────────────
 
-const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
+const onSymbolLand = ({
+	rawSymbol,
+	symbolIndexOfBoard,
+}: {
+	rawSymbol: RawSymbol;
+	symbolIndexOfBoard?: number;
+}) => {
+	if (symbolIndexOfBoard === BOTTOM_ROW_INDEX) {
+		eventEmitter.broadcast({
+			type: 'soundReelStop',
+			forcePlay: !stateBet.isTurbo,
+		});
+	}
+
 	if (rawSymbol.name === 'S') {
 		eventEmitter.broadcast({ type: 'soundScatterCounterIncrease' });
 		eventEmitter.broadcast({
@@ -46,15 +60,11 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		initialSymbols: INITIAL_BOARD[reelIndex],
 		initialSymbolState: INITIAL_SYMBOL_STATE,
 		onReelSpinStart: () => {
-			eventEmitter.broadcast({ type: 'soundReelSpin' });
+			if (reelIndex === 0) {
+				eventEmitter.broadcast({ type: 'soundReelSpin' });
+			}
 		},
-		onReelStopping: () => {
-			eventEmitter.broadcast({
-				type: 'soundReelStop',
-				forcePlay: !stateBet.isTurbo,
-				playbackRate: stateBet.isTurbo ? 1.25 : 1,
-			});
-		},
+		onReelStopping: () => {},
 		onSymbolLand,
 	});
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { Container, BitmapText, Sprite } from 'pixi-svelte';
+	import { Container, Sprite, Graphics } from 'pixi-svelte';
 	import type { SymbolState, RawSymbol } from '../game/types';
-	import { SYMBOL_SIZE, SYMBOL_CELL_WIDTH, SYMBOL_CELL_HEIGHT, SYMBOL_WIN_DURATION_MS, SYMBOL_EXPLOSION_DURATION_MS, SYMBOL_LAND_DURATION_MS } from '../game/constants';
+	import { SYMBOL_SIZE, SYMBOL_CELL_WIDTH, SYMBOL_CELL_HEIGHT, SCATTER_SYMBOL_SIZE_SCALE, SYMBOL_WIN_DURATION_MS, SYMBOL_EXPLOSION_DURATION_MS, SYMBOL_LAND_DURATION_MS } from '../game/constants';
 
 	type Props = {
 		x?: number;
@@ -16,6 +16,7 @@
 
 	/** Asset key for the symbol sprite (registered in src/game/assets.ts). */
 	const spriteKey = $derived(`sym_${props.rawSymbol.name.toLowerCase()}`);
+	const isScatter = $derived(props.rawSymbol.name === 'S');
 
 	/**
 	 * Visual feedback per state:
@@ -35,7 +36,29 @@
 	);
 
 	const scale = $derived(props.state === 'win' ? 1.05 : 1);
-	const symbolSpriteSize = Math.min(SYMBOL_CELL_WIDTH, SYMBOL_CELL_HEIGHT) * 0.99;
+	const symbolSpriteSize = $derived(
+		Math.min(SYMBOL_CELL_WIDTH, SYMBOL_CELL_HEIGHT) *
+			0.99 *
+			(isScatter ? SCATTER_SYMBOL_SIZE_SCALE : 1),
+	);
+	const showScatterGlow = $derived(isScatter && props.state !== 'explosion');
+
+	let scatterPulse = $state(0);
+
+	$effect(() => {
+		if (!showScatterGlow) {
+			scatterPulse = 0;
+			return;
+		}
+		let raf = 0;
+		const start = performance.now();
+		const tick = (t: number) => {
+			scatterPulse = (Math.sin(((t - start) / 650) * Math.PI * 2) + 1) / 2;
+			raf = requestAnimationFrame(tick);
+		};
+		raf = requestAnimationFrame(tick);
+		return () => cancelAnimationFrame(raf);
+	});
 
 	// Trigger oncomplete for animation states that have no real spine track yet.
 	$effect(() => {
@@ -53,6 +76,30 @@
 </script>
 
 <Container x={props.x ?? 0} y={props.y ?? 0} {scale}>
+	{#if showScatterGlow}
+		<Graphics
+			draw={(g) => {
+				g.clear();
+				const r = symbolSpriteSize * 0.56;
+				const pulse = scatterPulse;
+
+				g.circle(0, 0, r * 1.42 + pulse * r * 0.1);
+				g.fill({ color: 0xff8c00, alpha: 0.14 + pulse * 0.14 });
+
+				g.circle(0, 0, r * 1.12 + pulse * r * 0.06);
+				g.fill({ color: 0xffc933, alpha: 0.24 + pulse * 0.2 });
+
+				g.circle(0, 0, r * 0.88);
+				g.fill({ color: 0xffe566, alpha: 0.1 + pulse * 0.12 });
+
+				g.circle(0, 0, r * 0.84);
+				g.stroke({ color: 0xffe989, width: 3 + pulse * 2, alpha: 0.65 + pulse * 0.3 });
+
+				g.circle(0, 0, r * 0.72);
+				g.stroke({ color: 0xfff8c8, width: 1.5, alpha: 0.5 + pulse * 0.35 });
+			}}
+		/>
+	{/if}
 	<Sprite
 		key={spriteKey}
 		anchor={0.5}

@@ -9,11 +9,10 @@
 
 <script lang="ts">
 	import { Container, Graphics } from 'pixi-svelte';
-	import { MainContainer } from 'components-layout';
 
 	import { getContext } from '../game/context';
-	import { BOARD_SIZES } from '../game/constants';
 	import { getSymbolX, getSymbolY } from '../game/utils';
+	import BoardContainer from './BoardContainer.svelte';
 
 	const context = getContext();
 
@@ -56,15 +55,11 @@
 		sparks = [...sparks, ...fresh];
 	}
 
-	/** Convert a board (reel,row) into MainContainer coordinates. */
-	function positionToMainCoords(reel: number, row: number) {
-		const board = context.stateGameDerived.boardLayout();
-		const s = board.scale;
-		const boardX0 = board.x - (BOARD_SIZES.width * s) / 2;
-		const boardY0 = board.y - (BOARD_SIZES.height * s) / 2;
+	/** Board-native coordinates — same space as symbols inside BoardContainer. */
+	function positionToBoardCoords(reel: number, row: number) {
 		return {
-			x: boardX0 + getSymbolX(reel) * s,
-			y: boardY0 + getSymbolY(row) * s,
+			x: getSymbolX(reel),
+			y: getSymbolY(row),
 		};
 	}
 
@@ -73,7 +68,7 @@
 
 		tumbleBoardExplode: ({ explodingPositions }) => {
 			for (const p of explodingPositions) {
-				const { x, y } = positionToMainCoords(p.reel, p.row);
+				const { x, y } = positionToBoardCoords(p.reel, p.row);
 				burst(x, y, 1);
 			}
 		},
@@ -104,7 +99,7 @@
 	});
 </script>
 
-<MainContainer>
+<BoardContainer>
 	<Container zIndex={50}>
 		{#each sparks as s (s.id)}
 			<Graphics
@@ -122,4 +117,4 @@
 			/>
 		{/each}
 	</Container>
-</MainContainer>
+</BoardContainer>

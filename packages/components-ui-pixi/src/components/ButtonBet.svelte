@@ -7,9 +7,9 @@
 	import UiAssetSprite from './UiAssetSprite.svelte';
 	import ButtonBetProvider from './ButtonBetProvider.svelte';
 	import {
-		MENU_ICON_ASPECT,
-		menuIconHitSize,
 		menuSpinHitSize,
+		menuStopHitSize,
+		menuStopRenderWidth,
 		portraitUiRuntime,
 	} from '../constants';
 
@@ -22,9 +22,7 @@
 <ButtonBetProvider>
 	{#snippet children({ key, onpress })}
 		{@const isSpin = isSpinKey(key)}
-		{@const sizes = isSpin
-			? menuSpinHitSize(8, uiScale)
-			: menuIconHitSize(MENU_ICON_ASPECT.stop, 6, uiScale)}
+		{@const sizes = isSpin ? menuSpinHitSize(8, uiScale) : menuStopHitSize(6, uiScale)}
 		<OnHotkey hotkey="Space" {disabled} {onpress} />
 		<Button {...props} {sizes} {onpress} {disabled}>
 			{#snippet children({ center, hovered, pressed })}
@@ -34,7 +32,7 @@
 						anchor={0.5}
 						width={isSpin
 							? portraitUiRuntime.menuSpinHeight
-							: portraitUiRuntime.menuIconHeight * MENU_ICON_ASPECT.stop}
+							: menuStopRenderWidth(portraitUiRuntime.menuIconHeight)}
 						height={isSpin
 							? portraitUiRuntime.menuSpinHeight
 							: portraitUiRuntime.menuIconHeight}

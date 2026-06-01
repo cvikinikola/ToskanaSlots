@@ -10,7 +10,6 @@
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
-	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
@@ -44,7 +43,6 @@
 </script>
 
 <App>
-	<EnableSound />
 	<EnableHotkey />
 	<EnableGameActor />
 	<EnablePixiExtension />
@@ -67,6 +65,8 @@
 			<ReelFramePanel />
 			<Board />
 			<SpotMultipliers />
+			<WinGlow />
+			<WinSparks />
 		</MainContainer>
 
 		<MainContainer
@@ -79,10 +79,8 @@
 			<FreeSpinCounter />
 		</MainContainer>
 
-		<WinSparks />
 		<AmbientNature />
 		<NatureBurst />
-		<WinGlow />
 
 		<UI>
 			{#snippet gameName()}{/snippet}

@@ -44,7 +44,7 @@ type ReelCreateOptions<TRawSymbol extends object, TSymbolState extends string> =
 	symbolHeight: number;
 	onReelSpinStart?: () => void;
 	onReelStopping: () => void;
-	onSymbolLand: (args: { rawSymbol: TRawSymbol }) => void;
+	onSymbolLand: (args: { rawSymbol: TRawSymbol; symbolIndexOfBoard?: number }) => void;
 };
 
 export type SpinningReelCreateOptions<

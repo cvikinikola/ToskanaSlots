@@ -7,12 +7,12 @@
 
 <script lang="ts">
 	import { Container, Graphics } from 'pixi-svelte';
-	import { MainContainer } from 'components-layout';
 
 	import { getContext } from '../game/context';
 	import type { Position } from '../game/types';
-	import { SYMBOL_SIZE, BOARD_SIZES } from '../game/constants';
+	import { SYMBOL_SIZE } from '../game/constants';
 	import { getSymbolX, getSymbolY } from '../game/utils';
+	import BoardContainer from './BoardContainer.svelte';
 
 	const context = getContext();
 
@@ -57,19 +57,14 @@
 
 	function symCenter(reel: number, row: number) {
 		return {
-			x: getSymbolX(reel) - BOARD_SIZES.width / 2,
-			y: getSymbolY(row) - BOARD_SIZES.height / 2,
+			x: getSymbolX(reel),
+			y: getSymbolY(row),
 		};
 	}
 </script>
 
-<MainContainer>
-	<Container
-		x={context.stateGameDerived.boardLayout().x}
-		y={context.stateGameDerived.boardLayout().y}
-		scale={context.stateGameDerived.boardLayout().scale}
-		zIndex={12}
-	>
+<BoardContainer>
+	<Container zIndex={12}>
 		{#each positions as p (`${p.reel}-${p.row}`)}
 			{@const c = symCenter(p.reel, p.row)}
 			<Graphics
@@ -89,4 +84,4 @@
 			/>
 		{/each}
 	</Container>
-</MainContainer>
+</BoardContainer>

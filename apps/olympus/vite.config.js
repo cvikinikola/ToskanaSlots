@@ -16,6 +16,10 @@ export default defineConfig(async () =>
 		optimizeDeps: {
 			exclude: ['pixi-svelte'],
 		},
-		server: { port: 3005 },
+		server: {
+			port: 3005,
+			// Allow ngrok tunnels (subdomain changes each session on free plan).
+			allowedHosts: ['.ngrok-free.dev', '.ngrok-free.app', '.ngrok.io'],
+		},
 	}),
 );

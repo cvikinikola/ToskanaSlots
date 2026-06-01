@@ -30,9 +30,9 @@
 		['portrait', 'tablet'].includes(context.stateLayoutDerived.layoutType()),
 	);
 
-	const fontMain = $derived(SYMBOL_SIZE * (isCompact ? 0.28 : 0.32));
-	const fontSmall = $derived(SYMBOL_SIZE * (isCompact ? 0.24 : 0.28));
-	const iconSize = $derived(SYMBOL_SIZE * (isCompact ? 0.44 : 0.5));
+	const fontMain = $derived(SYMBOL_SIZE * (isCompact ? 0.34 : 0.38));
+	const fontSmall = $derived(SYMBOL_SIZE * (isCompact ? 0.30 : 0.34));
+	const iconSize = $derived(SYMBOL_SIZE * (isCompact ? 0.52 : 0.58));
 	const lineGap = $derived(SYMBOL_SIZE * 0.54);
 	const segGap = $derived(SYMBOL_SIZE * 0.12);
 

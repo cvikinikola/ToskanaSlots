@@ -23,6 +23,11 @@
 
 	const context = getContext();
 	const activeAudios = new Set<HTMLAudioElement>();
+	const SPIN_SOUND = '/assets/audio/spin1.mp3';
+	const STOP_SOUND_SRC = '/assets/audio/stop2.mp3';
+	const SCATTER_MUSIC = '/assets/audio/scater_music.mp3';
+	const STOP_POOL_SIZE = 8;
+	let stopAudioPool: HTMLAudioElement[] = [];
 	let pageActive = $state(true);
 	let lastReelSpinAt = 0;
 	let lastReelStopAt = 0;
@@ -58,11 +63,44 @@
 		audio.play().catch(cleanup);
 	};
 
+	const playReelStop = ({
+		forcePlay = false,
+		playbackRate = 1,
+	}: {
+		forcePlay?: boolean;
+		playbackRate?: number;
+	}) => {
+		if (!pageActive || soundEffectVolume <= 0) return;
+
+		const now = performance.now();
+		if (!forcePlay && now - lastReelStopAt < 80) return;
+		lastReelStopAt = now;
+
+		const pooled = stopAudioPool.find((audio) => audio.paused || audio.ended);
+		const audio = pooled ?? stopAudioPool[0];
+		if (audio) {
+			audio.currentTime = 0;
+			audio.volume = Math.max(0, Math.min(1, 0.85 * soundEffectVolume));
+			audio.playbackRate = playbackRate;
+			audio.play().catch(() => {});
+			return;
+		}
+
+		playAudio(STOP_SOUND_SRC, 0.85, playbackRate);
+	};
+
 	$effect(() => {
 		if (soundEffectVolume <= 0) pauseActiveAudios();
 	});
 
 	onMount(() => {
+		stopAudioPool = Array.from({ length: STOP_POOL_SIZE }, () => {
+			const audio = new Audio(STOP_SOUND_SRC);
+			audio.preload = 'auto';
+			audio.load();
+			return audio;
+		});
+
 		updatePageActive();
 		document.addEventListener('visibilitychange', updatePageActive);
 		window.addEventListener('pageshow', updatePageActive);
@@ -90,18 +128,19 @@
 				const now = performance.now();
 				if (now - lastReelSpinAt < 80) return;
 				lastReelSpinAt = now;
-				playAudio('/assets/audio/spin.mp3', 0.8);
+				playAudio(SPIN_SOUND, 0.8);
 				return;
 			}
 			if (name === 'sfx_reel_stop_1') {
-				const now = performance.now();
-				if (now - lastReelStopAt < 80) return;
-				lastReelStopAt = now;
-				playAudio('/assets/audio/zaustavljanje.mp3', 0.85);
+				playReelStop({});
 				return;
 			}
 			if (name === 'sfx_symbol_destroy') {
 				playAudio('/assets/audio/unistenjeSimbola.wav', 0.9);
+				return;
+			}
+			if (/^sfx_scatter_[1-5]$/.test(name)) {
+				playAudio(SCATTER_MUSIC, 0.85);
 				return;
 			}
 			if (name === 'sfx_coin_clink') {
@@ -123,14 +162,11 @@
 			const now = performance.now();
 			if (now - lastReelSpinAt < 80) return;
 			lastReelSpinAt = now;
-			playAudio('/assets/audio/spin.mp3', 0.8);
+			playAudio(SPIN_SOUND, 0.8);
 		},
 
 		soundReelStop: ({ forcePlay = false, playbackRate = 1 }) => {
-			const now = performance.now();
-			if (!forcePlay && now - lastReelStopAt < 80) return;
-			lastReelStopAt = now;
-			playAudio('/assets/audio/zaustavljanje.mp3', 0.85, playbackRate);
+			playReelStop({ forcePlay, playbackRate });
 		},
 
 		soundSymbolDestroy: () => {

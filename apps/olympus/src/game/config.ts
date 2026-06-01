@@ -168,7 +168,7 @@ const config = {
 	spotMultipliers: {
 		startMultiplier: 2,
 		maxMultiplier: 1024,
-		/** Base game: visuals cleared on next spin (reveal). Free spins: persist entire round. */
+	/** Base game: visuals cleared when the round finishes (finalWin). Free spins: persist until bonus ends. */
 		persistInFreeSpins: true,
 	},
 
