@@ -1,11 +1,7 @@
 <script lang="ts" module>
-	import type { SymbolName } from '../game/types';
+	import type { TumbleBreakdownLine } from '../game/tumbleBreakdown';
 
-	export type TumbleWinBreakdownLine = {
-		count: number;
-		symbol: SymbolName;
-		amount: number;
-	};
+	export type TumbleWinBreakdownLine = TumbleBreakdownLine;
 
 	export type EmitterEventTumbleWinAmount =
 		| { type: 'tumbleWinAmountShow' }
@@ -23,140 +19,116 @@
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, BOARD_SIZES, REEL_FRAME_OFFSET, REEL_FRAME_SIZES } from '../game/constants';
+	import { SYMBOL_SIZE, BOARD_SIZES, REEL_FRAME_OFFSET } from '../game/constants';
+	import type { TumbleWinBreakdownLine as Line } from '../game/tumbleBreakdown';
 
 	const context = getContext();
 
-	const PANEL_W = SYMBOL_SIZE * 3.85;
-	const PANEL_H = SYMBOL_SIZE * 1.05;
-	const PANEL_W_STACKED = SYMBOL_SIZE * 3.95;
-	const PANEL_H_STACKED = SYMBOL_SIZE * 1.08;
-	const SYMBOL_ICON_SIZE = SYMBOL_SIZE * 0.34;
 	const GOLD = 0xffd147;
 
 	const isCompact = $derived(
 		['portrait', 'tablet'].includes(context.stateLayoutDerived.layoutType()),
 	);
 
+	const fontMain = $derived(SYMBOL_SIZE * (isCompact ? 0.28 : 0.32));
+	const fontSmall = $derived(SYMBOL_SIZE * (isCompact ? 0.24 : 0.28));
+	const iconSize = $derived(SYMBOL_SIZE * (isCompact ? 0.44 : 0.5));
+	const lineGap = $derived(SYMBOL_SIZE * 0.54);
+	const segGap = $derived(SYMBOL_SIZE * 0.12);
+
 	let show = $state(false);
 	let breakdownLines: TumbleWinBreakdownLine[] = $state([]);
 
-	const panelWidth = $derived(isCompact ? PANEL_W_STACKED : PANEL_W);
-	const panelHeight = $derived(isCompact ? PANEL_H_STACKED : PANEL_H);
-	const currentTumbleAmount = $derived(
-		breakdownLines.reduce((total, line) => total + line.amount, 0),
+	const centerX = BOARD_SIZES.width / 2 + REEL_FRAME_OFFSET.x;
+
+	/** Bottom of 7×7 grid in board-local coords (pivot is board centre). */
+	const gridBottom = BOARD_SIZES.height;
+
+	/** First row centre — below grid, above menu WIN readout (in the frame gap). */
+	const canvasSizeType = $derived(context.stateLayoutDerived.canvasSizeType());
+	const tumbleGapScale = $derived(
+		canvasSizeType === 'smallMobile' ? 0.38 : canvasSizeType === 'mobile' ? 0.42 : isCompact ? 0.45 : 0.55,
 	);
-	const displayText = $derived.by(() => {
-		if (breakdownLines.length === 0) return '';
-		if (breakdownLines.length === 1) return '';
-		return `WIN WIN ${bookEventAmountToCurrencyString(currentTumbleAmount)}`;
-	});
-	const singleWinLine = $derived(breakdownLines.length === 1 ? breakdownLines[0] : undefined);
+	const firstRowY = $derived(gridBottom + SYMBOL_SIZE * tumbleGapScale + iconSize / 2);
 
-	const frameBounds = $derived({
-		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
-		right: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
-		top: BOARD_SIZES.height / 2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
-		bottom: BOARD_SIZES.height / 2 + REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
-	});
-
-	const position = $derived.by(() => {
-		const x = BOARD_SIZES.width / 2 - panelWidth / 2;
-
-		return {
-			x,
-			y: isCompact
-				? frameBounds.bottom - panelHeight * 0.48
-				: frameBounds.bottom - panelHeight * 0.35,
-		};
+	const textStyle = (size: number) => ({
+		fontFamily: 'proxima-nova',
+		fontSize: size,
+		fill: GOLD,
+		fontWeight: '900' as const,
 	});
 
 	context.eventEmitter.subscribeOnMount({
 		tumbleWinAmountShow: () => {
 			show = true;
 		},
-
 		tumbleWinAmountHide: () => {
 			show = false;
 			breakdownLines = [];
 		},
-
 		tumbleWinAmountReset: () => {
 			show = false;
 			breakdownLines = [];
 		},
-
 		tumbleWinBreakdownShow: (emitterEvent) => {
 			breakdownLines = emitterEvent.lines;
 			show = true;
 		},
-
 		tumbleWinAmountUpdate: async () => {},
 	});
 </script>
 
+{#snippet winRow(line: Line, rowY: number, rowIndex: number)}
+	{@const hasMult = line.spotMult > 1}
+	<Container x={centerX} y={rowY}>
+		<BitmapText
+			anchor={{ x: 1, y: 0.5 }}
+			x={-iconSize / 2 - segGap}
+			y={0}
+			text={`${line.count}×`}
+			style={textStyle(fontMain)}
+		/>
+		<UiAssetSprite
+			key={`tumble_win_${line.symbol}_${rowIndex}`}
+			assetKey={`sym_${line.symbol.toLowerCase()}`}
+			anchor={0.5}
+			x={0}
+			y={0}
+			width={iconSize}
+			height={iconSize}
+		/>
+		<BitmapText
+			anchor={{ x: 0, y: 0.5 }}
+			x={iconSize / 2 + segGap}
+			y={0}
+			text={hasMult
+				? `= ${bookEventAmountToCurrencyString(line.baseAmount)}`
+				: `= ${bookEventAmountToCurrencyString(line.amount)}`}
+			style={textStyle(fontSmall)}
+		/>
+		{#if hasMult}
+			<BitmapText
+				anchor={{ x: 0, y: 0.5 }}
+				x={iconSize / 2 + segGap + fontSmall * 5.4}
+				y={0}
+				text={`× ${line.spotMult}`}
+				style={textStyle(fontMain)}
+			/>
+			<BitmapText
+				anchor={{ x: 0, y: 0.5 }}
+				x={iconSize / 2 + segGap + fontSmall * 5.4 + fontMain * 2.2}
+				y={0}
+				text={`= ${bookEventAmountToCurrencyString(line.amount)}`}
+				style={textStyle(fontSmall)}
+			/>
+		{/if}
+	</Container>
+{/snippet}
+
 <FadeContainer {show}>
 	<BoardContainer>
-		<Container {...position}>
-			<UiAssetSprite
-				key="menu_panel_md"
-				assetKey="menu_panel_md"
-				anchor={{ x: 0, y: 0 }}
-				width={panelWidth}
-				height={panelHeight}
-				alpha={0.98}
-			/>
-
-			{#if singleWinLine}
-				<BitmapText
-					anchor={{ x: 1, y: 0.5 }}
-					x={panelWidth * (isCompact ? 0.32 : 0.34)}
-					y={panelHeight * 0.52}
-					text={`${singleWinLine.count}x`}
-					style={{
-						fontFamily: 'proxima-nova',
-						fontSize: SYMBOL_SIZE * (isCompact ? 0.19 : 0.21),
-						fill: GOLD,
-						fontWeight: '900',
-					}}
-				/>
-
-				<UiAssetSprite
-					key={`tumble_win_${singleWinLine.symbol.toLowerCase()}`}
-					assetKey={`sym_${singleWinLine.symbol.toLowerCase()}`}
-					anchor={0.5}
-					x={panelWidth * (isCompact ? 0.4 : 0.42)}
-					y={panelHeight * 0.52}
-					width={SYMBOL_ICON_SIZE * (isCompact ? 0.96 : 1)}
-					height={SYMBOL_ICON_SIZE * (isCompact ? 0.96 : 1)}
-				/>
-
-				<BitmapText
-					anchor={{ x: 0, y: 0.5 }}
-					x={panelWidth * (isCompact ? 0.48 : 0.5)}
-					y={panelHeight * 0.52}
-					text={`Pays ${bookEventAmountToCurrencyString(singleWinLine.amount)}`}
-					style={{
-						fontFamily: 'proxima-nova',
-						fontSize: SYMBOL_SIZE * (isCompact ? 0.19 : 0.21),
-						fill: GOLD,
-						fontWeight: '900',
-					}}
-				/>
-			{:else if displayText}
-				<BitmapText
-					anchor={{ x: 0.5, y: 0.5 }}
-					x={panelWidth / 2}
-					y={panelHeight * 0.52}
-					text={displayText}
-					style={{
-						fontFamily: 'proxima-nova',
-						fontSize: SYMBOL_SIZE * (isCompact ? 0.19 : 0.21),
-						fill: GOLD,
-						fontWeight: '900',
-					}}
-				/>
-			{/if}
-		</Container>
+		{#each breakdownLines as line, index (line.symbol + line.amount + index)}
+			{@render winRow(line, firstRowY + index * lineGap, index)}
+		{/each}
 	</BoardContainer>
 </FadeContainer>

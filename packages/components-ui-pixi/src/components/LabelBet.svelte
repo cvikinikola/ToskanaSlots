@@ -7,7 +7,7 @@
 	import UiLabel from './UiLabel.svelte';
 	import { getContext } from '../context';
 	import { i18nDerived } from '../i18n/i18nDerived';
-	import { UI_BASE_SIZE } from '../constants';
+	import { UI_BASE_SIZE, portraitUiRuntime } from '../constants';
 
 	type Props = {
 		stacked?: boolean;
@@ -22,7 +22,12 @@
 	);
 	const hitArea = $derived(
 		props.stacked
-			? new Rectangle(-UI_BASE_SIZE * 1.45, -UI_BASE_SIZE * 0.2, UI_BASE_SIZE * 2.9, UI_BASE_SIZE * 1.25)
+			? new Rectangle(
+					-portraitUiRuntime.plateWidth / 2,
+					-portraitUiRuntime.plateTop,
+					portraitUiRuntime.plateWidth,
+					portraitUiRuntime.plateHeight,
+				)
 			: new Rectangle(-UI_BASE_SIZE * 0.7, -UI_BASE_SIZE * 0.55, UI_BASE_SIZE * 4.7, UI_BASE_SIZE * 1.1),
 	);
 

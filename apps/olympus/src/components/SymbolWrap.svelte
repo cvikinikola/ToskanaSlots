@@ -14,18 +14,12 @@
 	const props: Props = $props();
 	const boardContext = getContextBoard();
 
-	/**
-	 * Each symbol renders in exactly one of the two Board passes:
-	 * - static pass (animate=false): renders when NOT animating
-	 * - animate pass (animate=true): renders ONLY when animating
-	 * This prevents double-rendering.
-	 */
 	const show = $derived(
 		(boardContext.animate && props.animating) || (!boardContext.animate && !props.animating),
 	);
 
-	const top = SYMBOL_SIZE * 0.5;
-	const bottom = SYMBOL_SIZE * (BOARD_DIMENSIONS.y - 0.5);
+	const top = 0;
+	const bottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
 	const inFrame = $derived(props.y >= top && props.y <= bottom);
 </script>
 

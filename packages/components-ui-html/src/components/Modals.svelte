@@ -33,7 +33,7 @@
 <style lang="scss">
 	:global(html) {
 		font-size: 16px; /* you can chose any size here 16 is default */
-		@media screen and (max-width: 500px) {
+		@media screen and (max-width: 480px) {
 			font-size: 15px;
 		}
 	}

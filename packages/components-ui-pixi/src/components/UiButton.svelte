@@ -7,7 +7,14 @@
 	import type { ButtonIcon } from '../types';
 	import type { Snippet } from 'svelte';
 	import { i18nDerived } from '../i18n/i18nDerived';
-	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from '../constants';
+	import {
+		MENU_ICON_ASPECT,
+		menuBarLayoutAspect,
+		LANDSCAPE_BET_CONTROL_RENDER_RATIO,
+		UI_BASE_FONT_SIZE,
+		UI_BASE_SIZE,
+		portraitUiRuntime,
+	} from '../constants';
 
 	type Props = Omit<ButtonProps, 'children'> & {
 		icon: ButtonIcon;
@@ -35,9 +42,40 @@
 
 	const defaultImageKey = $derived(iconAssetMap[icon]);
 	const imageKey = $derived(active && icon === 'turbo' ? 'menu_turbo_active' : defaultImageKey);
-	const isWideImage = $derived(['turbo', 'autoSpin'].includes(icon));
-	const imageWidth = $derived(buttonProps.sizes.width * (isWideImage ? 1.12 : 1.14));
-	const imageHeight = $derived(buttonProps.sizes.height * 0.82);
+	const barAspect = $derived(
+		(
+			{
+				menu: menuBarLayoutAspect('menu'),
+				turbo: menuBarLayoutAspect('turbo'),
+				autoSpin: MENU_ICON_ASPECT.autoSpin,
+			} as Partial<Record<ButtonIcon, number>>
+		)[icon],
+	);
+	const isBetControl = $derived(icon === 'decrease' || icon === 'increase');
+	const uniformBar = $derived(portraitUiRuntime.uniformBarIcons);
+	const barHeight = $derived(portraitUiRuntime.menuIconHeight);
+	const betControlSize = $derived(
+		uniformBar ? barHeight * LANDSCAPE_BET_CONTROL_RENDER_RATIO : barHeight,
+	);
+	/** Fixed bar height; width from native aspect — no horizontal stretch. */
+	const imageHeight = $derived(
+		uniformBar && isBetControl
+			? betControlSize
+			: isBetControl || barAspect
+				? barHeight
+				: buttonProps.sizes.height * 0.82,
+	);
+	const imageWidth = $derived(
+		uniformBar && isBetControl
+			? betControlSize
+			: uniformBar && barAspect
+				? barHeight * barAspect
+				: isBetControl
+					? barHeight
+					: barAspect
+						? imageHeight * barAspect
+						: buttonProps.sizes.width * 1.14,
+	);
 	const text = $derived(i18nDerived[icon]());
 	const compactText = $derived(buttonProps.sizes.width <= UI_BASE_SIZE * 1.35);
 	const textFontSize = $derived(UI_BASE_FONT_SIZE * (compactText ? 0.56 : 0.85));

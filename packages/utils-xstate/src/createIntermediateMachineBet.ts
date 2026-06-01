@@ -73,6 +73,11 @@ export const createIntermediateMachineBet = ({
 								target: 'ending',
 							},
 						],
+						onError: [
+							{
+								target: 'end',
+							},
+						],
 					},
 				},
 				ending: {

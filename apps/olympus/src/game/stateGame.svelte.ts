@@ -108,9 +108,23 @@ export const stateGame = $state({
 // ─── Derived computations ─────────────────────────────────────────────────────
 
 const boardLayout = () => {
+	const layoutType = stateLayoutDerived.layoutType();
+	const mainLayout =
+		layoutType === 'landscape'
+			? stateLayoutDerived.mainLayoutStandard()
+			: stateLayoutDerived.mainLayout();
+	const canvasSizes = stateLayoutDerived.canvasSizes();
 	const c = getBoardCenterMain(
-		stateLayoutDerived.mainLayout(),
-		stateLayoutDerived.layoutType(),
+		mainLayout,
+		layoutType,
+		{
+			canvasSizes,
+			mainScale: mainLayout.scale,
+			canvasSizeType: stateLayoutDerived.canvasSizeType(),
+			canvasHeight: canvasSizes.height,
+			canvasRatioType: stateLayoutDerived.canvasRatioType(),
+			canvasRatio: stateLayoutDerived.canvasRatio(),
+		},
 	);
 	return {
 		x: c.x,

@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 
 	import { getContextLayout } from 'utils-layout';
+	import { applyLandscapeUiRuntime, applyPortraitUiRuntime, isCompactPortraitHud } from '../constants';
 	import { EnableSpaceHold } from 'components-shared';
 
 	import UiFadeContainer from './UiFadeContainer.svelte';
@@ -42,6 +43,32 @@
 	};
 
 	const LayoutComponent = $derived(LAYOUT_COMPONENT_MAP[stateLayoutDerived.layoutType()]);
+
+	$effect(() => {
+		const layoutType = stateLayoutDerived.layoutType();
+		const ml = stateLayoutDerived.mainLayoutStandard();
+		const sizeType = stateLayoutDerived.canvasSizeType();
+		const ratioType = stateLayoutDerived.canvasRatioType();
+		const ratio = stateLayoutDerived.canvasRatio();
+		const runtimeSize =
+			layoutType === 'portrait' || layoutType === 'landscape' ? sizeType : 'desktop';
+		if (layoutType === 'landscape') {
+			applyLandscapeUiRuntime(
+				runtimeSize,
+				ml.width,
+				ratioType === 'almostSquare',
+			);
+		} else if (layoutType === 'portrait') {
+			const compact = isCompactPortraitHud(ratioType, ratio)
+				? ratioType === 'almostSquare'
+					? ('almostSquare' as const)
+					: ('nearSquare' as const)
+				: false;
+			applyPortraitUiRuntime(runtimeSize, ml.width, compact);
+		} else {
+			applyPortraitUiRuntime(runtimeSize, ml.width);
+		}
+	});
 </script>
 
 <EnableSpaceHold />

@@ -10,8 +10,10 @@ import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
+import { sanitizePaddedBoard, sanitizeRawSymbol } from './constants';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
+import { buildTumbleBreakdownLine } from './tumbleBreakdown';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -110,6 +112,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
 
+		if (bookEvent.gameType === 'basegame') {
+			eventEmitter.broadcast({ type: 'spotMultipliersClear' });
+		}
+
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
 		if (isBonusGame) {
 			eventEmitter.broadcast({ type: 'stopButtonEnable' });
@@ -118,7 +124,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		stateGame.gameType = bookEvent.gameType;
 		await stateGameDerived.enhancedBoard.spin({
-			revealEvent: bookEvent,
+			revealEvent: {
+				...bookEvent,
+				board: sanitizePaddedBoard(bookEvent.board),
+			},
 			// paddingBoard not used by cascading boards, kept for API compatibility
 		});
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
@@ -127,67 +136,54 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// ── winInfo ────────────────────────────────────────────────────────────────
 	// One or more winning clusters found. Animate each winning group in sequence.
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
+		const hasSpotMult = bookEvent.wins.some((win) => (win.meta.spotMult ?? 1) > 1);
 		updateRoundWinBookEventAmount(bookEvent.totalWin);
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_coin_clink' });
+		if (hasSpotMult) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
+		}
 		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'tumbleWinAmountUpdate',
 			amount: bookEvent.totalWin,
 			animate: false,
 		});
+		const breakdownLines = bookEvent.wins.map((win) => buildTumbleBreakdownLine(win));
 		eventEmitter.broadcast({
 			type: 'tumbleWinBreakdownShow',
-			lines: bookEvent.wins.map((win) => ({
-				count: win.positions.length,
-				symbol: win.symbol,
-				amount: win.win,
-			})),
+			lines: breakdownLines,
 		});
 		eventEmitter.broadcast({
 			type: 'tumbleHistoryAdd',
-			lines: bookEvent.wins.map((win) => ({
-				count: win.positions.length,
-				symbol: win.symbol,
-				amount: win.win,
-			})),
+			lines: breakdownLines,
 		});
 		await sequence(bookEvent.wins, async (win) => {
 			await animateSymbols({ positions: win.positions });
 		});
 	},
 
+	// ── spotMultiplierUpdate ──────────────────────────────────────────────────
+	spotMultiplierUpdate: async (bookEvent: BookEventOfType<'spotMultiplierUpdate'>) => {
+		const upgraded = bookEvent.spots.some((spot) => spot.multiplier >= 2);
+		if (upgraded) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_update' });
+		}
+		eventEmitter.broadcast({
+			type: 'spotMultipliersSync',
+			spots: bookEvent.spots,
+		});
+	},
+
+	spotMultipliersClear: async () => {
+		eventEmitter.broadcast({ type: 'spotMultipliersClear' });
+	},
+
 	// ── boardMultiplierInfo ───────────────────────────────────────────────────
-	// Multiplier symbols (M) are on the board after a winning cascade.
-	// Sequence:
-	//  1. Update tumble win display to show pre-multiplier win
-	//  2. Animate each M symbol's "activate" state on the main board
-	//  3. Move multiplier values up to the global multiplier counter
-	//  4. Update the global multiplier display
-	//  5. Animate the win amount jumping to post-multiplier total
+	// Legacy M-symbol books — no-op for new spot-multiplier math.
 	boardMultiplierInfo: async (bookEvent: BookEventOfType<'boardMultiplierInfo'>) => {
-		updateRoundWinBookEventAmount(bookEvent.winInfo.tumbleWin);
-		// Show the pre-multiplier tumble win
-		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
-		await eventEmitter.broadcastAsync({
-			type: 'tumbleWinAmountUpdate',
-			amount: bookEvent.winInfo.tumbleWin,
-			animate: false,
-		});
-
-		// Animate each multiplier symbol on the main board (they glow/bounce)
-		await animateSymbols({ positions: bookEvent.multInfo.positions });
-
-		// Update the global multiplier counter display
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_update' });
-		await eventEmitter.broadcastAsync({
-			type: 'globalMultiplierUpdate',
-			multiplier: bookEvent.winInfo.boardMult,
-		});
-
-		// Animate the tumble win counter to the post-multiplier total
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
 		updateRoundWinBookEventAmount(bookEvent.winInfo.totalWin);
+		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'tumbleWinAmountUpdate',
 			amount: bookEvent.winInfo.totalWin,
@@ -207,7 +203,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	tumbleBoard: async (bookEvent: BookEventOfType<'tumbleBoard'>) => {
 		eventEmitter.broadcast({ type: 'boardHide' });
 		eventEmitter.broadcast({ type: 'tumbleBoardShow' });
-		eventEmitter.broadcast({ type: 'tumbleBoardInit', addingBoard: bookEvent.newSymbols });
+		eventEmitter.broadcast({
+			type: 'tumbleBoardInit',
+			addingBoard: bookEvent.newSymbols.map((reel) => reel.map((sym) => sanitizeRawSymbol(sym))),
+		});
 
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_tumble_explode' });
 		await eventEmitter.broadcastAsync({
@@ -222,9 +221,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Settle the main board using the resulting tumble board symbols
 		eventEmitter.broadcast({
 			type: 'boardSettle',
-			board: stateGameDerived
-				.tumbleBoardCombined()
-				.map((tumbleReel) => tumbleReel.map((sym) => sym.rawSymbol)),
+			board: sanitizePaddedBoard(
+				stateGameDerived
+					.tumbleBoardCombined()
+					.map((tumbleReel) => tumbleReel.map((sym) => sym.rawSymbol)),
+			),
 		});
 
 		eventEmitter.broadcast({ type: 'tumbleBoardReset' });
@@ -254,17 +255,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 
 	// ── updateGlobalMult ──────────────────────────────────────────────────────
+	// Legacy books only — spot multipliers replaced global M-symbol collection.
 	updateGlobalMult: async (bookEvent: BookEventOfType<'updateGlobalMult'>) => {
 		stateGame.globalMultiplier = bookEvent.globalMult;
-		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
 		if (bookEvent.globalMult === 1) {
-			// Reset means a new free spin cascade cycle
 			eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
 		}
-		await eventEmitter.broadcastAsync({
-			type: 'globalMultiplierUpdate',
-			multiplier: bookEvent.globalMult,
-		});
 	},
 
 	// ── freeSpinTrigger ───────────────────────────────────────────────────────
@@ -273,23 +269,23 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		freeSpinTumbleWinBookEventAmount = 0;
 		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
 
-		// Animate each scatter one-by-one: individual lightning bolt + pop sound per scatter.
-		// This gives the player clear visual feedback for each one landing.
+		// Animate each scatter one-by-one: butterfly flutter + pop sound per scatter.
 		await sequence(bookEvent.positions, async (pos) => {
-			eventEmitter.broadcast({ type: 'lightningStrike', durationMs: 280 });
+			eventEmitter.broadcast({ type: 'natureFlutter' });
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 			await animateSymbols({ positions: [pos] });
 			await waitForTimeout(110);
 		});
 
-		// All scatters confirmed — unleash the storm before transition.
-		eventEmitter.broadcast({ type: 'scatterStorm' });
+		// All scatters confirmed — nature burst before transition.
+		eventEmitter.broadcast({ type: 'natureBurst' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await waitForTimeout(1500);
 
-		// Transition to free spins mode
+		// Transition to free spins mode — swap background while screen is black.
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await eventEmitter.broadcastAsync({ type: 'transition' });
+		stateGame.gameType = 'freeSpins';
 
 		// Show free spins intro
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
@@ -300,13 +296,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			totalFreeSpins: bookEvent.totalFs,
 		});
 
-		// Switch game mode
-		stateGame.gameType = 'freeSpins';
-		stateGame.globalMultiplier = 1;
-
 		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
-		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
-		await eventEmitter.broadcastAsync({ type: 'globalMultiplierUpdate', multiplier: 1 });
 
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		stateUi.freeSpinCounterShow = true;
@@ -323,12 +313,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 
 	// ── freeSpinRetrigger ─────────────────────────────────────────────────────
-	// 3+ scatters during free spins → +N extra spins.
+	// 3+ scatters during free spins → extra spins (same table as base trigger).
 	// Animate scatters, show a brief "+N FREE SPINS" panel, bump the counter.
 	freeSpinRetrigger: async (bookEvent: BookEventOfType<'freeSpinRetrigger'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
-		// Thunder strike on retrigger — it's an exciting moment
-		setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' }), 350);
+		setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_bird_chirp' }), 350);
 		await animateSymbols({ positions: bookEvent.positions });
 
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
@@ -372,8 +361,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		stateGame.freeSpinOutroActive = true;
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
-		// Thunder boom as the free-spin finale
-		setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' }), 300);
+		setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_nature_burst' }), 300);
 		winLevelSoundsPlay({ winLevelData });
 
 		await eventEmitter.broadcastAsync({
@@ -386,11 +374,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		winLevelSoundsStop();
 		stateGame.freeSpinOutroActive = false;
 		stateGame.gameType = 'basegame';
-		stateGame.globalMultiplier = 1;
+		eventEmitter.broadcast({ type: 'spotMultipliersClear' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;
-		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
 		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
 
@@ -420,7 +407,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (bookEvent.amount > 0) {
 			playWinToBalanceCoins();
 		}
-		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
 	},
 

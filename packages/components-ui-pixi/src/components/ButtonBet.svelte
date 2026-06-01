@@ -6,28 +6,38 @@
 
 	import UiAssetSprite from './UiAssetSprite.svelte';
 	import ButtonBetProvider from './ButtonBetProvider.svelte';
-	import { UI_BASE_SIZE } from '../constants';
+	import {
+		MENU_ICON_ASPECT,
+		menuIconHitSize,
+		menuSpinHitSize,
+		portraitUiRuntime,
+	} from '../constants';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
-	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
 	const isSpinKey = (key: string) => ['spin_default', 'spin_disabled'].includes(key);
+	const uiScale = $derived(portraitUiRuntime.scale);
 </script>
 
 <ButtonBetProvider>
 	{#snippet children({ key, onpress })}
+		{@const isSpin = isSpinKey(key)}
+		{@const sizes = isSpin
+			? menuSpinHitSize(8, uiScale)
+			: menuIconHitSize(MENU_ICON_ASPECT.stop, 6, uiScale)}
 		<OnHotkey hotkey="Space" {disabled} {onpress} />
 		<Button {...props} {sizes} {onpress} {disabled}>
 			{#snippet children({ center, hovered, pressed })}
-				<Container
-					{...center}
-					scale={pressed ? 0.94 : hovered ? 1.04 : 1}
-				>
+				<Container {...center} scale={pressed ? 0.94 : hovered ? 1.04 : 1}>
 					<UiAssetSprite
-						assetKey={isSpinKey(key) ? 'menu_spin' : 'menu_stop'}
+						assetKey={isSpin ? 'menu_spin' : 'menu_stop'}
 						anchor={0.5}
-						width={sizes.width * (isSpinKey(key) ? 0.96 : 1.04)}
-						height={sizes.height * (isSpinKey(key) ? 0.96 : 0.52)}
+						width={isSpin
+							? portraitUiRuntime.menuSpinHeight
+							: portraitUiRuntime.menuIconHeight * MENU_ICON_ASPECT.stop}
+						height={isSpin
+							? portraitUiRuntime.menuSpinHeight
+							: portraitUiRuntime.menuIconHeight}
 						alpha={disabled || ['spin_disabled', 'stop_disabled'].includes(key) ? 0.5 : 1}
 					/>
 				</Container>

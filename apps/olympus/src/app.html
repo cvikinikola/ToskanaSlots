@@ -9,13 +9,24 @@
 		<!-- DEV MOCK: redirects RGS requests to the local Vite dev server. Remove before connecting to a real RGS backend. -->
 		<script>
 		(function() {
-			if (location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') return;
+			var host = location.hostname;
+			var isLocalDev =
+				host === 'localhost' ||
+				host === '127.0.0.1' ||
+				/^192\.168\.\d{1,3}\.\d{1,3}$/.test(host) ||
+				/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host) ||
+				host.endsWith('.ngrok-free.app') ||
+				host.endsWith('.ngrok.io') ||
+				host.indexOf('ngrok') !== -1;
+			if (!isLocalDev) return;
 			var LOCAL = location.origin;
 			function patchFetch(fn) {
 				return function devFetch(input, init) {
 					var url = input instanceof Request ? input.url : String(input);
 					if (url.indexOf('/wallet/') !== -1 || url.indexOf('/bet/event') !== -1) {
-						var local = LOCAL + url.replace(/^https?:\/\/[^\/]*/, '');
+						var path = url.replace(/^https?:\/\/[^/]*/, '');
+						if (!path.startsWith('/')) path = '/' + path.replace(/^\/+/, '');
+						var local = LOCAL + path;
 						console.info('[mock-rgs]', url, '->', local);
 						return fn.call(this, local, init instanceof Headers ? init : (init || {}));
 					}

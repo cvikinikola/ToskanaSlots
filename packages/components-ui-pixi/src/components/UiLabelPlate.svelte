@@ -14,6 +14,7 @@
 	 *   • a small gold rivet on each short end (left & right)
 	 */
 	export type Props = Omit<SpriteProps, 'key'> & {
+		assetKey: string;
 		anchor?: PixiPoint;
 		width: number;
 		height: number;
@@ -28,6 +29,7 @@
 
 <script lang="ts">
 	const {
+		assetKey,
 		anchor,
 		width,
 		height,
@@ -41,4 +43,4 @@
 	}: Props = $props();
 </script>
 
-<UiAssetSprite {...spriteProps} assetKey="menu_panel_lg" {anchor} {width} {height} />
+<UiAssetSprite {...spriteProps} {assetKey} {anchor} {width} {height} />

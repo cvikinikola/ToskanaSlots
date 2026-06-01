@@ -24,7 +24,6 @@
 	const context = getContext();
 	const activeAudios = new Set<HTMLAudioElement>();
 	let pageActive = $state(true);
-	let lastThunderAt = 0;
 	let lastReelSpinAt = 0;
 	let lastReelStopAt = 0;
 	const soundEffectVolume = $derived(
@@ -113,18 +112,7 @@
 				playAudio(src);
 				return;
 			}
-			if (name === 'sfx_thunder') {
-				const now = performance.now();
-				if (now - lastThunderAt < 4500) return;
-				lastThunderAt = now;
-				playAudio('/assets/audio/thunder.mp3', 0.55);
-				return;
-			}
-			if (name === 'sfx_thunder_clap') {
-				const now = performance.now();
-				if (now - lastThunderAt < 4500) return;
-				lastThunderAt = now;
-				playAudio('/assets/audio/thunder_clap.mp3', 0.5);
+			if (name === 'sfx_bird_chirp' || name === 'sfx_cricket' || name === 'sfx_nature_burst') {
 				return;
 			}
 			// sound.players.once.play({ name });

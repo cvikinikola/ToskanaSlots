@@ -5,12 +5,12 @@
 
 	import UiButton from './UiButton.svelte';
 	import { getContext } from '../context';
-	import { UI_BASE_SIZE } from '../constants';
+	import { MENU_ICON_ASPECT, menuIconHitSize, portraitUiRuntime } from '../constants';
 	import ButtonBetAutoSpinsCounter from './ButtonBetAutoSpinsCounter.svelte';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
-	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
+	const sizes = $derived(menuIconHitSize(MENU_ICON_ASPECT.autoSpin, 6, portraitUiRuntime.scale));
 	const active = $derived(stateBetDerived.hasAutoBetCounter());
 	const disabled = $derived.by(() => {
 		if (stateBet.isSpaceHold) return true;

@@ -1,11 +1,7 @@
 <script lang="ts" module>
-	import type { SymbolName } from '../game/types';
+	import type { TumbleBreakdownLine } from '../game/tumbleBreakdown';
 
-	export type TumbleHistoryLine = {
-		count: number;
-		symbol: SymbolName;
-		amount: number;
-	};
+	export type TumbleHistoryLine = TumbleBreakdownLine;
 
 	export type EmitterEventTumbleHistory =
 		| { type: 'tumbleHistoryReset' }
@@ -21,18 +17,16 @@
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
 	import { BOARD_SIZES, REEL_FRAME_OFFSET, REEL_FRAME_SIZES, SYMBOL_SIZE } from '../game/constants';
+	import type { TumbleHistoryLine as Line } from '../game/tumbleBreakdown';
 
 	const context = getContext();
 
 	const MAX_LINES = 5;
-	const PANEL_W = SYMBOL_SIZE * 2.95;
-	const PANEL_H = SYMBOL_SIZE * 2.50;
-	const PANEL_W_STACKED = SYMBOL_SIZE * 3.95;
-	const PANEL_H_STACKED = SYMBOL_SIZE * 1.48;
-	const PANEL_FRAME_PULL_IN = SYMBOL_SIZE * 1.2;
-	const ROW_GAP = SYMBOL_SIZE * 0.25;
-	const ROW_GAP_STACKED = SYMBOL_SIZE * 0.31;
-	const ICON_SIZE = SYMBOL_SIZE * 0.28;
+	const GOLD = 0xffd147;
+	const ROW_GAP = SYMBOL_SIZE * 0.38;
+	const ICON_SIZE = SYMBOL_SIZE * 0.32;
+	const FONT_COUNT = SYMBOL_SIZE * 0.2;
+	const FONT_AMOUNT = SYMBOL_SIZE * 0.17;
 	const DESKTOP_Y_BASE = SYMBOL_SIZE * 2.1;
 	const DESKTOP_Y_FREE_SPINS = SYMBOL_SIZE * 2.12;
 
@@ -46,22 +40,18 @@
 
 	const frameBounds = $derived({
 		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
-		right: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
 		top: BOARD_SIZES.height / 2.2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
-		centerX: BOARD_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
 	});
 
 	const position = $derived.by(() => {
 		if (isCompact) {
-			const rowCenterY = frameBounds.top - SYMBOL_SIZE * 0.22;
 			return {
-				x: frameBounds.centerX - PANEL_W_STACKED / 2,
-				y: rowCenterY - PANEL_H_STACKED / 2,
+				x: BOARD_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
+				y: frameBounds.top - SYMBOL_SIZE * 0.35,
 			};
 		}
-
 		return {
-			x: frameBounds.left - PANEL_W + PANEL_FRAME_PULL_IN,
+			x: frameBounds.left + SYMBOL_SIZE * 0.5,
 			y: frameBounds.top + (isFreeSpins ? DESKTOP_Y_FREE_SPINS : DESKTOP_Y_BASE),
 		};
 	});
@@ -76,71 +66,51 @@
 	});
 </script>
 
-<FadeContainer {show}>
-	<BoardContainer>
-		<Container {...position}>
-			<UiAssetSprite
-				key="menu_frame_free_spins"
-				assetKey="menu_frame_free_spins"
-				anchor={{ x: 0, y: 0 }}
-				width={isCompact ? PANEL_W_STACKED : PANEL_W}
-				height={isCompact ? PANEL_H_STACKED : PANEL_H}
-				alpha={0.94}
-			/>
-
-		 <BitmapText
-			anchor={{ x: 0.5, y: 0.5 }}
-			x={(isCompact ? PANEL_W_STACKED : PANEL_W) / 2}
-			y={(isCompact ? PANEL_H_STACKED : PANEL_H) * (isCompact ? 0.24 : 0.2)}
-			text="TUMBLE HISTORY"
+{#snippet historyRow(line: Line, rowY: number, rowIndex: number)}
+	<Container x={0} y={rowY}>
+		<BitmapText
+			anchor={{ x: 1, y: 0.5 }}
+			x={-ICON_SIZE / 2 - 6}
+			y={0}
+			text={`${line.count}×`}
 			style={{
 				fontFamily: 'proxima-nova',
-				fontSize: SYMBOL_SIZE * (isCompact ? 0.145 : 0.15),
-				fill: 0xffd147,
+				fontSize: FONT_COUNT,
+				fill: 0xffffff,
 				fontWeight: '900',
 			}}
-		/> 
+		/>
+		<UiAssetSprite
+			key={`history_${line.symbol}_${rowIndex}`}
+			assetKey={`sym_${line.symbol.toLowerCase()}`}
+			anchor={0.5}
+			x={0}
+			y={0}
+			width={ICON_SIZE}
+			height={ICON_SIZE}
+		/>
+		<BitmapText
+			anchor={{ x: 0, y: 0.5 }}
+			x={ICON_SIZE / 2 + 6}
+			y={0}
+			text={line.spotMult > 1
+				? `= ${bookEventAmountToCurrencyString(line.amount)} (×${line.spotMult})`
+				: `= ${bookEventAmountToCurrencyString(line.amount)}`}
+			style={{
+				fontFamily: 'proxima-nova',
+				fontSize: FONT_AMOUNT,
+				fill: 0xfff0b8,
+				fontWeight: '900',
+			}}
+		/>
+	</Container>
+{/snippet}
 
-			{#each visibleLines as line, index (`${line.symbol}-${line.count}-${line.amount}-${index}`)}
-				{@const panelH = isCompact ? PANEL_H_STACKED : PANEL_H}
-				{@const rowGap = isCompact ? ROW_GAP_STACKED : ROW_GAP}
-				{@const rowY = panelH * 0.78 - (visibleLines.length - 1 - index) * rowGap}
-
-			<BitmapText
-				anchor={{ x: 1, y: 0.5 }}
-				x={SYMBOL_SIZE * (isCompact ? 0.72 : 0.64)}
-				y={rowY}
-					text={`${line.count}x`}
-					style={{
-						fontFamily: 'proxima-nova',
-						fontSize: SYMBOL_SIZE * (isCompact ? 0.155 : 0.18),
-						fill: 0xffffff,
-						fontWeight: '900',
-					}}
-			/>
-
-			<UiAssetSprite
-				key={`history_${line.symbol.toLowerCase()}_${index}`}
-				assetKey={`sym_${line.symbol.toLowerCase()}`}
-				anchor={0.5}
-				x={SYMBOL_SIZE * (isCompact ? 0.92 : 0.88)}
-				y={rowY}
-				width={ICON_SIZE * (isCompact ? 0.86 : 1)}
-				height={ICON_SIZE * (isCompact ? 0.86 : 1)}
-			/>
-
-			<BitmapText
-				anchor={{ x: 0, y: 0.5 }}
-				x={SYMBOL_SIZE * (isCompact ? 1.08 : 1.08)}
-				y={rowY}
-					text={`= ${bookEventAmountToCurrencyString(line.amount)}`}
-					style={{
-						fontFamily: 'proxima-nova',
-						fontSize: SYMBOL_SIZE * (isCompact ? 0.155 : 0.17),
-						fill: 0xfff0b8,
-						fontWeight: '900',
-					}}
-			/>
+<FadeContainer {show}>
+	<BoardContainer>
+		<Container x={position.x} y={position.y}>
+			{#each visibleLines as line, index (`${line.symbol}-${line.amount}-${index}`)}
+				{@render historyRow(line, -index * ROW_GAP, index)}
 			{/each}
 		</Container>
 	</BoardContainer>

@@ -48,8 +48,12 @@ export const createLayout = (layoutOptions: {
 		return 'desktop' as const;
 	};
 	const layoutType = () => {
-		if (canvasRatioType() === 'almostSquare') return 'tablet' as const;
+		if (canvasRatioType() === 'almostSquare') {
+			// Square-ish monitors: reuse stacked portrait / landscape (not legacy tablet HUD).
+			return canvasRatio() >= 1 ? ('landscape' as const) : ('portrait' as const);
+		}
 		if (canvasRatioType() === 'longHeight') return 'portrait' as const;
+		if (canvasRatioType() === 'longWidth') return 'landscape' as const;
 		if (canvasSizeType() === 'mobile' || canvasSizeType() === 'smallMobile')
 			return 'landscape' as const;
 		return 'desktop' as const;

@@ -10,10 +10,14 @@ export const rgsFetcher = {
 		rgsUrl: string;
 		variables?: paths[T]['post']['requestBody']['content']['application/json'];
 	}): Promise<TResponse> {
+		const endpoint = options.rgsUrl
+			? `https://${options.rgsUrl}${options.url}`
+			: options.url;
+
 		const response = await fetcher({
 			method: 'POST',
 			variables: options.variables,
-			endpoint: `https://${options.rgsUrl}${options.url}`,
+			endpoint,
 		});
 
 		if (response.status !== 200) console.error('error', response);
@@ -24,9 +28,13 @@ export const rgsFetcher = {
 		T extends keyof paths,
 		TResponse = paths[T]['get']['responses'][200]['content']['application/json'],
 	>(options: { url: T; rgsUrl: string }): Promise<TResponse> {
+		const endpoint = options.rgsUrl
+			? `https://${options.rgsUrl}${options.url}`
+			: options.url;
+
 		const response = await fetcher({
 			method: 'GET',
-			endpoint: `https://${options.rgsUrl}${options.url}`,
+			endpoint,
 		});
 
 		if (response.status !== 200) console.error('error', response);

@@ -73,7 +73,7 @@
 	});
 </script>
 
-<div bind:this={wrap}>
+<div class="pixi-app-wrap" bind:this={wrap}>
 	{#if initialised}
 		{@render props.children()}
 	{:else if initError}
@@ -92,6 +92,18 @@
 </div>
 
 <style lang="scss">
+	.pixi-app-wrap {
+		overflow: hidden;
+		width: 100%;
+		max-width: 100vw;
+		position: relative;
+
+		:global(canvas) {
+			display: block;
+			max-width: 100%;
+		}
+	}
+
 	.renderer-error {
 		position: fixed;
 		inset: 0;

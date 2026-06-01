@@ -1,11 +1,12 @@
 /**
- * Pay-anywhere cluster-slot math.
+ * Connected-cluster slot math.
  *
  *  mock-rgs/math/
  *  ├── rng.js        — choiceWeighted, shuffle, createSeededRng
  *  ├── paytable.js   — PAYOUT_TABLE, getPayoutMultiplier, calculatePayout
  *  ├── board.js      — generateBoard, generateSymbol, tumble, dropAndFill
- *  ├── wins.js       — findPayAnywhereWins, collectMultipliers, countScatters
+ *  ├── clusterDetection.js — BFS flood-fill on 7×7 grid
+ *  ├── wins.js       — findConnectedClusterWins, findWinningClustersOnGrid
  *  ├── tumble.js     — runTumbleSequence
  *  ├── spin.js       — runBaseSpin, runFreeSpins, runBonusBuy
  *  └── index.js      — barrel (this file)
@@ -17,9 +18,14 @@
  * BookEvents emitted match `apps/olympus/src/game/typesBookEvent.ts` exactly.
  */
 
+export * from './symbols.js';
 export * from './rng.js';
 export * from './paytable.js';
 export * from './board.js';
+export * from './clusterDetection.js';
 export * from './wins.js';
+export * from './spotMultipliers.js';
 export * from './tumble.js';
+export * from './scatter.js';
 export * from './spin.js';
+export * from './tuning.js';

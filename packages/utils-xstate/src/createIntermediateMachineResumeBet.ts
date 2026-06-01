@@ -49,6 +49,11 @@ export const createIntermediateMachineResumeBet = (actors: {
 								target: 'ending',
 							},
 						],
+						onError: [
+							{
+								target: 'end',
+							},
+						],
 					},
 				},
 				ending: {

@@ -63,7 +63,7 @@
 					// +1 because reelState.symbols[0] is the top padding symbol;
 					// visible row 0 is at array index 1.
 					const reelSymbol =
-						context.stateGame.board[position.reel].reelState.symbols[position.row + 1];
+						context.stateGame.board[position.reel]?.reelState.symbols[position.row + 1];
 					if (!reelSymbol) return;
 					reelSymbol.symbolState = 'win';
 					await waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
@@ -95,6 +95,7 @@
 
 	<BoardContext animate={true}>
 		<BoardContainer>
+			<BoardMask />
 			<BoardBase />
 		</BoardContainer>
 	</BoardContext>

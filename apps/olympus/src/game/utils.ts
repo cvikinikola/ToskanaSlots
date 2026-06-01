@@ -20,14 +20,22 @@ export const { playBookEvent, playBookEvents } = createPlayBookUtils({ bookEvent
 
 export const playBet = async (bet: Bet) => {
 	stateBet.winBookEventAmount = 0;
-	await playBookEvents(bet.state);
-	eventEmitter.broadcast({ type: 'stopButtonEnable' });
+	try {
+		await playBookEvents(bet.state);
+	} catch (error) {
+		console.error('[playBet] book event playback failed:', error);
+		eventEmitter.broadcast({ type: 'boardShow' });
+		eventEmitter.broadcast({ type: 'tumbleBoardHide' });
+		eventEmitter.broadcast({ type: 'spotMultipliersClear' });
+	} finally {
+		eventEmitter.broadcast({ type: 'stopButtonEnable' });
+	}
 };
 
 // ─── Resume bet ───────────────────────────────────────────────────────────────
 
 const BOOK_EVENT_TYPES_TO_RESERVE_FOR_SNAPSHOT = [
-	'updateGlobalMult',
+	'spotMultiplierUpdate',
 	'freeSpinTrigger',
 	'updateFreeSpin',
 	'setTotalWin',
@@ -51,12 +59,10 @@ export const convertTorResumableBet = (betToResume: Bet) => {
 
 // ─── Symbol position helpers ──────────────────────────────────────────────────
 
-/** Pixel X coordinate for the left edge of reel `reelIndex` (centred in cell). */
-export const getSymbolX = (reelIndex: number) =>
-	SYMBOL_SIZE / 2 +
-	reelIndex * SYMBOL_STEP_X;
+/** Pixel X coordinate for reel centre — evenly spans board width edge-to-edge. */
+export const getSymbolX = (reelIndex: number) => (reelIndex + 0.5) * SYMBOL_STEP_X;
 
-/** Pixel Y coordinate for the top edge of visible row `symbolIndexOfBoard` (centred in cell). */
+/** Pixel Y coordinate for visible row centre — evenly spans board height edge-to-edge. */
 export const getSymbolY = (symbolIndexOfBoard: number) => (symbolIndexOfBoard + 0.5) * SYMBOL_SIZE;
 
 // ─── Symbol colour helper ─────────────────────────────────────────────────────

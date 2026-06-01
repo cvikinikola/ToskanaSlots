@@ -6,10 +6,8 @@ import type config from './config';
 export type SymbolName = keyof typeof config.symbols;
 
 export type RawSymbol = {
-	/** Symbol identifier matching config.symbols keys */
+	/** Symbol identifier — must be one of GRID_SYMBOL_NAMES */
 	name: SymbolName;
-	/** Only present on 'M' (multiplier) symbols */
-	multiplier?: number;
 	/** Only present on 'S' (scatter) symbols */
 	scatter?: boolean;
 };

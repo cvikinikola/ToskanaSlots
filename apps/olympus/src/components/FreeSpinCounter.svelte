@@ -61,8 +61,8 @@
 	<BoardContainer>
 		<Container {...position}>
 			<UiAssetSprite
-				key="menu_panel_md"
-				assetKey="menu_panel_md"
+				key="menu_panel_win"
+				assetKey="menu_panel_win"
 				anchor={{ x: 0, y: 0 }}
 				width={panelWidth}
 				height={panelHeight}

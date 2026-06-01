@@ -4,11 +4,11 @@
 
 	import UiButton from './UiButton.svelte';
 	import { getContext } from '../context';
-	import { UI_BASE_SIZE } from '../constants';
+	import { menuBetControlHitSize, portraitUiRuntime } from '../constants';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
-	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
+	const sizes = $derived(menuBetControlHitSize(4, portraitUiRuntime.scale));
 	const biggest = $derived(stateConfig.betAmountOptions[stateConfig.betAmountOptions.length - 1]);
 	const disabled = $derived(!context.stateXstateDerived.isIdle() || stateBet.betAmount === biggest);
 

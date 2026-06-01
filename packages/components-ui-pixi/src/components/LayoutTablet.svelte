@@ -4,12 +4,32 @@
 	import { MainContainer } from 'components-layout';
 	import { Container, Rectangle, anchorToPivot } from 'pixi-svelte';
 
+	import {
+		actionClusterCenters,
+		DESKTOP_BASE_SIZE,
+		DESKTOP_BACKGROUND_WIDTH_LIST,
+		menuBuyCenters,
+		menuFarLeftX,
+		menuIconHalfWidth,
+		MENU_ICON_ASPECT,
+		MENU_ICON_GAP,
+		PANEL_DISPLAY_SCALE,
+		PANEL_ROW_HALF_GAP,
+	} from '../constants';
 	import { getContext } from '../context';
 	import type { LayoutUiProps } from '../types';
-	import { DESKTOP_BASE_SIZE, DESKTOP_BACKGROUND_WIDTH_LIST } from '../constants';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
+
+	const ml = $derived(context.stateLayoutDerived.mainLayoutStandard());
+	const BAR_CENTER_X = 880;
+	const BUTTON_Y = DESKTOP_BASE_SIZE * 0.5;
+	const { autoX, spinX, turboX } = actionClusterCenters(BAR_CENTER_X);
+	const menuLeftX = menuFarLeftX();
+	const { buyX } = menuBuyCenters(autoX);
+	const betControlGap = menuIconHalfWidth(MENU_ICON_ASPECT.square) + MENU_ICON_GAP;
+	const barY = $derived(ml.height - DESKTOP_BASE_SIZE - 30);
 </script>
 
 <Container x={20}>
@@ -22,8 +42,8 @@
 
 <MainContainer standard alignVertical="bottom">
 	<Container
-		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-		y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 30}
+		x={ml.width * 0.5}
+		y={barY}
 		pivot={anchorToPivot({
 			anchor: { x: 0.5, y: 0 },
 			sizes: {
@@ -32,46 +52,45 @@
 			},
 		})}
 	>
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={880 - 640}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={BAR_CENTER_X - PANEL_ROW_HALF_GAP} scale={PANEL_DISPLAY_SCALE}>
 			{@render props.amountBalance({ stacked: true })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={880}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={BAR_CENTER_X} scale={PANEL_DISPLAY_SCALE}>
 			{@render props.amountWin({ stacked: true })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={880 + 640}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={BAR_CENTER_X + PANEL_ROW_HALF_GAP} scale={PANEL_DISPLAY_SCALE}>
 			{@render props.amountBet({ stacked: true })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20}>
+		<Container y={BUTTON_Y} x={menuLeftX}>
 			{@render props.buttonMenu({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 180}>
+		<Container y={BUTTON_Y} x={buyX}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 4}>
+		<Container y={BUTTON_Y} x={autoX}>
 			{@render props.buttonAutoSpin({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 5}>
+		<Container y={BUTTON_Y} x={spinX}>
 			{@render props.buttonBet({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 6}>
+		<Container y={BUTTON_Y} x={turboX}>
 			{@render props.buttonTurbo({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={1560}>
+		<Container y={BUTTON_Y} x={BAR_CENTER_X + PANEL_ROW_HALF_GAP + 60}>
 			{@render props.buttonDecrease({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={1560 + 180}>
+		<Container y={BUTTON_Y} x={BAR_CENTER_X + PANEL_ROW_HALF_GAP + 60 + betControlGap * 2}>
 			{@render props.buttonIncrease({ anchor: 0.5 })}
 		</Container>
-
 	</Container>
 </MainContainer>
 
@@ -90,23 +109,20 @@
 	/>
 
 	<MainContainer standard alignVertical="bottom">
-		<Container
-			x={100}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 30}
-		>
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 3}>
+		<Container x={menuLeftX} y={barY}>
+			<Container y={DESKTOP_BASE_SIZE * 0.5 - 150 - 170 * 3}>
 				{@render props.buttonPayTable({ anchor: 0.5 })}
 			</Container>
 
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 2}>
+			<Container y={DESKTOP_BASE_SIZE * 0.5 - 150 - 170 * 2}>
 				{@render props.buttonSettings({ anchor: 0.5 })}
 			</Container>
 
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 1}>
+			<Container y={DESKTOP_BASE_SIZE * 0.5 - 150 - 170 * 1}>
 				{@render props.buttonGameRules({ anchor: 0.5 })}
 			</Container>
 
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185}>
+			<Container y={DESKTOP_BASE_SIZE * 0.5 - 150}>
 				{@render props.buttonSoundSwitch({ anchor: 0.5 })}
 			</Container>
 

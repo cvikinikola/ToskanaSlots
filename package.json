@@ -7,6 +7,7 @@
     "lint": "turbo run lint",
     "format": "turbo run format",
     "dev": "turbo run dev",
+    "dev:olympus": "pnpm --filter olympus dev",
     "build": "turbo run build",
     "preview": "turbo run preview",
     "real-build-storybook": "turbo run real-build-storybook",

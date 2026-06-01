@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 44" width="120" height="44">
+	<defs>
+		<linearGradient id="wing" x1="0%" y1="0%" x2="100%" y2="100%">
+			<stop offset="0%" stop-color="#6e6862"/>
+			<stop offset="50%" stop-color="#4f4a45"/>
+			<stop offset="100%" stop-color="#353230"/>
+		</linearGradient>
+	</defs>
+	<path
+		fill="url(#wing)"
+		d="M 12 22
+			C 24 6, 44 8, 58 18
+			C 66 21, 78 19, 96 18
+			C 106 17, 114 19, 116 20
+			C 104 24, 88 26, 74 24
+			C 56 28, 36 32, 20 28
+			C 14 26, 10 24, 12 22 Z"
+	/>
+	<ellipse cx="14" cy="21" rx="3.5" ry="2.8" fill="#4f4a45"/>
+</svg>

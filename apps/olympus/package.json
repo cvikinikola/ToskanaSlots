@@ -10,7 +10,8 @@
 		"build": "node scripts/build.mjs",
 		"preview": "vite preview",
 		"gen-books": "node scripts/gen-books.mjs",
-		"verify-paytable": "node scripts/verify-paytable.mjs"
+		"verify-paytable": "node scripts/verify-paytable.mjs",
+		"simulate-rtp": "node scripts/simulate-rtp.mjs"
 	},
 	"type": "module",
 	"devDependencies": {
@@ -21,7 +22,8 @@
 		"config-ts": "workspace:*",
 		"config-vite": "workspace:*",
 		"eslint": "9.21.0",
-		"eslint-config-custom": "workspace:*"
+		"eslint-config-custom": "workspace:*",
+		"sharp": "^0.34.5"
 	},
 	"dependencies": {
 		"@lingui/core": "5.2.0",

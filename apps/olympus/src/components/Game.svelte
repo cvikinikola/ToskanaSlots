@@ -4,9 +4,9 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, REM } from 'pixi-svelte';
+	import { App } from 'pixi-svelte';
 
-	import { UI, UiAssetSprite } from 'components-ui-pixi';
+	import { UI } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
@@ -14,21 +14,20 @@
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
+	import NatureAmbience from './NatureAmbience.svelte';
 	import Background from './Background.svelte';
-	import BottomUiBackdrop from './BottomUiBackdrop.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import MipmapEnabler from './MipmapEnabler.svelte';
 	import Board from './Board.svelte';
 	import TumbleBoard from './TumbleBoard.svelte';
 	import TumbleWinAmount from './TumbleWinAmount.svelte';
 	import TumbleHistory from './TumbleHistory.svelte';
-	import GlobalMultiplier from './GlobalMultiplier.svelte';
+	import SpotMultipliers from './SpotMultipliers.svelte';
 	import ReelFramePanel from './ReelFramePanel.svelte';
 	import Win from './Win.svelte';
 	import WinSparks from './WinSparks.svelte';
-	import LightningCrackle from './LightningCrackle.svelte';
-	import AmbientLightning from './AmbientLightning.svelte';
-	import SkyLightning from './SkyLightning.svelte';
+	import AmbientNature from './AmbientNature.svelte';
+	import NatureBurst from './NatureBurst.svelte';
 	import WinGlow from './WinGlow.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
@@ -39,13 +38,9 @@
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
-	// Shrink the painted-text titles on stacked (portrait/tablet) layouts so
-	// they don't crowd the centred reels.
-	const titleScale = $derived(
-		context.stateLayoutDerived.isStacked() ? 0.7 : 1,
+	const gameAlignBottom = $derived(
+		context.stateLayoutDerived.layoutType() === 'landscape',
 	);
-	// On portrait/tablet Thor is rendered above the frame — hide the text title
-	// to avoid clashing with the 3-D character in the same area.
 </script>
 
 <App>
@@ -63,16 +58,21 @@
 	{:else}
 		<ResumeBet />
 		<Sound />
+		<NatureAmbience />
 
-		<BottomUiBackdrop />
-
-		<MainContainer>
+		<MainContainer
+			standard={gameAlignBottom}
+			alignVertical={gameAlignBottom ? 'bottom' : undefined}
+		>
 			<ReelFramePanel />
 			<Board />
-			<GlobalMultiplier />
+			<SpotMultipliers />
 		</MainContainer>
 
-		<MainContainer>
+		<MainContainer
+			standard={gameAlignBottom}
+			alignVertical={gameAlignBottom ? 'bottom' : undefined}
+		>
 			<TumbleBoard />
 			<TumbleHistory />
 			<TumbleWinAmount />
@@ -80,24 +80,13 @@
 		</MainContainer>
 
 		<WinSparks />
-		<LightningCrackle />
-		<AmbientLightning />
-		<SkyLightning />
+		<AmbientNature />
+		<NatureBurst />
 		<WinGlow />
 
 		<UI>
-			{#snippet gameName()}
-				<!-- Single title used (logo snippet renders 'HAMMER OF THOR' top-right) -->
-			{/snippet}
-			{#snippet logo()}
-				<UiAssetSprite
-					assetKey="menu_logo"
-					anchor={{ x: 1, y: 0 }}
-					y={context.stateLayoutDerived.isStacked() ? REM * 0.5 : 0}
-					width={REM * 13.8 * titleScale}
-					height={REM * 2.95 * titleScale}
-				/>
-			{/snippet}
+			{#snippet gameName()}{/snippet}
+			{#snippet logo()}{/snippet}
 		</UI>
 
 		<Win />

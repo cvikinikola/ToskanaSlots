@@ -7,16 +7,19 @@
  * `totalWin` is in × bet.
  */
 
-import { BOARD_CONFIG, generateBoard, visibleToBoardRow } from './board.js';
+import { BOARD_CONFIG, generateBoard, visibleToBoardRow, buildSymbolWeights } from './board.js';
 import { getScatterPositions, countScatters } from './wins.js';
 import { runTumbleSequence, toBookAmount } from './tumble.js';
 import { shuffle, defaultRng } from './rng.js';
+import { createSpotMultiplierState } from './spotMultipliers.js';
+import {
+  FREE_SPINS_TRIGGER,
+  FREE_SPINS_AWARDED,
+  getFreeSpinsAwarded,
+} from './scatter.js';
+import { MAX_WIN_MULTIPLIER } from './tuning.js';
 
-const FREE_SPINS_AWARDED = 15;
-const FREE_SPINS_TRIGGER = 4;
-/** During free spins: 3+ scatters retriggers extra spins. */
-const FREE_SPINS_RETRIGGER_THRESHOLD = 3;
-const FREE_SPINS_RETRIGGER_AWARD = 5;
+const capRoundWin = (totalWin) => Math.min(totalWin, MAX_WIN_MULTIPLIER);
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -38,11 +41,11 @@ const emptyAnticipation = () => new Array(BOARD_CONFIG.numReels).fill(0);
 
 // ─── Public API ──────────────────────────────────────────────────────────────
 
-/** Base spin (with optional follow-on free spins on 4+ scatters). */
+/** Base spin (with optional follow-on free spins on 3+ scatters). */
 export const runBaseSpin = ({ betAmount = 1, rng = defaultRng } = {}) =>
   playRound({ betAmount, rng, forceBonus: false });
 
-/** Bonus-buy entry: forces 4 scatters on the initial board. */
+/** Bonus-buy entry: forces minimum scatters on the initial board. */
 export const runBonusBuy = ({ betAmount = 1, rng = defaultRng } = {}) =>
   playRound({ betAmount, rng, forceBonus: true });
 
@@ -52,10 +55,11 @@ export const runBonusBuy = ({ betAmount = 1, rng = defaultRng } = {}) =>
  */
 export const runFreeSpins = ({
   betAmount = 1,
-  freeSpinCount = FREE_SPINS_AWARDED,
+  freeSpinCount = FREE_SPINS_AWARDED[FREE_SPINS_TRIGGER],
+  bonusBuyMode = false,
   rng = defaultRng,
   indexRef = { value: 0 },
-  globalMultRef = { value: 1 },
+  spotStateRef = { state: createSpotMultiplierState() },
 } = {}) => {
   const bookEvents = [];
   const emit = (e) => bookEvents.push({ index: indexRef.value++, ...e });
@@ -66,7 +70,8 @@ export const runFreeSpins = ({
   for (let fs = 1; fs <= totalFs; fs++) {
     emit({ type: 'updateFreeSpin', amount: fs, total: totalFs });
 
-    const fsBoard = generateBoard({ freeSpinMode: true, rng });
+    const symbolWeights = buildSymbolWeights({ freeSpinMode: true, bonusBuyMode, rng });
+    const fsBoard = generateBoard({ freeSpinMode: true, bonusBuyMode, symbolWeights, rng });
     emit({
       type: 'reveal',
       board: fsBoard,
@@ -75,13 +80,14 @@ export const runFreeSpins = ({
       gameType: 'freeSpins',
     });
 
-    // Retrigger: 3+ scatters during free spins → +5 spins.
+    // Retrigger: 3+ scatters anywhere on the grid → same free-spin table as base.
     const scattersOnThisSpin = countScatters(fsBoard);
-    if (scattersOnThisSpin >= FREE_SPINS_RETRIGGER_THRESHOLD) {
-      totalFs += FREE_SPINS_RETRIGGER_AWARD;
+    const extraFs = getFreeSpinsAwarded(scattersOnThisSpin);
+    if (extraFs > 0) {
+      totalFs += extraFs;
       emit({
         type: 'freeSpinRetrigger',
-        extraFs: FREE_SPINS_RETRIGGER_AWARD,
+        extraFs,
         totalFs,
         positions: getScatterPositions(fsBoard),
       });
@@ -93,7 +99,10 @@ export const runFreeSpins = ({
       initialBoard: fsBoard,
       betAmount,
       freeSpinMode: true,
-      globalMultRef,
+      bonusBuyMode,
+      symbolWeights,
+      rng,
+      spotStateRef,
       indexRef,
     });
     bookEvents.push(...chain.events);
@@ -111,7 +120,8 @@ const playRound = ({ betAmount, rng, forceBonus }) => {
   const emit = (e) => bookEvents.push({ index: indexRef.value++, ...e });
 
   // ── Base spin ────────────────────────────────────────────────────────────
-  let board = generateBoard({ freeSpinMode: false, rng });
+  const symbolWeights = buildSymbolWeights({ freeSpinMode: false, rng });
+  let board = generateBoard({ freeSpinMode: false, symbolWeights, rng });
   if (forceBonus) board = forceScatters(board, FREE_SPINS_TRIGGER, rng);
 
   emit({
@@ -122,12 +132,13 @@ const playRound = ({ betAmount, rng, forceBonus }) => {
     gameType: 'basegame',
   });
 
-  const globalMultRef = { value: 1 };
+  const spotStateRef = { state: createSpotMultiplierState() };
   const baseChain = runTumbleSequence({
     initialBoard: board,
     betAmount,
     freeSpinMode: false,
-    globalMultRef,
+    symbolWeights,
+    rng,
     indexRef,
   });
   bookEvents.push(...baseChain.events);
@@ -137,28 +148,31 @@ const playRound = ({ betAmount, rng, forceBonus }) => {
   // Count scatters on the FINAL board so scatters that fell in during cascades
   // are also counted (player sees them → expects the trigger).
   const scattersFinal = countScatters(baseChain.finalBoard);
-  const triggered = scattersFinal >= FREE_SPINS_TRIGGER || forceBonus;
+  const scatterCount = forceBonus ? Math.max(scattersFinal, FREE_SPINS_TRIGGER) : scattersFinal;
+  const fsAward = getFreeSpinsAwarded(scatterCount);
+  const triggered = fsAward > 0;
 
   if (triggered) {
     emit({
       type: 'freeSpinTrigger',
-      totalFs: FREE_SPINS_AWARDED,
+      totalFs: fsAward,
       positions: getScatterPositions(baseChain.finalBoard),
     });
-    globalMultRef.value = 1;
-    emit({ type: 'updateGlobalMult', globalMult: 1 });
 
     const fs = runFreeSpins({
       betAmount,
-      freeSpinCount: FREE_SPINS_AWARDED,
+      freeSpinCount: fsAward,
+      bonusBuyMode: forceBonus,
       rng,
       indexRef,
-      globalMultRef,
+      spotStateRef,
     });
     bookEvents.push(...fs.bookEvents);
     totalWin += fs.totalWin;
     emit({ type: 'freeSpinEnd', amount: toBookAmount(fs.totalWin), winLevel: 0 });
   }
+
+  totalWin = capRoundWin(totalWin);
 
   emit({ type: 'setTotalWin', amount: toBookAmount(totalWin) });
   emit({ type: 'finalWin', amount: toBookAmount(totalWin) });
@@ -169,8 +183,6 @@ const playRound = ({ betAmount, rng, forceBonus }) => {
 // ─── Constants exported for the mock-rgs server ──────────────────────────────
 
 export const FREE_SPINS_CONFIG = {
-  awarded: FREE_SPINS_AWARDED,
   triggerCount: FREE_SPINS_TRIGGER,
-  retriggerThreshold: FREE_SPINS_RETRIGGER_THRESHOLD,
-  retriggerAward: FREE_SPINS_RETRIGGER_AWARD,
+  awarded: FREE_SPINS_AWARDED,
 };

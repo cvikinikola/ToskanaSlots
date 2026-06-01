@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicInOut } from 'svelte/easing';
 
@@ -11,10 +12,38 @@
 
 	import ButtonDrawer from './ButtonDrawer.svelte';
 	import type { LayoutUiProps } from '../types';
+	import {
+		portraitActionAndEdgeCenters,
+		portraitBetControlX,
+		portraitStackedLayout,
+		portraitUiRuntime,
+	} from '../constants';
 	import { getContext } from '../context';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
+
+	const ml = $derived(context.stateLayoutDerived.mainLayoutStandard());
+	const cx = $derived(ml.width * 0.5);
+	const canvasSizeType = $derived(context.stateLayoutDerived.canvasSizeType());
+	const { menuLeftX, buyX, autoX, spinX, turboX } = $derived(
+		portraitActionAndEdgeCenters(ml.width, canvasSizeType),
+	);
+	const compactPortrait = $derived.by((): 'almostSquare' | 'nearSquare' | false => {
+		const ratioType = context.stateLayoutDerived.canvasRatioType();
+		const ratio = context.stateLayoutDerived.canvasRatio();
+		if (ratioType === 'almostSquare') return 'almostSquare';
+		if (ratioType === 'longHeight' && ratio >= 0.72) return 'nearSquare';
+		return false;
+	});
+	const stacked = $derived(
+		portraitStackedLayout(canvasSizeType, ml.height, ml.width, compactPortrait),
+	);
+	const Y_BUTTONS = $derived(stacked.yButtons);
+	const Y_WIN = $derived(stacked.yWin);
+	const Y_BALANCE = $derived(stacked.yBalance);
+	const Y_BET_ROW = $derived(stacked.yBetRow);
+	const betControlX = $derived(portraitBetControlX(ml.width, canvasSizeType));
 
 	const DRAWER_Y = {
 		unfold: 0,
@@ -37,7 +66,22 @@
 
 	let drawerButtonFadeComplete = $state(() => {});
 
+	/** Drawer fold must not shift the menu/spin row (it was pushing the bar off-screen). */
+	const ensureDrawerUnfolded = async () => {
+		if (!stateUi.drawerFold && drawerTween.current === DRAWER_Y.unfold) return;
+		stateUi.drawerFold = false;
+		drawerButtonTween.set(DRAWER_BUTTON_Y.unfold, { duration: 0 });
+		await drawerTween.set(DRAWER_Y.unfold, { duration: 0 });
+	};
+
+	onMount(() => {
+		void ensureDrawerUnfolded();
+	});
+
 	context.eventEmitter.subscribeOnMount({
+		uiShow: async () => {
+			await ensureDrawerUnfolded();
+		},
 		drawerButtonShow: async () => {
 			if (!stateUi.drawerButtonShow) {
 				stateUi.drawerButtonShow = true;
@@ -74,94 +118,55 @@
 </Container>
 
 <MainContainer standard alignVertical="bottom">
-	<!-- drawer container -->
-	<Container y={drawerTween.current}>
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 440}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
-			{@render props.buttonMenu({ anchor: 0.5 })}
-		</Container>
-
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 440}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
-			{@render props.buttonBuyBonus({ anchor: 0.5 })}
-		</Container>
-
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
-			{@render props.buttonBet({ anchor: 0.5 })}
-		</Container>
-
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 180}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
-			{@render props.buttonAutoSpin({ anchor: 0.5 })}
-		</Container>
-
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 180}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
-			{@render props.buttonTurbo({ anchor: 0.5 })}
-		</Container>
-
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 270}
-		>
-			{@render props.amountBalance({ stacked: true })}
-		</Container>
+	<Container x={menuLeftX} y={Y_BUTTONS}>
+		{@render props.buttonMenu({ anchor: 0.5 })}
 	</Container>
 
-	<Container y={Math.min(drawerTween.current, 350)}>
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 670}
-		>
-			{@render props.amountWin({ stacked: true })}
-		</Container>
+	<Container x={autoX} y={Y_BUTTONS}>
+		{@render props.buttonAutoSpin({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={spinX} y={Y_BUTTONS}>
+		{@render props.buttonBet({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={turboX} y={Y_BUTTONS}>
+		{@render props.buttonTurbo({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={buyX} y={Y_BUTTONS}>
+		{@render props.buttonBuyBonus({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={cx} y={Y_WIN}>
+		{@render props.amountWin({ stacked: true })}
 	</Container>
 </MainContainer>
 
 <MainContainer standard alignVertical="bottom">
-	<Container
-		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-		y={context.stateLayoutDerived.mainLayoutStandard().height - 130}
-	>
-		{@render props.amountBet({ stacked: true })}
+	<Container x={cx} y={Y_BALANCE}>
+		{@render props.amountBalance({ stacked: true })}
 	</Container>
 
-	<Container
-		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 390}
-		y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
-	>
-		{@render props.buttonDecrease({ anchor: 0.5 })}
+	<Container x={cx} y={Y_BET_ROW}>
+		<Container x={-betControlX}>
+			{@render props.buttonDecrease({ anchor: 0.5 })}
+		</Container>
+		<Container>
+			{@render props.amountBet({ stacked: true })}
+		</Container>
+		<Container x={betControlX}>
+			{@render props.buttonIncrease({ anchor: 0.5 })}
+		</Container>
 	</Container>
 
-	<Container
-		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 390}
-		y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
-	>
-		{@render props.buttonIncrease({ anchor: 0.5 })}
-	</Container>
-
-	<!-- drawer button -->
 	<FadeContainer
 		persistent
 		show={stateUi.drawerButtonShow}
 		oncomplete={drawerButtonFadeComplete}
 		y={drawerButtonTween.current}
 	>
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 440}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 105}
-		>
+		<Container x={buyX} y={Y_BET_ROW + 20}>
 			<ButtonDrawer disabled={!stateUi.drawerButtonShow} anchor={0.5} />
 		</Container>
 	</FadeContainer>
@@ -182,10 +187,7 @@
 	/>
 
 	<MainContainer standard alignVertical="bottom">
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 440}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
+		<Container x={menuLeftX} y={Y_BUTTONS}>
 			<Container y={-190 - 210 * 3}>
 				{@render props.buttonPayTable({ anchor: 0.5 })}
 			</Container>

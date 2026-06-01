@@ -119,14 +119,70 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		reelState.motion = 'hanging';
 	};
 
+	const getFallInMode = () => reelState.spinOptions().symbolFallInMode ?? 'default';
+
+	const getHangY = (idx: number) => {
+		const mode = getFallInMode();
+		if (idx >= 0 && idx < reelLengthInBoard) {
+			if (mode === 'rain') {
+				return getSymbolY(-1) - (reelLengthInBoard - 1 - idx) * reelOptions.symbolHeight;
+			}
+			if (mode === 'top-stagger') {
+				return getSymbolY(-1) - idx * reelOptions.symbolHeight;
+			}
+		}
+		return getSymbolY(idx - reelLength);
+	};
+
+	const getFallInStartDelay = (idx: number) => {
+		const interval = reelState.spinOptions().symbolFallInInterval;
+		const mode = getFallInMode();
+		if (mode === 'top-stagger') {
+			return interval * idx;
+		}
+		// rain + default: bottom row leads, others follow
+		return interval * (reelLengthInBoard - 1 - idx);
+	};
+
 	const hanging = async () => {
 		updateSymbols(targetSymbols);
 
 		await moveAllSymbolsWith(async (reelSymbol) => {
-			const newSymbolY = getSymbolY(reelSymbol.symbolIndexOfBoard - reelLength);
-			const duration = 0;
+			const idx = reelSymbol.symbolIndexOfBoard;
+			await reelSymbol.symbolY.set(getHangY(idx), { duration: 0 });
+		});
+	};
 
-			await reelSymbol.symbolY.set(newSymbolY, { duration });
+	const fallOneSymbolIn = async (reelSymbol: ReelSymbol) => {
+		const oldSymbolY = reelSymbol.symbolY.current;
+		const newSymbolY = getSymbolY(reelSymbol.symbolIndexOfBoard);
+		const distance = newSymbolY - oldSymbolY;
+		const noBounce = getFallInMode() === 'rain';
+		const bounceDistance = noBounce
+			? 0
+			: reelOptions.symbolHeight * reelState.spinOptions().symbolFallInBounceSizeMulti;
+		const fallSpeed = reelState.spinOptions().symbolFallInSpeed;
+		const landDuration = Math.max(1, (distance - bounceDistance) / fallSpeed);
+
+		reelSymbol.symbolState = 'spin' as TSymbolState;
+
+		if (noBounce) {
+			await reelSymbol.symbolY.set(newSymbolY, { duration: landDuration });
+			reelSymbol.symbolState = 'land' as TSymbolState;
+			reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol });
+			reelSymbol.symbolState = 'static' as TSymbolState;
+			return;
+		}
+
+		const bounceDuration = bounceDistance / reelState.spinOptions().symbolFallInBounceSpeed;
+		await reelSymbol.symbolY.set(newSymbolY - bounceDistance, {
+			duration: landDuration,
+		});
+		reelSymbol.symbolState = 'land' as TSymbolState;
+		reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol });
+		await reelSymbol.symbolY.set(newSymbolY, {
+			duration: bounceDuration,
+			easing: backOut,
 		});
 	};
 
@@ -147,29 +203,30 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 
 		reelState.motion = 'fallingIn';
 
-		await moveAllSymbolsWith(async (reelSymbol) => {
-			const oldSymbolY = reelSymbol.symbolY.current;
-			const newSymbolY = getSymbolY(reelSymbol.symbolIndexOfBoard);
-			const distance = newSymbolY - oldSymbolY;
-			const delay =
-				reelState.spinOptions().symbolFallInInterval *
-				(reelLengthInBoard - reelSymbol.symbolIndexOfBoard);
-			const bounceDistance =
-				reelOptions.symbolHeight * reelState.spinOptions().symbolFallInBounceSizeMulti;
-			const bounceDuration = bounceDistance / reelState.spinOptions().symbolFallInBounceSpeed;
-			const landDuration = (distance - bounceDistance) / reelState.spinOptions().symbolFallInSpeed;
+		const mode = getFallInMode();
+		const sequentialTopStagger =
+			mode === 'top-stagger' && reelState.spinType !== 'fast' && !stateBet.isTurbo;
 
-			await reelSymbol.symbolY.set(newSymbolY - bounceDistance, {
-				duration: landDuration,
-				delay,
+		if (sequentialTopStagger) {
+			const visibleSymbols = reelState.symbols
+				.filter((s) => s.symbolIndexOfBoard >= 0 && s.symbolIndexOfBoard < reelLengthInBoard)
+				.sort((a, b) => a.symbolIndexOfBoard - b.symbolIndexOfBoard);
+			const gap = reelState.spinOptions().symbolFallInInterval;
+
+			for (let i = 0; i < visibleSymbols.length; i++) {
+				if (i > 0 && gap > 0) await waitForTimeout(gap);
+				await fallOneSymbolIn(visibleSymbols[i]);
+			}
+		} else {
+			await moveAllSymbolsWith(async (reelSymbol) => {
+				const idx = reelSymbol.symbolIndexOfBoard;
+				if (idx < 0 || idx >= reelLengthInBoard) return;
+
+				const delay = getFallInStartDelay(idx);
+				if (delay > 0) await waitForTimeout(delay);
+				await fallOneSymbolIn(reelSymbol);
 			});
-			reelSymbol.symbolState = 'land' as TSymbolState;
-			reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol });
-			await reelSymbol.symbolY.set(newSymbolY, {
-				duration: bounceDuration,
-				easing: backOut,
-			});
-		});
+		}
 
 		onSpinFinishing();
 		reelState.motion = 'stopped';

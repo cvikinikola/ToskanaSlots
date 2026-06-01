@@ -33,6 +33,8 @@ export type CascadingReelSpinOptions = {
 	reelPaddingMultiplierNormal: number;
 	reelPaddingMultiplierAnticipated: number;
 	reelFallOutDelay: number;
+	/** 'default' = bottom-first + bounce; 'top-stagger' = top lands first; 'rain' = column, no bounce, bottom first */
+	symbolFallInMode?: 'default' | 'top-stagger' | 'rain';
 };
 
 type ReelCreateOptions<TRawSymbol extends object, TSymbolState extends string> = {

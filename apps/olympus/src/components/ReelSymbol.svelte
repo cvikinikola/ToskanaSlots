@@ -11,21 +11,14 @@
 
 	const props: Props = $props();
 
-	/**
-	 * A symbol is 'animating' when it is in a state that requires the animated
-	 * render pass (currently: win, explosion).
-	 * SymbolWrap uses this to decide which BoardContext pass to render in.
-	 */
+	const y = $derived(props.reelSymbol.symbolY.current);
+
 	const animating = $derived(
 		props.reelSymbol.symbolState === 'win' || props.reelSymbol.symbolState === 'explosion',
 	);
 </script>
 
-<SymbolWrap
-	x={getSymbolX(props.reelIndex)}
-	y={props.reelSymbol.symbolY.current}
-	{animating}
->
+<SymbolWrap x={getSymbolX(props.reelIndex)} {y} {animating}>
 	<Symbol
 		state={props.reelSymbol.symbolState}
 		rawSymbol={props.reelSymbol.rawSymbol}

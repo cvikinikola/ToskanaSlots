@@ -22,6 +22,7 @@
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
 	import { getSymbolY } from '../game/utils';
+	import { TUMBLE_SLIDE_DURATION_MS } from '../game/constants';
 	import { getContext } from '../game/context';
 	import type { RawSymbol } from '../game/types';
 
@@ -88,7 +89,8 @@
 					// +1 because tumbleBoardBase[r][0] is the top padding symbol;
 					// visible row 0 is at array index 1.
 					const tumbleSymbol =
-						context.stateGame.tumbleBoardBase[position.reel][position.row + 1];
+						context.stateGame.tumbleBoardBase[position.reel]?.[position.row + 1];
+					if (!tumbleSymbol) return;
 					tumbleSymbol.symbolState = 'explosion';
 					await waitForResolve((resolve) => (tumbleSymbol.oncomplete = resolve));
 				});
@@ -117,7 +119,7 @@
 							const targetY = getSymbolY(symbolIndex - 1);
 							if (targetY !== tumbleSymbol.symbolY.current) {
 								await tumbleSymbol.symbolY.set(targetY, {
-									duration: 200,
+									duration: TUMBLE_SLIDE_DURATION_MS,
 									easing: backOut,
 								});
 								if (symbolIndex > 0 && symbolIndex < tumbleReel.length - 1) {
@@ -159,6 +161,7 @@
 
 	<BoardContext animate={true}>
 		<BoardContainer>
+			<BoardMask />
 			<TumbleBoardBase />
 		</BoardContainer>
 	</BoardContext>

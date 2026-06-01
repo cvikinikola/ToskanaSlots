@@ -11,7 +11,6 @@
 
 	const props: Props = $props();
 
-	/** Tumble symbols are always "animating" so they render in the animate pass. */
 	const animating = $derived(
 		props.tumbleSymbol.symbolState === 'win' || props.tumbleSymbol.symbolState === 'explosion',
 	);

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Container, BitmapText, Sprite } from 'pixi-svelte';
 	import type { SymbolState, RawSymbol } from '../game/types';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { SYMBOL_SIZE, SYMBOL_CELL_WIDTH, SYMBOL_CELL_HEIGHT, SYMBOL_WIN_DURATION_MS, SYMBOL_EXPLOSION_DURATION_MS, SYMBOL_LAND_DURATION_MS } from '../game/constants';
 
 	type Props = {
 		x?: number;
@@ -21,7 +21,7 @@
 	 * Visual feedback per state:
 	 *  - win:           bright tint + slight scale-up
 	 *  - postWinStatic: full colour fallback after win animation
-	 *  - explosion:     red flash, fires oncomplete after 400ms
+	 *  - explosion:     red flash, fires oncomplete after SYMBOL_EXPLOSION_DURATION_MS
 	 *  - default:       full colour
 	 */
 	const tint = $derived(
@@ -35,17 +35,18 @@
 	);
 
 	const scale = $derived(props.state === 'win' ? 1.05 : 1);
-	const symbolSpriteSize = SYMBOL_SIZE * 1.04;
+	const symbolSpriteSize = Math.min(SYMBOL_CELL_WIDTH, SYMBOL_CELL_HEIGHT) * 0.99;
 
 	// Trigger oncomplete for animation states that have no real spine track yet.
 	$effect(() => {
 		if (props.state === 'win' || props.state === 'explosion') {
-			const t = setTimeout(() => props.oncomplete?.(), 400);
+			const ms = props.state === 'win' ? SYMBOL_WIN_DURATION_MS : SYMBOL_EXPLOSION_DURATION_MS;
+			const t = setTimeout(() => props.oncomplete?.(), ms);
 			return () => clearTimeout(t);
 		}
 		if (props.state === 'land') {
 			// Short bounce/settle delay before the symbol is considered done landing.
-			const t = setTimeout(() => props.oncomplete?.(), 120);
+			const t = setTimeout(() => props.oncomplete?.(), SYMBOL_LAND_DURATION_MS);
 			return () => clearTimeout(t);
 		}
 	});
@@ -61,19 +62,4 @@
 		tint={tint}
 	/>
 
-	<!-- Multiplier badge – shown on M symbols -->
-	{#if props.rawSymbol.multiplier}
-		<BitmapText
-			anchor={{ x: 0.5, y: 1 }}
-			y={SYMBOL_SIZE * 0.42}
-			text={`×${props.rawSymbol.multiplier}`}
-			style={{
-				fontFamily: 'proxima-nova',
-				fontSize: SYMBOL_SIZE * 0.28,
-				fill: 0xffd700,
-				fontWeight: '800',
-				stroke: { color: 0x1a0608, width: 4 },
-			}}
-		/>
-	{/if}
 </Container>

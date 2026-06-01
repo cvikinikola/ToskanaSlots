@@ -1,6 +1,6 @@
 import type { EmitterEventBoard } from '../components/Board.svelte';
 import type { EmitterEventTumbleBoard } from '../components/TumbleBoard.svelte';
-import type { EmitterEventGlobalMultiplier } from '../components/GlobalMultiplier.svelte';
+import type { EmitterEventSpotMultipliers } from '../components/SpotMultipliers.svelte';
 import type { EmitterEventTumbleWinAmount } from '../components/TumbleWinAmount.svelte';
 import type { EmitterEventTumbleHistory } from '../components/TumbleHistory.svelte';
 import type { EmitterEventFreeSpinIntro } from '../components/FreeSpinIntro.svelte';
@@ -10,7 +10,7 @@ import type { EmitterEventWin } from '../components/Win.svelte';
 import type { EmitterEventSound } from '../components/Sound.svelte';
 import type { EmitterEventTransition } from '../components/Transition.svelte';
 import type { EmitterEventWinSparks } from '../components/WinSparks.svelte';
-import type { EmitterEventLightningCrackle } from '../components/LightningCrackle.svelte';
+import type { EmitterEventNatureBurst } from '../components/NatureBurst.svelte';
 import type { EmitterEventWinGlow } from '../components/WinGlow.svelte';
 
 /**
@@ -20,7 +20,7 @@ import type { EmitterEventWinGlow } from '../components/WinGlow.svelte';
 export type EmitterEventGame =
 	| EmitterEventBoard
 	| EmitterEventTumbleBoard
-	| EmitterEventGlobalMultiplier
+	| EmitterEventSpotMultipliers
 	| EmitterEventTumbleWinAmount
 	| EmitterEventTumbleHistory
 	| EmitterEventFreeSpinIntro
@@ -30,5 +30,5 @@ export type EmitterEventGame =
 	| EmitterEventSound
 	| EmitterEventTransition
 	| EmitterEventWinSparks
-	| EmitterEventLightningCrackle
+	| EmitterEventNatureBurst
 	| EmitterEventWinGlow;
