@@ -32,11 +32,21 @@
 			},
 		})}
 	>
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={85 + 20} scale={0.8}>
+		<!--
+			QA (phone landscape): pull side buttons inward so they sit close to
+			the centred Balance / Win / Bet strip instead of hugging the screen
+			edges. Bottom info amounts (balance/win/bet) stay in place.
+				• menu left edge aligns with balance plate left edge
+				  (balance center 420, plate half-width 241 → plate left 179;
+				   button half-width 60 → menu center 239)
+				• buy bonus keeps same spacing from menu (was 175 gap)
+				• decrease / increase: shifted left (was 1580 / 1715)
+		-->
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={239} scale={0.8}>
 			{@render props.buttonMenu({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={220 + 20} scale={0.8}>
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={414} scale={0.8}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 
@@ -52,18 +62,27 @@
 			{@render props.amountBet({ stacked: true })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={1580} scale={0.8}>
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={1455} scale={0.8}>
 			{@render props.buttonDecrease({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={1715} scale={0.8}>
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={1585} scale={0.8}>
 			{@render props.buttonIncrease({ anchor: 0.5 })}
 		</Container>
 	</Container>
 
+	<!--
+		QA (phone landscape): pull the right-side action column (autospin /
+		spin-stop / turbo) inward from the screen edge so it sits vertically
+		above the +/- buttons in the bottom row, aligned with their midpoint
+		(decrease 1455 / increase 1585 → centred at ~1520; with anchor x:1 and
+		children at LANDSCAPE_BASE_SIZE * 0.5, x = 1520 + 82 ≈ 1602 →
+		mainWidth - 318). Lifted the column ~80 px so the bottom button
+		(turbo) clears the bottom info bar.
+	-->
 	<Container
-		x={context.stateLayoutDerived.mainLayoutStandard().width - 60}
-		y={context.stateLayoutDerived.mainLayoutStandard().height * 0.5}
+		x={context.stateLayoutDerived.mainLayoutStandard().width - 318}
+		y={context.stateLayoutDerived.mainLayoutStandard().height * 0.5 - 80}
 		pivot={anchorToPivot({
 			anchor: { x: 1, y: 0.5 },
 			sizes: {

@@ -45,9 +45,9 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		symbolHeight: SYMBOL_SIZE,
 		initialSymbols: INITIAL_BOARD[reelIndex],
 		initialSymbolState: INITIAL_SYMBOL_STATE,
-		onReelSpinStart: () => {
-			eventEmitter.broadcast({ type: 'soundReelSpin' });
-		},
+		// soundReelSpin is now broadcast from the 'reveal' book-event handler
+		// (first reveal only) so cascades don't replay the spin sound.
+		onReelSpinStart: () => {},
 		onReelStopping: () => {
 			eventEmitter.broadcast({
 				type: 'soundReelStop',
@@ -91,8 +91,8 @@ export const stateGame = $state({
 	tumbleBoardBase: [] as TumbleSymbol[][],
 	/** Symbols falling in from the top during a tumble (adding layer) */
 	tumbleBoardAdding: [] as TumbleSymbol[][],
-	/** Accumulated global multiplier (active during free spins) */
-	globalMultiplier: 1,
+	/** Accumulated free-spin global multiplier. Starts at 0 (no boost) and can only grow (QA). */
+	globalMultiplier: 0,
 	/** Scatter land counter for progressive scatter landing sounds */
 	scatterCounter: 0,
 	/** 3-D model loading gates; loading screen waits for these before start. */

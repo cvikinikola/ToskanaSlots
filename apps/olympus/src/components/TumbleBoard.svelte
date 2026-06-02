@@ -15,6 +15,7 @@
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 
+	import { stateBet } from 'state-shared';
 	import { BoardContext } from 'components-shared';
 	import { waitForResolve } from 'utils-shared/wait';
 
@@ -111,9 +112,20 @@
 			//  • inside a reel each symbol is offset by a small delay too, giving
 			//    the classic "stream" of symbols falling in instead of a single
 			//    rigid block dropping at once.
-			const REEL_STAGGER_MS = 55;
-			const SYMBOL_STAGGER_MS = 35;
-			const FALL_DURATION_MS = 360;
+			// Turbo mode (QA): skip both staggers and shorten the fall so every
+			// symbol on every reel drops at once. We RE-READ stateBet.isTurbo on
+			// every reel/symbol so that pressing STOP mid-cascade (which flips
+			// isTurbo on via ButtonTurbo's stopButtonClick subscriber) instantly
+			// fast-forwards the rest of the cascade — otherwise STOP in free
+			// spins appeared to do nothing (QA report).
+			const getTimings = () => {
+				const isTurbo = stateBet.isTurbo;
+				return {
+					REEL_STAGGER_MS: isTurbo ? 0 : 55,
+					SYMBOL_STAGGER_MS: isTurbo ? 0 : 35,
+					FALL_DURATION_MS: isTurbo ? 120 : 360,
+				};
+			};
 			const getPromises = () =>
 				context.stateGameDerived.tumbleBoardCombined().map(async (tumbleReel, reelIndex) => {
 					const reelMoved = tumbleReel.some((tumbleSymbol, symbolIndex) => {
@@ -123,7 +135,7 @@
 
 					if (reelMoved) {
 						await waitForResolve((resolve) =>
-							setTimeout(resolve, reelIndex * REEL_STAGGER_MS),
+							setTimeout(resolve, reelIndex * getTimings().REEL_STAGGER_MS),
 						);
 					}
 
@@ -133,10 +145,11 @@
 							if (targetY !== tumbleSymbol.symbolY.current) {
 								// Top-most symbols arrive first; bottom symbols a tick later.
 								const symbolDelay =
-									(tumbleReel.length - 1 - symbolIndex) * SYMBOL_STAGGER_MS;
+									(tumbleReel.length - 1 - symbolIndex) *
+									getTimings().SYMBOL_STAGGER_MS;
 								await waitForResolve((resolve) => setTimeout(resolve, symbolDelay));
 								await tumbleSymbol.symbolY.set(targetY, {
-									duration: FALL_DURATION_MS,
+									duration: getTimings().FALL_DURATION_MS,
 									easing: cubicOut,
 								});
 								if (symbolIndex > 0 && symbolIndex < tumbleReel.length - 1) {
@@ -164,6 +177,28 @@
 					}
 				});
 			await Promise.all(getPromises());
+		},
+
+		// QA: pressing STOP during free-spin cascades must INSTANTLY settle the
+		// board. The ButtonTurbo subscriber flips stateBet.isTurbo on stop, but
+		// any symbol Tween that's already mid-flight keeps running for its
+		// original duration. Force every tumbleSymbol to its final Y with
+		// duration:0 and resolve any pending oncomplete awaits so the cascade
+		// chain advances immediately.
+		stopButtonClick: () => {
+			const settleReel = (reel: typeof context.stateGame.tumbleBoardBase[number]) =>
+				reel.forEach((tumbleSymbol, symbolIndex) => {
+					const targetY = getSymbolY(symbolIndex - 1);
+					if (tumbleSymbol.symbolY.current !== targetY) {
+						tumbleSymbol.symbolY.set(targetY, { duration: 0 });
+					}
+					tumbleSymbol.symbolState = 'static';
+					const resolve = tumbleSymbol.oncomplete;
+					tumbleSymbol.oncomplete = () => {};
+					resolve();
+				});
+			context.stateGame.tumbleBoardBase.forEach(settleReel);
+			context.stateGame.tumbleBoardAdding.forEach(settleReel);
 		},
 	});
 </script>

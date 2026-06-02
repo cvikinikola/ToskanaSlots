@@ -5,11 +5,15 @@
  * remain, emitting bookEvents that match `apps/olympus/src/game/typesBookEvent.ts`
  * so they replay through the existing `bookEventHandlerMap` unchanged.
  *
- * Multipliers:
+ * Multipliers (per QA spec):
  *   • Base game — collected M values are summed and applied ONCE at the end
  *     of the chain via `boardMultiplierInfo`.
- *   • Free spins — collected M values are added into a persistent globalMult
- *     via `updateGlobalMult`; every cascade win is pre-multiplied by it.
+ *   • Free spins — the persistent globalMult starts at 0 and can ONLY grow.
+ *     M symbols are collected/applied ONLY if the spin produced at least
+ *     one cascade win. On a no-win spin every M on the board is discarded
+ *     and globalMult is left unchanged. When applying the multiplier to a
+ *     win we use `max(1, globalMult)` so a still-zero accumulator does not
+ *     wipe the cascade win out.
  */
 
 import { tumble } from './board.js';
@@ -66,8 +70,11 @@ export const runTumbleSequence = ({
     if (wins.length === 0) break;
 
     const cascadeWinRaw = wins.reduce((a, w) => a + w.payoutMultiplier, 0);
-    const globalMult = freeSpinMode ? globalMultRef.value : 1;
-    const cascadeWin = cascadeWinRaw * globalMult;
+    // Stored globalMult starts at 0; effective multiplier on a win is at
+    // least 1 (no boost). This matches QA examples 1–3.
+    const storedGlobalMult = freeSpinMode ? globalMultRef.value : 1;
+    const effectiveGlobalMult = storedGlobalMult || 1;
+    const cascadeWin = cascadeWinRaw * effectiveGlobalMult;
     rawTumbleWin += cascadeWinRaw;
     tumbleWin += cascadeWin;
 
@@ -76,10 +83,10 @@ export const runTumbleSequence = ({
       totalWin: toBookAmount(tumbleWin),
       wins: wins.map((w) => ({
         symbol: w.symbol,
-        win: toBookAmount(w.payoutMultiplier * globalMult),
+        win: toBookAmount(w.payoutMultiplier * effectiveGlobalMult),
         positions: w.positions,
         meta: {
-          globalMult,
+          globalMult: effectiveGlobalMult,
           winWithoutMult: toBookAmount(w.payoutMultiplier),
           overlay: w.positions[0],
         },
@@ -94,33 +101,35 @@ export const runTumbleSequence = ({
   }
 
   // Apply visible multipliers once at the end of the chain.
-  // In free spins, multipliers ALWAYS accumulate into the persistent global
-  // multiplier, even on spins with no win — that's the whole hook of the
-  // bonus (think Gates of Olympus). In the base game, multipliers only
-  // matter when there's something to multiply.
-  const collected = freeSpinMode || tumbleWin > 0 ? collectMultipliers(cur) : [];
+  // QA rule (free spins): multipliers are only counted when the spin had
+  // at least one cascade win. On a no-win spin every M on the board is
+  // discarded — it does NOT grow the persistent globalMult.
+  // Base game: multipliers only matter when there's something to multiply.
+  const collected = tumbleWin > 0 ? collectMultipliers(cur) : [];
   if (collected.length > 0) {
     const boardMult = collected.reduce((a, m) => a + m.multiplier, 0);
     if (freeSpinMode) {
-      // First grow the persistent multiplier with the M symbols that landed
-      // this spin so future spins (and the FreeSpins outro total) reflect it.
+      // Grow the persistent multiplier with every M that landed during this
+      // winning spin (across all cascades — they all live on the final
+      // board because M symbols never explode).
       const previousGlobalMult = globalMultRef.value;
       globalMultRef.value += boardMult;
       emit({ type: 'updateGlobalMult', globalMult: globalMultRef.value });
 
-      // Boost THIS spin's win too — the M symbols that just landed should
-      // also apply to the cascade wins from the same spin (GoO behaviour).
-      // Cascade wins were already multiplied by `previousGlobalMult`; we
-      // re-base them onto the NEW total so the player sees the visible M
-      // symbols actually affect the win counter on the spin they appear.
-      if (rawTumbleWin > 0 && boardMult > 0) {
-        const totalAfter = rawTumbleWin * globalMultRef.value;
+      // Apply the NEW total multiplier (prev + thisSpinMs) to ALL wins in
+      // this spin, as per QA examples 1–3. Use `|| 1` so a still-zero
+      // accumulator doesn't wipe wins out (cascade loop above also used the
+      // pre-update effective value).
+      if (boardMult > 0) {
+        const newEffectiveMult = globalMultRef.value || 1;
+        const previousEffectiveMult = previousGlobalMult || 1;
+        const totalAfter = rawTumbleWin * newEffectiveMult;
         emit({
           type: 'boardMultiplierInfo',
           multInfo: { positions: collected },
           winInfo: {
-            tumbleWin: toBookAmount(rawTumbleWin * previousGlobalMult),
-            boardMult: globalMultRef.value,
+            tumbleWin: toBookAmount(rawTumbleWin * previousEffectiveMult),
+            boardMult: newEffectiveMult,
             totalWin: toBookAmount(totalAfter),
           },
         });

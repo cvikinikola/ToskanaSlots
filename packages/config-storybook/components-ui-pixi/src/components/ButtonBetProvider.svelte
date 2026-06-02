@@ -68,6 +68,7 @@
 	context.eventEmitter.subscribeOnMount({
 		stopButtonClick: () => (stopDisabled = true),
 		stopButtonEnable: () => (stopDisabled = false),
+		stopButtonDisable: () => (stopDisabled = true),
 	});
 </script>
 

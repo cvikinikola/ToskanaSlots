@@ -55,7 +55,8 @@ export const runFreeSpins = ({
   freeSpinCount = FREE_SPINS_AWARDED,
   rng = defaultRng,
   indexRef = { value: 0 },
-  globalMultRef = { value: 1 },
+  // QA: Free-spin global multiplier starts at 0 (not 1) and can only grow.
+  globalMultRef = { value: 0 },
 } = {}) => {
   const bookEvents = [];
   const emit = (e) => bookEvents.push({ index: indexRef.value++, ...e });
@@ -122,7 +123,8 @@ const playRound = ({ betAmount, rng, forceBonus }) => {
     gameType: 'basegame',
   });
 
-  const globalMultRef = { value: 1 };
+  // Base game does not use the persistent multiplier (kept at 0).
+  const globalMultRef = { value: 0 };
   const baseChain = runTumbleSequence({
     initialBoard: board,
     betAmount,
@@ -145,8 +147,9 @@ const playRound = ({ betAmount, rng, forceBonus }) => {
       totalFs: FREE_SPINS_AWARDED,
       positions: getScatterPositions(baseChain.finalBoard),
     });
-    globalMultRef.value = 1;
-    emit({ type: 'updateGlobalMult', globalMult: 1 });
+    // QA: starts at 0, not 1.
+    globalMultRef.value = 0;
+    emit({ type: 'updateGlobalMult', globalMult: 0 });
 
     const fs = runFreeSpins({
       betAmount,

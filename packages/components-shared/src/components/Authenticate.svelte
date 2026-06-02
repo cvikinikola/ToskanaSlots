@@ -112,26 +112,36 @@
 	};
 
 	const handleReplay = async () => {
-		stateBet.betAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
-		stateBet.wageredBetAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
-		stateBet.activeBetModeKey = stateUrlDerived.mode();
+		try {
+			stateBet.betAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
+			stateBet.wageredBetAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
+			stateBet.activeBetModeKey = stateUrlDerived.mode();
 
-		const data = await requestReplay({
-			rgsUrl: stateUrlDerived.rgsUrl(),
-			game: stateUrlDerived.game(),
-			mode: stateUrlDerived.mode(),
-			version: stateUrlDerived.version(),
-			event: stateUrlDerived.event(),
-		});
-
-		if(data) {
-			// @ts-ignore
-			stateBet.betToResume = {
-				...data,
-				event: '0',
-				active: true,
+			const data = await requestReplay({
+				rgsUrl: stateUrlDerived.rgsUrl(),
+				game: stateUrlDerived.game(),
 				mode: stateUrlDerived.mode(),
-			};
+				version: stateUrlDerived.version(),
+				event: stateUrlDerived.event(),
+			});
+
+			// error from RGS
+			if ((data as any)?.error) throw data;
+
+			if (data) {
+				// @ts-ignore
+				stateBet.betToResume = {
+					...data,
+					event: '0',
+					active: true,
+					mode: stateUrlDerived.mode(),
+				};
+			} else {
+				throw new Error('Replay data could not be loaded.');
+			}
+		} catch (error) {
+			console.error(error);
+			stateModal.modal = { name: 'error', error };
 		}
 	};
 
@@ -150,4 +160,68 @@
 
 {#if authenticated}
 	{@render props.children()}
+	{#if stateUrlDerived.replay()}
+		<div class="replay-badge" aria-label="Replay mode">REPLAY MODE</div>
+	{/if}
+{:else}
+	<div class="authenticate-loader" role="status" aria-live="polite">
+		<div class="authenticate-loader__spinner" aria-hidden="true"></div>
+		<div class="authenticate-loader__label">
+			{stateUrlDerived.replay() ? 'Loading replay…' : 'Loading game…'}
+		</div>
+	</div>
 {/if}
+
+<style lang="scss">
+	.authenticate-loader {
+		position: fixed;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 16px;
+		background: #000;
+		color: #fff;
+		font-family: system-ui, sans-serif;
+		z-index: 9999;
+
+		&__spinner {
+			width: 48px;
+			height: 48px;
+			border: 4px solid rgba(255, 255, 255, 0.2);
+			border-top-color: #fff;
+			border-radius: 50%;
+			animation: authenticate-loader-spin 0.9s linear infinite;
+		}
+
+		&__label {
+			font-size: 14px;
+			letter-spacing: 0.05em;
+			text-transform: uppercase;
+			opacity: 0.85;
+		}
+	}
+
+	@keyframes authenticate-loader-spin {
+		to { transform: rotate(360deg); }
+	}
+
+	.replay-badge {
+		position: fixed;
+		top: 12px;
+		left: 50%;
+		transform: translateX(-50%);
+		padding: 6px 14px;
+		background: rgba(220, 38, 38, 0.92);
+		color: #fff;
+		font-family: system-ui, sans-serif;
+		font-size: 12px;
+		font-weight: 700;
+		letter-spacing: 0.12em;
+		border-radius: 4px;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+		pointer-events: none;
+		z-index: 9998;
+	}
+</style>

@@ -62,6 +62,13 @@
 			   return { mode: 'side', left, top, width: w, height: h };
 		}
 
+		if (layoutType === 'landscape') {
+			// QA: phone landscape — hammer would overlap the bottom-row menu /
+			// buy-bonus buttons that the shared LayoutLandscape places along the
+			// bottom edge. Hide it on this layout (Thor is also hidden here).
+			return { mode: 'hidden' };
+		}
+
 		// Desktop / landscape: touch the LEFT edge of the reel frame.
 		// Bottom of model aligns with frame bottom.
 		const frameLeft = frameCx - frameW / 2;

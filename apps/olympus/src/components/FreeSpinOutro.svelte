@@ -145,7 +145,7 @@
 				style={{
 					fontFamily: 'proxima-nova',
 					fontSize: SYMBOL_SIZE * 0.44 * FONT_SCALE,
-					fill: 0xffffff,
+					fill: 0xffd700,
 					fontWeight: '900',
 				}}
 			/>

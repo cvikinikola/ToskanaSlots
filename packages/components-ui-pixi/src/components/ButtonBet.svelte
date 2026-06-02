@@ -12,12 +12,18 @@
 	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
 	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
 	const isSpinKey = (key: string) => ['spin_default', 'spin_disabled'].includes(key);
+	const isDisabledKey = (key: string) => ['spin_disabled', 'stop_disabled'].includes(key);
 </script>
 
 <ButtonBetProvider>
 	{#snippet children({ key, onpress })}
 		<OnHotkey hotkey="Space" {disabled} {onpress} />
-		<Button {...props} {sizes} {onpress} {disabled}>
+		<!--
+			QA: when the bet button is in a *_disabled state (e.g. STOP during
+			free spins) it must look and behave like AutoSpin while disabled —
+			no pointer cursor, no hover scale, no click feedback.
+		-->
+		<Button {...props} {sizes} {onpress} disabled={disabled || isDisabledKey(key)}>
 			{#snippet children({ center, hovered, pressed })}
 				<Container
 					{...center}

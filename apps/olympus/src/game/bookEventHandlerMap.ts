@@ -113,11 +113,24 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
 		if (isBonusGame) {
-			eventEmitter.broadcast({ type: 'stopButtonEnable' });
+			// QA: during free spins the STOP button must stay disabled (greyed
+			// out) like +/- — players cannot interrupt the auto-played sequence.
+			eventEmitter.broadcast({ type: 'stopButtonDisable' });
 			recordBookEvent({ bookEvent });
 		}
 
 		stateGame.gameType = bookEvent.gameType;
+
+		// Play spin sound only on the first reveal of each round.
+		// Cascade re-reveals share the same bookEvents array but have a higher
+		// index — we detect them by checking for any prior reveal event.
+		const isFirstReveal = !bookEvents.some(
+			(e) => e.type === 'reveal' && e.index < bookEvent.index,
+		);
+		if (isFirstReveal) {
+			eventEmitter.broadcast({ type: 'soundReelSpin' });
+		}
+
 		await stateGameDerived.enhancedBoard.spin({
 			revealEvent: bookEvent,
 			// paddingBoard not used by cascading boards, kept for API compatibility
@@ -258,8 +271,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	updateGlobalMult: async (bookEvent: BookEventOfType<'updateGlobalMult'>) => {
 		stateGame.globalMultiplier = bookEvent.globalMult;
 		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
-		if (bookEvent.globalMult === 1) {
-			// Reset means a new free spin cascade cycle
+		if (bookEvent.globalMult === 0) {
+			// Reset (start of a new free-spin round) — clear the tumble win counter.
 			eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
 		}
 		await eventEmitter.broadcastAsync({
@@ -303,11 +316,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		// Switch game mode
 		stateGame.gameType = 'freeSpins';
-		stateGame.globalMultiplier = 1;
+		stateGame.globalMultiplier = 0;
 
 		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		eventEmitter.broadcast({ type: 'globalMultiplierShow' });
-		await eventEmitter.broadcastAsync({ type: 'globalMultiplierUpdate', multiplier: 1 });
+		await eventEmitter.broadcastAsync({ type: 'globalMultiplierUpdate', multiplier: 0 });
 
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		stateUi.freeSpinCounterShow = true;
@@ -319,8 +332,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateUi.freeSpinCounterTotal = bookEvent.totalFs;
 
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
+		// QA: keep Balance + spin/stop visible during free spins exactly like
+		// in base game. Do NOT fold the drawer and do NOT show the toggle
+		// arrow button — all UI elements stay in place on every device.
 		eventEmitter.broadcast({ type: 'drawerButtonHide' });
-		eventEmitter.broadcast({ type: 'drawerFold' });
+		eventEmitter.broadcast({ type: 'drawerUnfold' });
 	},
 
 	// ── freeSpinRetrigger ─────────────────────────────────────────────────────
@@ -387,7 +403,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		winLevelSoundsStop();
 		stateGame.freeSpinOutroActive = false;
 		stateGame.gameType = 'basegame';
-		stateGame.globalMultiplier = 1;
+		stateGame.globalMultiplier = 0;
+		// Restore STOP button so base-game spins can be interrupted again.
+		eventEmitter.broadcast({ type: 'stopButtonEnable' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;

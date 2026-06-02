@@ -68,6 +68,10 @@
 	context.eventEmitter.subscribeOnMount({
 		stopButtonClick: () => (stopDisabled = true),
 		stopButtonEnable: () => (stopDisabled = false),
+		// Allows games to keep STOP greyed-out without triggering the turbo
+		// side-effect that stopButtonClick has (e.g. during free spins where
+		// the user shouldn't be able to interrupt the auto-played sequence).
+		stopButtonDisable: () => (stopDisabled = true),
 	});
 </script>
 

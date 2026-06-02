@@ -58,7 +58,17 @@ export const BOARD_LAYOUT_BY_TYPE: Record<
 > = {
 
 	desktop:   { center: { x: 0.510, y: 0.35 }, fit: { w: 0.68, h: 0.70 } },
-	landscape: { center: { x: 0.510, y: 0.35 }, fit: { w: 0.68, h: 0.70 } },
+	// QA: phone-landscape (e.g. iPhone 14 Pro Max 932×430). The shared
+	// LayoutLandscape places:
+	//   • bottom row (menu / buy bonus / balance / win / bet / +/-) at y≈867
+	//   • right column (autospin / spin / turbo) centered around x≈1860
+	// On this layout Thor + hammer 3D models are hidden (see Thor*3D.svelte)
+	// so the board can use the central area without colliding. fit.h is the
+	// active limit (REEL_FRAME aspect 10.7:7.25 ≈ 1.48 < main 1.78).
+	// fit.h 0.68 → board H ≈ 740, bottom ≈ 432+370 = 802 (safe vs UI 867).
+	// Board right edge ≈ 1502; with multiplier panel +120 main px ≈ 1622
+	// (safe vs right column inner edge ≈ 1778).
+	landscape: { center: { x: 0.500, y: 0.40 }, fit: { w: 0.84, h: 0.68 } },
 	tablet:    { center: { x: 0.5, y: 0.44 }, fit: { w: 0.97, h: 0.68 } },
 	portrait:  { center: { x: 0.5, y: 0.48 }, fit: { w: 1.2, h: 1.0 } },
 };

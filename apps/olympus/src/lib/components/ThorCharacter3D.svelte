@@ -43,7 +43,10 @@
 			canvasSizes.height * 0.5 +
 			(mainLayout.height * board.center.y - mainLayout.height * 0.5) * scale;
 
-		if (layoutType === 'portrait' || layoutType === 'tablet') {
+		if (layoutType === 'portrait' || layoutType === 'tablet' || layoutType === 'landscape') {
+			// QA: phone landscape — Thor would collide with the right-side
+			// Auto Spin / Spin / Turbo column and the +/- buttons. Skip rendering
+			// him there (matches portrait/tablet behaviour).
 			return { mode: 'hidden' };
 		}
 

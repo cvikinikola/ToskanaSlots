@@ -24,8 +24,16 @@
 		(boardContext.animate && props.animating) || (!boardContext.animate && !props.animating),
 	);
 
-	const top = SYMBOL_SIZE * 0.5;
-	const bottom = SYMBOL_SIZE * (BOARD_DIMENSIONS.y - 0.5);
+	// Symbol `y` is the sprite CENTRE (anchor 0.5), so the visible range
+	// must cover the full board height — from the top edge (y = 0) to the
+	// bottom edge (y = SYMBOL_SIZE * BOARD_DIMENSIONS.y). Using the row
+	// centres here (50 … 450) caused cascading symbols to stay hidden until
+	// their centre reached row 0, then "pop in" at row 0 and slide downward
+	// to the real target row — visually the first row was skipped and the
+	// reels appeared to stop one row lower than the spin result (QA bug
+	// "prvi red preleće, zaustavljanje na drugom redu").
+	const top = 0;
+	const bottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
 	const inFrame = $derived(props.y >= top && props.y <= bottom);
 </script>
 

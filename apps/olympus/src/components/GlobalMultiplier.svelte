@@ -42,14 +42,21 @@
 			};
 		}
 
+		// Desktop / landscape: mirror the FREE SPINS counter (left of board).
+		// FreeSpinCounter overlaps the frame by ~1.2 SYMBOL_SIZE inside; mirror
+		// that overlap on the right so the multiplier hugs the board edge
+		// symmetrically. Y is aligned with the FREE SPINS panel top.
+		const FRAME_OVERLAP_INSIDE = SYMBOL_SIZE * 1.2;
+		// Matches FreeSpinCounter: historyY (frameBounds.top + 2.12) - panelH - gap(0.22)
+		const counterTopY = frameBounds.top + SYMBOL_SIZE * 2.12 - SYMBOL_SIZE * 1.25 - SYMBOL_SIZE * 0.22;
 		return {
-			x: frameBounds.right + SYMBOL_SIZE * 0.18,
-			y: frameBounds.top + insetY,
+			x: frameBounds.right - FRAME_OVERLAP_INSIDE,
+			y: counterTopY + (SYMBOL_SIZE * 1.25 - PANEL_H) / 2 + insetY * 0,
 		};
 	});
 
 	let show = $state(false);
-	let multiplier = $state(1);
+	let multiplier = $state(0);
 	let flash = $state(false);
 
 	context.eventEmitter.subscribeOnMount({
@@ -58,11 +65,11 @@
 		globalMultiplierHide: () => (show = false),
 
 		globalMultiplierUpdate: async (emitterEvent) => {
-			if (emitterEvent.multiplier === 1 && multiplier !== 1) {
+			if (emitterEvent.multiplier === 0 && multiplier !== 0) {
 				flash = true;
 				await waitForTimeout(200);
 				flash = false;
-				multiplier = 1;
+				multiplier = 0;
 			} else if (emitterEvent.multiplier > multiplier) {
 				flash = true;
 				await waitForTimeout(300);
@@ -95,7 +102,7 @@
 				style={{
 					fontFamily: 'proxima-nova',
 					fontSize: SYMBOL_SIZE * 0.12,
-					fill: flash ? 0xffffff : GOLD,
+					fill: GOLD,
 					fontWeight: '900',
 				}}
 			/>
@@ -108,7 +115,7 @@
 				style={{
 					fontFamily: 'proxima-nova',
 					fontSize: SYMBOL_SIZE * 0.34,
-					fill: flash ? 0xffffff : GOLD,
+					fill: GOLD,
 					fontWeight: '900',
 				}}
 			/>

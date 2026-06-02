@@ -7,6 +7,7 @@ export type EmitterEventUi =
 	| { type: 'hotKeyEscape' }
 	| { type: 'stopButtonClick' }
 	| { type: 'stopButtonEnable' }
+	| { type: 'stopButtonDisable' }
 	| { type: 'uiShow' }
 	| { type: 'uiHide' }
 	| { type: 'drawerUnfold' }

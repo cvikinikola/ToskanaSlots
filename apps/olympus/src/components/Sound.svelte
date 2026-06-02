@@ -107,7 +107,7 @@
 				const now = performance.now();
 				if (now - lastReelStopAt < REEL_STOP_DEBOUNCE_MS) return;
 				lastReelStopAt = now;
-				playAudio('/assets/audio/stop.mp3', 0.85);
+				playAudio('/assets/audio/stop.mp3', 1.0);
 				return;
 			}
 			if (name === 'sfx_symbol_destroy') {
@@ -136,6 +136,16 @@
 				playAudio('/assets/audio/thunder_clap.mp3', 0.5);
 				return;
 			}
+			// Free spin start jingle (freeSpinTrigger / freeSpinRetrigger)
+			if (name === 'jng_intro_fs') {
+				playAudio('/assets/audio/Massive_Thor_hammer__2-1779125404081.mp3', 0.9);
+				return;
+			}
+			// Free spin end — "You Won" panel fanfare
+			if (name === 'sfx_youwon_panel') {
+				playAudio('/assets/audio/Massive_Thor_hammer__2-1779125404081.mp3', 0.9);
+				return;
+			}
 			// sound.players.once.play({ name });
 			console.debug('[sound] sfx →', name);
 		},
@@ -161,7 +171,7 @@
 			const now = performance.now();
 			if (!forcePlay && now - lastReelStopAt < REEL_STOP_DEBOUNCE_MS) return;
 			lastReelStopAt = now;
-			playAudio('/assets/audio/stop.mp3', 0.85, playbackRate);
+			playAudio('/assets/audio/stop.mp3', 1.0, playbackRate);
 		},
 
 		// destroy.mp3 — winning symbols exploding before the cascade.
