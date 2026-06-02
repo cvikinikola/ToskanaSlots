@@ -179,23 +179,24 @@ export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 
 
 export const SPIN_OPTIONS_DEFAULT = {
-    symbolFallInSpeed: 5,
-    symbolFallInInterval: 80,
-    symbolFallInBounceSpeed: 2,
-    symbolFallInBounceSizeMulti: 0.1,
-    symbolFallOutSpeed: 8,
-    symbolFallOutInterval: 40,
-    reelFallInDelay: 120,
-    reelPaddingMultiplierNormal: 1.5,
-    reelPaddingMultiplierAnticipated: 3,
-    reelFallOutDelay: 80,
+    // Gates-of-Olympus pacing: deliberate fall-in, clear per-reel cascade.
+    symbolFallInSpeed: 3.2,
+    symbolFallInInterval: 110,
+    symbolFallInBounceSpeed: 1,
+    symbolFallInBounceSizeMulti: 0,
+    symbolFallOutSpeed: 5,
+    symbolFallOutInterval: 55,
+    reelFallInDelay: 170,
+    reelPaddingMultiplierNormal: 1.8,
+    reelPaddingMultiplierAnticipated: 3.2,
+    reelFallOutDelay: 110,
 };
 
 export const SPIN_OPTIONS_FAST = {
-	symbolFallInSpeed: 12,
+	symbolFallInSpeed: 14,
 	symbolFallInInterval: 20,
-	symbolFallInBounceSpeed: 5,
-	symbolFallInBounceSizeMulti: 0.05,
+	symbolFallInBounceSpeed: 1,
+	symbolFallInBounceSizeMulti: 0,
 	symbolFallOutSpeed: 16,
 	symbolFallOutInterval: 10,
 	reelFallInDelay: 20,

@@ -56,7 +56,9 @@ export const runTumbleSequence = ({
   const emit = (e) => events.push({ index: indexRef.value++, ...e });
 
   const scattersOnInitialBoard = countScatters(initialBoard);
-  let tumbleWin = 0; // × bet
+  let tumbleWin = 0;       // × bet, with the global mult applied to each cascade
+  let rawTumbleWin = 0;    // × bet, BEFORE any multiplier — used to re-apply the
+                           // final boosted multiplier in free spins.
   let cur = initialBoard;
 
   for (let cascade = 0; cascade < MAX_CASCADES; cascade++) {
@@ -66,6 +68,7 @@ export const runTumbleSequence = ({
     const cascadeWinRaw = wins.reduce((a, w) => a + w.payoutMultiplier, 0);
     const globalMult = freeSpinMode ? globalMultRef.value : 1;
     const cascadeWin = cascadeWinRaw * globalMult;
+    rawTumbleWin += cascadeWinRaw;
     tumbleWin += cascadeWin;
 
     emit({
@@ -91,12 +94,38 @@ export const runTumbleSequence = ({
   }
 
   // Apply visible multipliers once at the end of the chain.
-  const collected = tumbleWin > 0 ? collectMultipliers(cur) : [];
+  // In free spins, multipliers ALWAYS accumulate into the persistent global
+  // multiplier, even on spins with no win — that's the whole hook of the
+  // bonus (think Gates of Olympus). In the base game, multipliers only
+  // matter when there's something to multiply.
+  const collected = freeSpinMode || tumbleWin > 0 ? collectMultipliers(cur) : [];
   if (collected.length > 0) {
     const boardMult = collected.reduce((a, m) => a + m.multiplier, 0);
     if (freeSpinMode) {
+      // First grow the persistent multiplier with the M symbols that landed
+      // this spin so future spins (and the FreeSpins outro total) reflect it.
+      const previousGlobalMult = globalMultRef.value;
       globalMultRef.value += boardMult;
       emit({ type: 'updateGlobalMult', globalMult: globalMultRef.value });
+
+      // Boost THIS spin's win too — the M symbols that just landed should
+      // also apply to the cascade wins from the same spin (GoO behaviour).
+      // Cascade wins were already multiplied by `previousGlobalMult`; we
+      // re-base them onto the NEW total so the player sees the visible M
+      // symbols actually affect the win counter on the spin they appear.
+      if (rawTumbleWin > 0 && boardMult > 0) {
+        const totalAfter = rawTumbleWin * globalMultRef.value;
+        emit({
+          type: 'boardMultiplierInfo',
+          multInfo: { positions: collected },
+          winInfo: {
+            tumbleWin: toBookAmount(rawTumbleWin * previousGlobalMult),
+            boardMult: globalMultRef.value,
+            totalWin: toBookAmount(totalAfter),
+          },
+        });
+        tumbleWin = totalAfter;
+      }
     } else {
       const preMult = tumbleWin;
       const totalAfter = preMult * boardMult;

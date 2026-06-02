@@ -25,8 +25,17 @@
 	const activeAudios = new Set<HTMLAudioElement>();
 	let pageActive = $state(true);
 	let lastThunderAt = 0;
+	// Spin debounce must be long enough to cover the per-reel stagger
+	// (reelFallOutDelay × number of reels ≈ 110 × 6 ≈ 660ms). Otherwise
+	// each reel's onReelSpinStart fires its own play and we hear the
+	// spin sound 3-6 times overlapped.
 	let lastReelSpinAt = 0;
+	const REEL_SPIN_DEBOUNCE_MS = 800;
+	// Stop debounce only needs to suppress duplicate calls from the same
+	// reel-stop moment (e.g. turbo where all reels stop together). Per-reel
+	// stops in normal mode are staggered by 170ms+, well above this threshold.
 	let lastReelStopAt = 0;
+	const REEL_STOP_DEBOUNCE_MS = 40;
 	const soundEffectVolume = $derived(
 		Math.max(0, Math.min(1, stateSoundDerived.volumeSoundEffect())),
 	);
@@ -89,20 +98,20 @@
 		soundOnce: ({ name }) => {
 			if (name === 'sfx_reel_spin') {
 				const now = performance.now();
-				if (now - lastReelSpinAt < 80) return;
+				if (now - lastReelSpinAt < REEL_SPIN_DEBOUNCE_MS) return;
 				lastReelSpinAt = now;
 				playAudio('/assets/audio/spin.mp3', 0.8);
 				return;
 			}
 			if (name === 'sfx_reel_stop_1') {
 				const now = performance.now();
-				if (now - lastReelStopAt < 80) return;
+				if (now - lastReelStopAt < REEL_STOP_DEBOUNCE_MS) return;
 				lastReelStopAt = now;
-				playAudio('/assets/audio/zaustavljanje.mp3', 0.85);
+				playAudio('/assets/audio/stop.mp3', 0.85);
 				return;
 			}
 			if (name === 'sfx_symbol_destroy') {
-				playAudio('/assets/audio/unistenjeSimbola.wav', 0.9);
+				playAudio('/assets/audio/destroy.mp3', 0.9);
 				return;
 			}
 			if (name === 'sfx_coin_clink') {
@@ -131,22 +140,33 @@
 			console.debug('[sound] sfx →', name);
 		},
 
+		// spin.mp3 — plays ONCE when the reels physically start spinning.
+		// Each of the 6 reels triggers this event on its own (staggered by
+		// reelFallOutDelay), so we debounce aggressively so the player hears
+		// a single "whoosh" per spin, not 6 overlapping copies.
 		soundReelSpin: () => {
 			const now = performance.now();
-			if (now - lastReelSpinAt < 80) return;
+			if (now - lastReelSpinAt < REEL_SPIN_DEBOUNCE_MS) return;
 			lastReelSpinAt = now;
 			playAudio('/assets/audio/spin.mp3', 0.8);
 		},
 
+		// stop.mp3 — plays once per reel that lands.
+		// • Normal mode: 6 staggered plays (one per reel).
+		// • Turbo mode: all reels stop together; the short debounce collapses
+		//   the burst to a single play, which matches the spec.
+		// • Tumble: TumbleBoard.svelte sets forcePlay=true so every reel that
+		//   actually moved gets its own stop sound, regardless of debounce.
 		soundReelStop: ({ forcePlay = false, playbackRate = 1 }) => {
 			const now = performance.now();
-			if (!forcePlay && now - lastReelStopAt < 80) return;
+			if (!forcePlay && now - lastReelStopAt < REEL_STOP_DEBOUNCE_MS) return;
 			lastReelStopAt = now;
-			playAudio('/assets/audio/zaustavljanje.mp3', 0.85, playbackRate);
+			playAudio('/assets/audio/stop.mp3', 0.85, playbackRate);
 		},
 
+		// destroy.mp3 — winning symbols exploding before the cascade.
 		soundSymbolDestroy: () => {
-			playAudio('/assets/audio/unistenjeSimbola.wav', 0.9);
+			playAudio('/assets/audio/destroy.mp3', 0.9);
 		},
 
 		// Looping SFX (e.g. coin shower during big win)

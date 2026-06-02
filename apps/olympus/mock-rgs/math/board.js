@@ -31,12 +31,16 @@ const SYMBOL_WEIGHTS = [
 ];
 
 const SCATTER_RATE = 0.004;
-const MULTIPLIER_RATE_BASE = 0.004;
-const MULTIPLIER_RATE_FREE = 0.012;
+const MULTIPLIER_RATE_BASE = 0.005;
+const MULTIPLIER_RATE_FREE = 0.018;
 
+// Gates-of-Olympus multiplier ladder: 2× → 500×.
+// Weights skew heavily to the low end; the huge values are extremely rare.
 const MULTIPLIER_WEIGHTS = [
-  [2, 45], [3, 30], [4, 16], [5, 8], [6, 4], [8, 2], [10, 1],
-  [12, 0.5], [15, 0.25], [20, 0.1], [25, 0.05], [50, 0.01],
+  [2, 50],   [3, 30],   [4, 18],   [5, 10],
+  [6, 6],    [8, 3],    [10, 2],   [12, 1.2],
+  [15, 0.6], [20, 0.3], [25, 0.15], [50, 0.05],
+  [100, 0.02], [250, 0.005], [500, 0.001],
 ];
 
 // ─── Symbol / board generation ───────────────────────────────────────────────

@@ -32,13 +32,23 @@
 	let show = $state(false);
 	let winLevelData = $state<WinLevelData>();
 	const countUpAmount = new Tween(0);
+	let countUpComplete = $state(false);
+
+	/**
+	 * Resolves when either:
+	 *  - the user clicks / presses a key AFTER the count-up animation has
+	 *    fully completed, or
+	 *  - the maximum hold duration elapses.
+	 * Early dismissals are ignored so the player always sees the total win
+	 * count up to the end before the outro panel closes.
+	 */
 	const waitForDismiss = (duration: number) =>
 		new Promise<void>((resolve) => {
 			let settled = false;
 			let timeout: ReturnType<typeof setTimeout>;
 			const cleanup = () => {
-				window.removeEventListener('pointerdown', finish);
-				window.removeEventListener('keydown', finish);
+				window.removeEventListener('pointerdown', onInput);
+				window.removeEventListener('keydown', onInput);
 				clearTimeout(timeout);
 			};
 			const finish = () => {
@@ -47,9 +57,15 @@
 				cleanup();
 				resolve();
 			};
+			const onInput = () => {
+				// Only allow dismissal AFTER the win count-up has visually finished
+				// so the player never misses the final amount.
+				if (!countUpComplete) return;
+				finish();
+			};
 
-			window.addEventListener('pointerdown', finish);
-			window.addEventListener('keydown', finish);
+			window.addEventListener('pointerdown', onInput);
+			window.addEventListener('keydown', onInput);
 			timeout = setTimeout(finish, duration);
 		});
 
@@ -57,6 +73,7 @@
 		freeSpinOutroShow: () => {
 			show = true;
 			winLevelData = undefined;
+			countUpComplete = false;
 			countUpAmount.set(0, { duration: 0 });
 		},
 
@@ -64,17 +81,28 @@
 
 		freeSpinOutroCountUp: async (e) => {
 			winLevelData = e.winLevelData;
-			// Use a minimum 3-second count-up so the player always sees the win animate.
-			const duration = Math.max(e.winLevelData?.presentDuration || 0, 3 * SECOND);
-			const countUp =
-				countUpAmount.target === e.amount
-					? new Promise<void>((resolve) => setTimeout(resolve, duration))
-					: countUpAmount.set(e.amount, { duration });
 
-			await Promise.race([
-				countUp,
-				waitForDismiss(duration),
-			]);
+			// Total time the count-up animates for. Always at least 3 seconds so
+			// even a tiny final win is presented; bigger wins use the win-level's
+			// own presentDuration (BIG/MEGA/EPIC).
+			const countUpDuration = Math.max(e.winLevelData?.presentDuration || 0, 3 * SECOND);
+
+			// 1) Fully animate the count-up to the final amount. Do NOT race with
+			//    a dismiss listener here — the player must see the money land on
+			//    the final value before anything else can interrupt.
+			if (countUpAmount.target === e.amount) {
+				await new Promise<void>((resolve) => setTimeout(resolve, countUpDuration));
+			} else {
+				await countUpAmount.set(e.amount, { duration: countUpDuration });
+			}
+
+			countUpComplete = true;
+
+			// 2) Hold the final amount on screen until the player taps/clicks or
+			//    the max hold elapses. Hold longer for the bigger win levels so
+			//    MEGA / EPIC banners stay readable.
+			const holdDuration = Math.max(e.winLevelData?.presentDuration || 0, 3 * SECOND);
+			await waitForDismiss(holdDuration);
 		},
 	});
 </script>

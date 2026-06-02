@@ -109,6 +109,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// `isBonusGame` is true during free spins (multiple reveal events).
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
+		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
 
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
 		if (isBonusGame) {

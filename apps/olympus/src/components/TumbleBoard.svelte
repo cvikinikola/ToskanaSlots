@@ -13,7 +13,7 @@
 
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
-	import { backOut } from 'svelte/easing';
+	import { cubicOut } from 'svelte/easing';
 
 	import { BoardContext } from 'components-shared';
 	import { waitForResolve } from 'utils-shared/wait';
@@ -105,6 +105,15 @@
 			});
 		},
 		tumbleBoardSlideDown: async () => {
+			// Gates-of-Olympus cascade pacing:
+			//  • each reel starts dropping slightly after the previous one
+			//    (per-reel stagger), so the player reads the cascade left → right
+			//  • inside a reel each symbol is offset by a small delay too, giving
+			//    the classic "stream" of symbols falling in instead of a single
+			//    rigid block dropping at once.
+			const REEL_STAGGER_MS = 55;
+			const SYMBOL_STAGGER_MS = 35;
+			const FALL_DURATION_MS = 360;
 			const getPromises = () =>
 				context.stateGameDerived.tumbleBoardCombined().map(async (tumbleReel, reelIndex) => {
 					const reelMoved = tumbleReel.some((tumbleSymbol, symbolIndex) => {
@@ -112,13 +121,23 @@
 						return targetY !== tumbleSymbol.symbolY.current;
 					});
 
+					if (reelMoved) {
+						await waitForResolve((resolve) =>
+							setTimeout(resolve, reelIndex * REEL_STAGGER_MS),
+						);
+					}
+
 					await Promise.all(
 						tumbleReel.map(async (tumbleSymbol, symbolIndex) => {
 							const targetY = getSymbolY(symbolIndex - 1);
 							if (targetY !== tumbleSymbol.symbolY.current) {
+								// Top-most symbols arrive first; bottom symbols a tick later.
+								const symbolDelay =
+									(tumbleReel.length - 1 - symbolIndex) * SYMBOL_STAGGER_MS;
+								await waitForResolve((resolve) => setTimeout(resolve, symbolDelay));
 								await tumbleSymbol.symbolY.set(targetY, {
-									duration: 200,
-									easing: backOut,
+									duration: FALL_DURATION_MS,
+									easing: cubicOut,
 								});
 								if (symbolIndex > 0 && symbolIndex < tumbleReel.length - 1) {
 									tumbleSymbol.symbolState = 'land';

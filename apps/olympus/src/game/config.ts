@@ -94,8 +94,8 @@ const config = {
 	/** Minimum cluster size to qualify for a win */
 	minClusterSize: 8,
 
-	/** Multiplier values that can appear on 'M' symbols */
-	multiplierValues: [2, 3, 5, 8, 10, 15, 20, 25, 50, 100],
+	/** Multiplier values that can appear on 'M' symbols (Gates-of-Olympus ladder) */
+	multiplierValues: [2, 3, 4, 5, 6, 8, 10, 12, 15, 20, 25, 50, 100, 250, 500],
 
 	/** Free spins configuration */
 	freeSpins: {
