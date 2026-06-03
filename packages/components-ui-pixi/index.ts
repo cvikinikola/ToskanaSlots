@@ -8,12 +8,23 @@ import { i18nDerived } from './src/i18n/i18nDerived';
 export * from './src/types';
 
 export {
+	applyLandscapeUiRuntime,
+	applyPortraitUiRuntime,
+	isCompactPortraitHud,
+	landscapeActionRowCentersAt,
 	landscapeBottomReservePx,
+	landscapePanelRowCentersAt,
 	landscapeRightReservePx,
 	landscapeStackedLayout,
 	landscapeTopReservePx,
 	portraitBottomReservePx,
 	portraitStackedLayout,
+	portraitUiRuntime,
+	WOODEN_PANEL_HEIGHT,
+	WOODEN_PANEL_WIDTH,
+	WOODEN_PANEL_LABEL_FONT_MUL,
+	WOODEN_PANEL_VALUE_FONT_MUL,
+	UI_BASE_FONT_SIZE,
 	type LandscapeStackedLayout,
 	type PortraitCanvasSizeType,
 } from './src/constants';

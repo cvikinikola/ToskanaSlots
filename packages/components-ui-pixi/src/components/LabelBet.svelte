@@ -11,6 +11,7 @@
 
 	type Props = {
 		stacked?: boolean;
+		labelAbove?: boolean;
 	};
 
 	const props: Props = $props();
@@ -24,7 +25,7 @@
 		props.stacked
 			? new Rectangle(
 					-portraitUiRuntime.plateWidth / 2,
-					-portraitUiRuntime.plateTop,
+					-portraitUiRuntime.plateHeight / 2,
 					portraitUiRuntime.plateWidth,
 					portraitUiRuntime.plateHeight,
 				)
@@ -39,5 +40,5 @@
 </script>
 
 <Container eventMode="static" cursor={disabled ? 'not-allowed' : 'pointer'} {hitArea} onpointerup={onpress}>
-	<UiLabel tiled {label} {value} stacked={props.stacked} />
+	<UiLabel tiled {label} {value} stacked={props.stacked} labelAbove={props.labelAbove} />
 </Container>

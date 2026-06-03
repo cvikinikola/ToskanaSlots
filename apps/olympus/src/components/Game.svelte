@@ -6,7 +6,7 @@
 	import { MainContainer } from 'components-layout';
 	import { App } from 'pixi-svelte';
 
-	import { UI } from 'components-ui-pixi';
+	import OlympusUI from './OlympusUI.svelte';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
@@ -76,10 +76,10 @@
 		<AmbientNature />
 		<NatureBurst />
 
-		<UI>
+		<OlympusUI>
 			{#snippet gameName()}{/snippet}
 			{#snippet logo()}{/snippet}
-		</UI>
+		</OlympusUI>
 
 		<Win />
 		<FreeSpinIntro />

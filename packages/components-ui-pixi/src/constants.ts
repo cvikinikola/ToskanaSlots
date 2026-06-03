@@ -150,8 +150,35 @@ export const menuFarLeftX = (pad = MENU_BAR_LEFT_PAD) =>
 
 /** Panel plate sizing — shared height for balance / win / bet. */
 export const PANEL_PLATE_TOP = 24;
+/** Legacy wide plates; wooden_panel uses WOODEN_PANEL_* below. */
 export const PANEL_PLATE_HEIGHT = UI_BASE_FONT_SIZE * 4.55;
 export const PANEL_PLATE_WIDTH = UI_BASE_FONT_SIZE * 3 * (326 / 73);
+
+/** Compact wooden ticker plates (menu_panel_balance asset). */
+export const WOODEN_PANEL_WIDTH = UI_BASE_FONT_SIZE * 4.1;
+export const WOODEN_PANEL_HEIGHT = UI_BASE_FONT_SIZE * 2.05;
+export const WOODEN_PANEL_LABEL_Y_RATIO = -0.28;
+export const WOODEN_PANEL_VALUE_Y_RATIO = 0.06;
+export const WOODEN_PANEL_LABEL_FONT_MUL = 0.56;
+export const WOODEN_PANEL_VALUE_FONT_MUL = 0.48;
+export const WOODEN_PANEL_VALUE_WRAP_WIDTH_RATIO = 0.84;
+export const WOODEN_PANEL_VALUE_MIN_FONT_MUL = 0.58;
+
+/** Shrink font so a single-line value fits inside the wooden plate inner width. */
+export const fitWoodenPanelValueFontSize = (
+	value: string,
+	plateWidth: number,
+	baseFontSize: number,
+) => {
+	const innerWidth = plateWidth * WOODEN_PANEL_VALUE_WRAP_WIDTH_RATIO;
+	const charWidth = baseFontSize * 0.52;
+	const estimated = Math.max(1, value.length) * charWidth;
+	if (estimated <= innerWidth) return baseFontSize;
+	const fitted = innerWidth / (Math.max(1, value.length) * 0.52);
+	const minSize = baseFontSize * WOODEN_PANEL_VALUE_MIN_FONT_MUL;
+	return Math.max(minSize, fitted);
+};
+
 export const PANEL_INNER_CENTER_RATIO = 0.51;
 export const PANEL_VALUE_Y = -PANEL_PLATE_TOP + PANEL_PLATE_HEIGHT * PANEL_INNER_CENTER_RATIO;
 export const PANEL_VALUE_FONT_SIZE = UI_BASE_FONT_SIZE * 0.72;
@@ -426,6 +453,8 @@ export type PortraitUiRuntime = {
 	plateTop: number;
 	plateValueY: number;
 	plateValueFontSize: number;
+	/** Set on Olympus landscape shelf; overrides label size when present. */
+	plateLabelFontSize?: number;
 	betPlateY: number;
 	menuIconHeight: number;
 	menuSpinHeight: number;
@@ -438,8 +467,8 @@ export type PortraitUiRuntime = {
 /** Updated by LayoutPortrait each frame — buttons/panels read scaled sizes. */
 export const portraitUiRuntime: PortraitUiRuntime = {
 	scale: 1,
-	plateWidth: PANEL_PLATE_WIDTH,
-	plateHeight: PANEL_PLATE_HEIGHT,
+	plateWidth: WOODEN_PANEL_WIDTH,
+	plateHeight: WOODEN_PANEL_HEIGHT,
 	plateTop: PANEL_PLATE_TOP,
 	plateValueY: PANEL_VALUE_Y,
 	plateValueFontSize: PANEL_VALUE_FONT_SIZE,
@@ -457,7 +486,7 @@ export const portraitUiScale = (
 ): number => {
 	const base =
 		sizeType === 'smallMobile' ? 0.84 : sizeType === 'mobile' ? 0.92 : 1;
-	const plateW = PANEL_PLATE_WIDTH * base;
+	const plateW = WOODEN_PANEL_WIDTH * base;
 	const iconHalf = (MENU_ICON_HEIGHT * base) / 2;
 	const defaultControl =
 		plateW * 0.5 + PORTRAIT_BET_PLATE_ART_PAD + iconHalf + PORTRAIT_BET_CONTROL_GAP;
@@ -495,8 +524,8 @@ export const applyPortraitUiRuntime = (
 ) => {
 	let scale = portraitUiScale(sizeType, layoutWidth);
 	if (compactPortrait) scale *= 0.9;
-	const plateHeight = PANEL_PLATE_HEIGHT * scale;
-	const plateWidth = PANEL_PLATE_WIDTH * scale;
+	const plateHeight = WOODEN_PANEL_HEIGHT * scale;
+	const plateWidth = WOODEN_PANEL_WIDTH * scale;
 	const menuIconHeight = MENU_ICON_HEIGHT * scale;
 	const menuSpinHeight = MENU_SPIN_HEIGHT * scale;
 	const plateTop = PANEL_PLATE_TOP * scale;
@@ -504,11 +533,12 @@ export const applyPortraitUiRuntime = (
 	const buttonRowHalf = menuSpinHeight / 2 + 8 * scale;
 
 	portraitUiRuntime.scale = scale;
-	portraitUiRuntime.plateWidth = plateWidth;
-	portraitUiRuntime.plateHeight = plateHeight;
+	portraitUiRuntime.plateWidth = Math.round(plateWidth);
+	portraitUiRuntime.plateHeight = Math.round(plateHeight);
 	portraitUiRuntime.plateTop = plateTop;
 	portraitUiRuntime.plateValueY = 0;
-	portraitUiRuntime.plateValueFontSize = PANEL_VALUE_FONT_SIZE * scale;
+	portraitUiRuntime.plateValueFontSize = UI_BASE_FONT_SIZE * WOODEN_PANEL_VALUE_FONT_MUL * scale;
+	portraitUiRuntime.plateLabelFontSize = undefined;
 	portraitUiRuntime.betPlateY = 0;
 	portraitUiRuntime.menuIconHeight = menuIconHeight;
 	portraitUiRuntime.menuSpinHeight = menuSpinHeight;
@@ -524,8 +554,8 @@ export const applyLandscapeUiRuntime = (
 ) => {
 	let scale = landscapeUiScale(sizeType, layoutWidth);
 	if (almostSquare) scale *= 0.88;
-	const plateHeight = PANEL_PLATE_HEIGHT * scale;
-	const plateWidth = PANEL_PLATE_WIDTH * scale;
+	const plateHeight = WOODEN_PANEL_HEIGHT * scale;
+	const plateWidth = WOODEN_PANEL_WIDTH * scale;
 	const menuIconHeight = MENU_ICON_HEIGHT * scale;
 	const menuSpinHeight = MENU_SPIN_HEIGHT * scale * LANDSCAPE_SPIN_RENDER_RATIO;
 	const plateTop = PANEL_PLATE_TOP * scale;
@@ -533,11 +563,12 @@ export const applyLandscapeUiRuntime = (
 	const buttonRowHalf = menuSpinHeight / 2 + 6 * scale;
 
 	portraitUiRuntime.scale = scale;
-	portraitUiRuntime.plateWidth = plateWidth;
-	portraitUiRuntime.plateHeight = plateHeight;
+	portraitUiRuntime.plateWidth = Math.round(plateWidth);
+	portraitUiRuntime.plateHeight = Math.round(plateHeight);
 	portraitUiRuntime.plateTop = plateTop;
 	portraitUiRuntime.plateValueY = 0;
-	portraitUiRuntime.plateValueFontSize = PANEL_VALUE_FONT_SIZE * scale;
+	portraitUiRuntime.plateValueFontSize = UI_BASE_FONT_SIZE * WOODEN_PANEL_VALUE_FONT_MUL * scale;
+	portraitUiRuntime.plateLabelFontSize = undefined;
 	portraitUiRuntime.betPlateY = 0;
 	portraitUiRuntime.menuIconHeight = menuIconHeight;
 	portraitUiRuntime.menuSpinHeight = menuSpinHeight;
@@ -687,24 +718,25 @@ const landscapeActionRowFromGap = (halves: number[], gap: number) => {
  * Landscape action row — centred row matching reference order:
  * MENU | BUY | AUTO | SPIN | TURBO | − | +
  */
-export const landscapeActionRowCenters = (
-	layoutWidth: number,
+/** Action row centred on `centerX`, clamped to `maxRowWidth`. */
+export const landscapeActionRowCentersAt = (
+	centerX: number,
+	maxRowWidth: number,
 	sizeType: PortraitCanvasSizeType,
 	uiScale: number,
 ): LandscapeActionRowLayout => {
-	const cx = layoutWidth * 0.5;
 	const halves = landscapeActionRowHalfWidths(uiScale);
-	const maxRowWidth = layoutWidth - PORTRAIT_EDGE_PAD * 2;
+	const rowMaxWidth = Math.max(maxRowWidth - PORTRAIT_EDGE_PAD * 2, halves[0]! * 4);
 
 	let gap = sizeType === 'smallMobile' ? 4 : sizeType === 'mobile' ? 5 : 6;
 
-	for (let i = 0; i < 48 && landscapeActionRowWidth(halves, gap) > maxRowWidth; i += 1) {
+	for (let i = 0; i < 48 && landscapeActionRowWidth(halves, gap) > rowMaxWidth; i += 1) {
 		if (gap > 3) gap -= 1;
 		else break;
 	}
 
 	const { centers, rowCenter } = landscapeActionRowFromGap(halves, gap);
-	const shift = cx - rowCenter;
+	const shift = centerX - rowCenter;
 
 	return {
 		menuLeftX: centers[0]! + shift,
@@ -717,29 +749,43 @@ export const landscapeActionRowCenters = (
 	};
 };
 
+export const landscapeActionRowCenters = (
+	layoutWidth: number,
+	sizeType: PortraitCanvasSizeType,
+	uiScale: number,
+): LandscapeActionRowLayout =>
+	landscapeActionRowCentersAt(layoutWidth * 0.5, layoutWidth, sizeType, uiScale);
+
+/** BALANCE / WIN / BET centred on `centerX`, spread within `maxRowWidth`. */
+export const landscapePanelRowCentersAt = (
+	centerX: number,
+	maxRowWidth: number,
+	uiScale: number,
+	sizeType: PortraitCanvasSizeType,
+	panelSpread: number,
+) => {
+	const plateWidth = WOODEN_PANEL_WIDTH * uiScale;
+	const minPlateGap = sizeType === 'smallMobile' ? 14 : 18;
+	const minCenterGap = plateWidth + minPlateGap;
+
+	const rowMaxWidth = Math.max(maxRowWidth - PORTRAIT_EDGE_PAD * 2, plateWidth * 3);
+	const maxCenterGap = Math.max(minCenterGap, (rowMaxWidth - plateWidth) / 2);
+	const centerGap = minCenterGap + (maxCenterGap - minCenterGap) * panelSpread;
+
+	return {
+		balanceX: centerX - centerGap,
+		winX: centerX,
+		betX: centerX + centerGap,
+	};
+};
+
 /** BALANCE / WIN / BET — no overlap, modest spread (not full screen width). */
 const landscapePanelRowCenters = (
 	layoutWidth: number,
 	uiScale: number,
 	sizeType: PortraitCanvasSizeType,
 	panelSpread: number,
-) => {
-	const cx = layoutWidth * 0.5;
-	const plateWidth = PANEL_PLATE_WIDTH * uiScale;
-	const minPlateGap = sizeType === 'smallMobile' ? 14 : 18;
-	const minCenterGap = plateWidth + minPlateGap;
-
-	const maxRowWidth = layoutWidth - PORTRAIT_EDGE_PAD * 2;
-	const maxCenterGap = (maxRowWidth - plateWidth) / 2;
-	const centerGap =
-		minCenterGap + (maxCenterGap - minCenterGap) * panelSpread;
-
-	return {
-		balanceX: cx - centerGap,
-		winX: cx,
-		betX: cx + centerGap,
-	};
-};
+) => landscapePanelRowCentersAt(layoutWidth * 0.5, layoutWidth, uiScale, sizeType, panelSpread);
 
 type LandscapePhoneUiTune = {
 	bottomSafe: number;

@@ -38,10 +38,10 @@ const assets = {
 	warrior:      sprite(`${BASE}/warrior.png`),
 
 	// Menu bar replacement art
-	// Menu bar panels (balance / win / bet)
-	menu_panel_balance: sprite(`${MENU_BAR}/panel_balance.webp`),
-	menu_panel_win: sprite(`${MENU_BAR}/panel_win.webp`),
-	menu_panel_bet: sprite(`${MENU_BAR}/panel_bet.webp`),
+	// Menu bar panels (balance / win / bet) — shared wooden plate
+	menu_panel_balance: sprite(`${MENU_BAR}/wooden_panel.webp`),
+	menu_panel_win: sprite(`${MENU_BAR}/wooden_panel.webp`),
+	menu_panel_bet: sprite(`${MENU_BAR}/wooden_panel.webp`),
 	menu_frame_free_spins: sprite(`${MENU_BAR}/frame_free_spins.png`),
 	menu_frame: sprite(`${MENU_BAR}/frame.png`),
 	/** Swap paths when portrait/landscape frame PNGs are cut. */
@@ -57,6 +57,9 @@ const assets = {
 	menu_buy_bonus: sprite(`${MENU_BAR_BUTTONS}/buy_bonus_icon.webp`),
 	menu_menu: sprite(`${MENU_BAR_BUTTONS}/menu_icon.webp`),
 	menu_spin: sprite(`${MENU_BAR_BUTTONS}/btn_spin.webp`),
+	menu_settings: sprite(`${MENU_BAR_BUTTONS}/btn_settings.webp`),
+	menu_mute: sprite(`${MENU_BAR_BUTTONS}/btn_mute.webp`),
+	menu_sound: sprite(`${MENU_BAR_BUTTONS}/btn_sound.webp`),
 	menu_logo: sprite(`${MENU_BAR}/humer_logo.png`),
 	menu_balance: sprite(`${MENU_BAR}/icon_balance.png`),
 	menu_win: sprite(`${MENU_BAR}/icon_win.png`),
