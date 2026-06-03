@@ -11,6 +11,8 @@
 	import ButtonOlympusLandscapeSettings from './ButtonOlympusLandscapeSettings.svelte';
 	import ButtonOlympusLandscapeSound from './ButtonOlympusLandscapeSound.svelte';
 	import ButtonOlympusLandscapeTurbo from './ButtonOlympusLandscapeTurbo.svelte';
+	import ButtonOlympusLandscapeIncrease from './ButtonOlympusLandscapeIncrease.svelte';
+	import ButtonOlympusLandscapeDecrease from './ButtonOlympusLandscapeDecrease.svelte';
 	import { getOlympusLandscapeHudLayout } from '../game/hudLandscapeLayout';
 	import LandscapeShelfStatus from './LandscapeShelfStatus.svelte';
 
@@ -18,6 +20,9 @@
 	const context = getContext();
 
 	const layout = $derived(getOlympusLandscapeHudLayout(context));
+	const almostSquare = $derived(
+		context.stateLayoutDerived.canvasRatioType() === 'almostSquare',
+	);
 </script>
 
 <Container x={20}>
@@ -55,34 +60,70 @@
 	</Container>
 
 	<Container x={layout.settingsX} y={layout.yBottomBarIcons}>
-		<ButtonOlympusLandscapeSettings anchor={0.5} iconSide={layout.bottomBarIconSide} />
+		<ButtonOlympusLandscapeSettings
+			anchor={0.5}
+			iconSide={layout.bottomBarIconSide}
+			hitUiScale={layout.uiScale}
+		/>
 	</Container>
 
 	<Container x={layout.muteX} y={layout.yBottomBarIcons}>
-		<ButtonOlympusLandscapeSound anchor={0.5} iconSide={layout.bottomBarIconSide} />
+		<ButtonOlympusLandscapeSound
+			anchor={0.5}
+			iconSide={layout.bottomBarIconSide}
+			hitUiScale={layout.uiScale}
+		/>
 	</Container>
 
 	<LandscapeShelfStatus />
 
 	<Container x={layout.autoX} y={layout.yBottomBarIcons}>
-		<ButtonOlympusLandscapeAutoSpin anchor={0.5} iconSide={layout.bottomBarIconSide} />
+		<ButtonOlympusLandscapeAutoSpin
+			anchor={0.5}
+			iconSide={layout.bottomBarIconSide}
+			hitUiScale={layout.uiScale}
+		/>
 	</Container>
 
 	<Container x={layout.turboX} y={layout.yBottomBarIcons}>
-		<ButtonOlympusLandscapeTurbo anchor={0.5} iconSide={layout.bottomBarIconSide} />
+		<ButtonOlympusLandscapeTurbo
+			anchor={0.5}
+			iconSide={layout.bottomBarIconSide}
+			hitUiScale={layout.uiScale}
+		/>
 	</Container>
 
-	<Container x={layout.spinStackX} y={layout.increaseY} scale={layout.betControlScale}>
-		{@render props.buttonIncrease({ anchor: 0.5 })}
-	</Container>
+	{#if almostSquare}
+		<Container x={layout.spinStackX} y={layout.increaseY}>
+			<ButtonOlympusLandscapeIncrease
+				anchor={0.5}
+				iconSide={layout.bottomBarIconSide}
+				hitUiScale={layout.uiScale}
+			/>
+		</Container>
+	{:else}
+		<Container x={layout.spinStackX} y={layout.increaseY} scale={layout.betControlScale}>
+			{@render props.buttonIncrease({ anchor: 0.5 })}
+		</Container>
+	{/if}
 
 	<Container x={layout.spinStackX} y={layout.spinY} scale={layout.spinScale}>
 		{@render props.buttonBet({ anchor: 0.5 })}
 	</Container>
 
-	<Container x={layout.spinStackX} y={layout.decreaseY} scale={layout.betControlScale}>
-		{@render props.buttonDecrease({ anchor: 0.5 })}
-	</Container>
+	{#if almostSquare}
+		<Container x={layout.spinStackX} y={layout.decreaseY}>
+			<ButtonOlympusLandscapeDecrease
+				anchor={0.5}
+				iconSide={layout.bottomBarIconSide}
+				hitUiScale={layout.uiScale}
+			/>
+		</Container>
+	{:else}
+		<Container x={layout.spinStackX} y={layout.decreaseY} scale={layout.betControlScale}>
+			{@render props.buttonDecrease({ anchor: 0.5 })}
+		</Container>
+	{/if}
 </MainContainer>
 
 {#if stateUi.menuOpen}

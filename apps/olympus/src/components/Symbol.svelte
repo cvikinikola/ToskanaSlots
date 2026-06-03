@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Container, Sprite, Graphics } from 'pixi-svelte';
 	import type { SymbolState, RawSymbol } from '../game/types';
-	import { SYMBOL_SIZE, SYMBOL_CELL_WIDTH, SYMBOL_CELL_HEIGHT, SCATTER_SYMBOL_SIZE_SCALE, SYMBOL_WIN_DURATION_MS, SYMBOL_EXPLOSION_DURATION_MS, SYMBOL_LAND_DURATION_MS } from '../game/constants';
+	import { SYMBOL_SIZE, SYMBOL_CELL_WIDTH, SYMBOL_CELL_HEIGHT, SCATTER_SYMBOL_SIZE_SCALE, SYMBOL_SPRITE_FILL, SYMBOL_WIN_DURATION_MS, SYMBOL_EXPLOSION_DURATION_MS, SYMBOL_LAND_DURATION_MS } from '../game/constants';
 
 	type Props = {
 		x?: number;
@@ -38,7 +38,7 @@
 	const scale = $derived(props.state === 'win' ? 1.05 : 1);
 	const symbolSpriteSize = $derived(
 		Math.min(SYMBOL_CELL_WIDTH, SYMBOL_CELL_HEIGHT) *
-			0.99 *
+			SYMBOL_SPRITE_FILL *
 			(isScatter ? SCATTER_SYMBOL_SIZE_SCALE : 1),
 	);
 	const showScatterGlow = $derived(isScatter && props.state !== 'explosion');

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { untrack } from 'svelte';
 
 	import { applyPortraitUiRuntime, isCompactPortraitHud } from 'components-ui-pixi';
 	import { EnableSpaceHold } from 'components-shared';
@@ -47,12 +48,7 @@
 		LAYOUT_COMPONENT_MAP[context.stateLayoutDerived.layoutType()],
 	);
 
-	const hudContext = $derived({
-		stateLayoutDerived: context.stateLayoutDerived,
-		stateGameDerived: context.stateGameDerived,
-	});
-
-	/** Sync bar scale + plates whenever orientation changes (landscape leaves smaller runtime). */
+	/** Sync bar scale + plates when orientation changes (not every HUD layout pass). */
 	$effect(() => {
 		const layoutType = context.stateLayoutDerived.layoutType();
 		const stdMain = context.stateLayoutDerived.mainLayoutStandard();
@@ -60,18 +56,25 @@
 		const ratioType = context.stateLayoutDerived.canvasRatioType();
 		const ratio = context.stateLayoutDerived.canvasRatio();
 
-		if (layoutType === 'landscape') {
-			getOlympusLandscapeHudLayout(hudContext);
-		} else if (layoutType === 'portrait') {
-			getOlympusPortraitHudLayout(hudContext);
-		} else {
-			const compact = isCompactPortraitHud(ratioType, ratio)
-				? ratioType === 'almostSquare'
-					? ('almostSquare' as const)
-					: ('nearSquare' as const)
-				: false;
-			applyPortraitUiRuntime(sizeType, stdMain.width, compact);
-		}
+		untrack(() => {
+			const hudContext = {
+				stateLayoutDerived: context.stateLayoutDerived,
+				stateGameDerived: context.stateGameDerived,
+			};
+
+			if (layoutType === 'landscape') {
+				getOlympusLandscapeHudLayout(hudContext);
+			} else if (layoutType === 'portrait') {
+				getOlympusPortraitHudLayout(hudContext);
+			} else {
+				const compact = isCompactPortraitHud(ratioType, ratio)
+					? ratioType === 'almostSquare'
+						? ('almostSquare' as const)
+						: ('nearSquare' as const)
+					: false;
+				applyPortraitUiRuntime(sizeType, stdMain.width, compact);
+			}
+		});
 	});
 </script>
 

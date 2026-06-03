@@ -53,19 +53,35 @@
 	</Container>
 
 	<Container x={layout.settingsX} y={layout.yIconRow}>
-		<ButtonOlympusLandscapeSettings anchor={0.5} iconSide={layout.bottomBarIconSide} />
+		<ButtonOlympusLandscapeSettings
+			anchor={0.5}
+			iconSide={layout.bottomBarIconSide}
+			hitUiScale={layout.barUiScale}
+		/>
 	</Container>
 
 	<Container x={layout.muteX} y={layout.yIconRow}>
-		<ButtonOlympusLandscapeSound anchor={0.5} iconSide={layout.bottomBarIconSide} />
+		<ButtonOlympusLandscapeSound
+			anchor={0.5}
+			iconSide={layout.bottomBarIconSide}
+			hitUiScale={layout.barUiScale}
+		/>
 	</Container>
 
 	<Container x={layout.autoX} y={layout.yIconRow}>
-		<ButtonOlympusLandscapeAutoSpin anchor={0.5} iconSide={layout.bottomBarIconSide} />
+		<ButtonOlympusLandscapeAutoSpin
+			anchor={0.5}
+			iconSide={layout.bottomBarIconSide}
+			hitUiScale={layout.barUiScale}
+		/>
 	</Container>
 
 	<Container x={layout.turboX} y={layout.yIconRow}>
-		<ButtonOlympusLandscapeTurbo anchor={0.5} iconSide={layout.bottomBarIconSide} />
+		<ButtonOlympusLandscapeTurbo
+			anchor={0.5}
+			iconSide={layout.bottomBarIconSide}
+			hitUiScale={layout.barUiScale}
+		/>
 	</Container>
 
 	<Container x={layout.decreaseX} y={layout.ySpinRow} scale={layout.betControlScale}>

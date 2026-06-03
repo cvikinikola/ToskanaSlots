@@ -31,13 +31,16 @@ export const OLYMPUS_PORTRAIT_HUD = {
 	gapIconToSpinRow: 12,
 	/** Fine nudge SPIN row down (positive = lower on screen). */
 	spinRowNudgeDown: 8,
-	/** Slightly smaller bar controls (icons, spin, +/-). */
+	/** Bar + spin row scale (4 corner icons, +/-, SPIN) — fixed; do not bump with value font. */
 	controlMul: 0.86,
 	innerWidthRatio: 0.94,
 	panelGapX: 8,
 	labelAbove: true as const,
 	sizeMul: 1.02,
+	/** Title row (BALANCE / WIN / BET) — unchanged feel. */
 	fontMul: 1.08,
+	/** Amounts under titles ($ values) only — not BALANCE/WIN/BET titles. */
+	valueFontMul: 1.4,
 	/** Top slots — bottom edge sits just above the grid (per markup). */
 	topGapAboveGrid: 8,
 	/** History panel width (portrait); height cap = frame.height × ratio (~107px → ~214px). */
@@ -79,6 +82,8 @@ export type OlympusPortraitHudLayout = {
 	turboX: number;
 	yIconRow: number;
 	bottomBarIconSide: number;
+	/** Bar icon hit scale (portrait controlMul); do not use raw portraitUiRuntime after landscape. */
+	barUiScale: number;
 	spinX: number;
 	decreaseX: number;
 	increaseX: number;
@@ -124,7 +129,7 @@ export const getOlympusPortraitHudLayout = (context: {
 	const almostSquare = ratioType === 'almostSquare';
 	const boardLayout = context.stateGameDerived.boardLayout();
 	const layoutType = context.stateLayoutDerived.layoutType();
-	const frame = getOlympusFrameBounds(boardLayout, layoutType);
+	const frame = getOlympusFrameBounds(boardLayout, layoutType, main.width);
 	const tune = portraitPhoneUiTune(sizeType, almostSquare);
 	const hud = OLYMPUS_PORTRAIT_HUD;
 	const uiScale = portraitUiRuntime.scale;
@@ -148,7 +153,7 @@ export const getOlympusPortraitHudLayout = (context: {
 	portraitUiRuntime.plateWidth = plateWidth;
 	portraitUiRuntime.plateHeight = plateHeight;
 	portraitUiRuntime.plateValueFontSize =
-		UI_BASE_FONT_SIZE * WOODEN_PANEL_VALUE_FONT_MUL * uiScale * hud.fontMul;
+		UI_BASE_FONT_SIZE * WOODEN_PANEL_VALUE_FONT_MUL * uiScale * hud.valueFontMul;
 	portraitUiRuntime.plateLabelFontSize =
 		UI_BASE_FONT_SIZE * WOODEN_PANEL_LABEL_FONT_MUL * uiScale * hud.fontMul;
 
@@ -220,6 +225,7 @@ export const getOlympusPortraitHudLayout = (context: {
 
 	return {
 		uiScale,
+		barUiScale: controlScale,
 		bottomReservePx,
 		topReservePx,
 		gridTopLimitY,

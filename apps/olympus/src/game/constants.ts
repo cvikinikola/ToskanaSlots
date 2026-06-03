@@ -41,28 +41,19 @@ export const BOARD_SIZES = {
 	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
 };
 
-/** Cluster: inset within 560 box so symbols sit inside the frame window. */
+/** Cluster default — keeps even gaps between columns. */
 export const REEL_PADDING = 0.53;
 
 export const SYMBOL_STEP_X = SYMBOL_SIZE;
 export const SYMBOL_CELL_WIDTH = SYMBOL_SIZE;
 export const SYMBOL_CELL_HEIGHT = SYMBOL_SIZE;
 
-/** menu_frame.png — frame scales around the 560×560 board (cluster frame_bg ratios). */
-const REEL_FRAME_NATIVE = { width: 1491, height: 1205 };
-const REEL_FRAME_BASE = {
-	height: 925,
-	width: Math.round(925 * (REEL_FRAME_NATIVE.width / REEL_FRAME_NATIVE.height)),
-};
-const REEL_FRAME_BUMP = 1.03;
+/** Portrait main-layout width — square frame fills this (see menuBar/frame.png). */
+export const OLYMPUS_PORTRAIT_FRAME_SIDE = 800;
 
-export const REEL_FRAME_SIZES = {
-	height: Math.round(REEL_FRAME_BASE.height * REEL_FRAME_BUMP),
-	width: Math.round(REEL_FRAME_BASE.width * REEL_FRAME_BUMP),
-};
+/** Native grid frame art — `static/assets/sprites/menuBar/frame.png`. */
+export const MENU_FRAME_NATIVE = { width: 500, height: 500 };
 
-/** Cluster frame_bg aspect; used by ReelFramePanel and art reference. */
-export const FRAME_BG_RATIO = REEL_FRAME_SIZES.width / BOARD_SIZES.width;
 export const FRAME_SPRITE_SCALE = { width: 1.07, height: 1.19 };
 export const FRAME_POSITION_ADJUSTMENT = 1.01;
 
@@ -84,6 +75,24 @@ export const CLUSTER_FRAME_BG_RATIO = 937 / 806;
 
 /** Scatter (S) renders slightly larger than paying symbols. */
 export const SCATTER_SYMBOL_SIZE_SCALE = 1.2;
+
+/** Icon size vs 80px cell (512px art transparent margins). */
+export const SYMBOL_SPRITE_FILL = 1.14;
+
+/** Portrait: outer frame side ÷ 560px grid (grid/voćke scale separately). */
+export const PORTRAIT_FRAME_TO_GRID = 1.22;
+
+/** Portrait: frame-only shrink so vine border is not clipped on screen edges. */
+export const PORTRAIT_FRAME_EDGE_INSET = 0.93;
+
+/** Square frame.png display side ÷ board width (ReelFramePanel). */
+export const FRAME_BG_RATIO = PORTRAIT_FRAME_TO_GRID * FRAME_SIZE_MUL;
+
+/** Nudge grid vs frame (main-layout px). +Y = symbols down. */
+export const GRID_NUDGE_Y = 4;
+
+/** Shift grid up as fraction of board height (frame unchanged). -0.02 = 2% up. */
+export const GRID_OFFSET_Y_RATIO = -0.02;
 
 /** Map a point from mainLayout space to canvas space (centred MainContainer). */
 export const mainLayoutPointToCanvas = (
@@ -116,12 +125,44 @@ export const getBgConfig = (
 
 export type LayoutType = 'desktop' | 'landscape' | 'tablet' | 'portrait';
 
-/** Slightly smaller play area on wide / large screens (grid + frame scale together). */
+/** Square / kockasti monitor (utils-layout `almostSquare`, landscape branch). */
+export const isAlmostSquareCanvas = (canvasSizes: { width: number; height: number }) => {
+	const r = canvasSizes.width / (canvasSizes.height || 1);
+	return r >= 0.85 && r <= 1.2;
+};
+
+/** Grid + frame boost on square landscape — portrait untouched. */
+export const ALMOST_SQUARE_PLAY_AREA_MUL = 1.61;
+
+/** HUD icons/plates on square landscape (offsets shared `applyLandscapeUiRuntime` 0.88 shrink). */
+export const ALMOST_SQUARE_HUD_MUL = 1.56;
+
+/** Extra SPIN scale on square landscape (right column only). */
+export const ALMOST_SQUARE_SPIN_MUL = 1.32;
+
+/** Wider/taller BALANCE | WIN | BET shelf on square landscape (labels above plates). */
+export const ALMOST_SQUARE_SHELF = {
+	innerWidthRatio: 0.98,
+	panelGapX: 4,
+	plateSizeMul: 1.15,
+	plateHeightMul: 1.24,
+	valueFontMul: 1.05,
+	/** Visual edge gap between +/- and SPIN on square landscape (px; negative = overlap padding). */
+	stackTouchGapPx: -6,
+	/** SPIN sprite has transparent rim — shrink visual half for stack math. */
+	spinVisualHalfMul: 0.86,
+} as const;
+
+/** Shift bottom HUD cluster up on square landscape (px; avoids canvas clip at bottom). */
+export const ALMOST_SQUARE_HUD_NUDGE_UP = 14;
+
+/** Slightly smaller play area on wide cinematic screens only (not square). */
 export const getPlayAreaScale = (
 	layoutType: LayoutType,
 	canvasSizes: { width: number; height: number },
 ): number => {
 	if (layoutType !== 'landscape' && layoutType !== 'desktop') return 1;
+	if (isAlmostSquareCanvas(canvasSizes)) return 1;
 
 	const maxSide = Math.max(canvasSizes.width, canvasSizes.height);
 	if (maxSide >= 1400) return 0.88;
@@ -129,9 +170,61 @@ export const getPlayAreaScale = (
 	return 0.95;
 };
 
+/** Portrait: zoom grid + frame together (symbols keep even spacing). */
+export const GRID_DISPLAY_SCALE: Partial<Record<LayoutType, number>> = {
+	portrait: 1.17,
+	tablet: 1.02,
+};
+
+/** Uniform portrait bump — grid, voćke, and frame scale together. */
+export const PORTRAIT_PLAY_AREA_MUL = 1.1;
+
+export const getBoardDisplayScale = (
+	layoutType: LayoutType,
+	canvasSizes: { width: number; height: number },
+) => {
+	const base =
+		getPlayAreaScale(layoutType, canvasSizes) * (GRID_DISPLAY_SCALE[layoutType] ?? 1);
+	if (layoutType === 'portrait') return base * PORTRAIT_PLAY_AREA_MUL;
+	if (
+		isAlmostSquareCanvas(canvasSizes) &&
+		(layoutType === 'landscape' || layoutType === 'desktop' || layoutType === 'tablet')
+	) {
+		return base * ALMOST_SQUARE_PLAY_AREA_MUL;
+	}
+	return base;
+};
+
 /** Landscape/desktop: trim frame height so the cluster block looks less tall. */
 export const getFrameHeightMul = (layoutType: LayoutType): number =>
 	layoutType === 'landscape' || layoutType === 'desktop' ? 0.96 : 1;
+
+/** Display size for BoardFrame (local px; BoardFrame Container applies boardLayout.scale). */
+export const getBoardFrameDisplaySize = (
+	boardLayout: { width: number; scale?: number },
+	layoutType: LayoutType,
+	almostSquare = false,
+): { width: number; height: number } => {
+	const frameHeightMul = getFrameHeightMul(layoutType);
+	const squareFrame =
+		layoutType === 'portrait' || (layoutType === 'landscape' && almostSquare);
+	const mul = squareFrame
+		? PORTRAIT_FRAME_TO_GRID * PORTRAIT_FRAME_EDGE_INSET
+		: PORTRAIT_FRAME_TO_GRID * FRAME_SIZE_MUL * frameHeightMul;
+	const side = boardLayout.width * mul;
+	return { width: side, height: side };
+};
+
+/** Frame bounds in main-layout space (includes board scale). */
+export const getBoardFrameVisualSize = (
+	boardLayout: { width: number; scale?: number },
+	layoutType: LayoutType,
+	almostSquare = false,
+) => {
+	const { width, height } = getBoardFrameDisplaySize(boardLayout, layoutType, almostSquare);
+	const s = boardLayout.scale ?? 1;
+	return { width: width * s, height: height * s };
+};
 
 /** Grid frame sprite — replace portrait/landscape PNGs when art is ready. */
 export type FrameAssetKey = 'menu_frame' | 'menu_frame_portrait' | 'menu_frame_landscape';

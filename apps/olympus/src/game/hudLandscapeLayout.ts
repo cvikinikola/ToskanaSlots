@@ -17,14 +17,13 @@ import {
 import { landscapePhoneUiTune } from 'components-ui-pixi/src/constants';
 
 import {
-	CLUSTER_FRAME_BG_RATIO,
-	FRAME_EXTEND_BOTTOM,
-	FRAME_EXTEND_TOP,
+	ALMOST_SQUARE_HUD_MUL,
+	ALMOST_SQUARE_HUD_NUDGE_UP,
+	ALMOST_SQUARE_SHELF,
+	ALMOST_SQUARE_SPIN_MUL,
 	FRAME_OFFSET_Y,
 	FRAME_POSITION_ADJUSTMENT,
-	FRAME_SIZE_MUL,
-	FRAME_SPRITE_SCALE,
-	getFrameHeightMul,
+	getBoardFrameVisualSize,
 	type LayoutType,
 } from './constants';
 
@@ -97,21 +96,13 @@ export type OlympusFrameBounds = {
 export const getOlympusFrameBounds = (
 	boardLayout: BoardLayout,
 	layoutType: LayoutType,
+	almostSquare = false,
 ): OlympusFrameBounds => {
-	const playScale = boardLayout.scale ?? 1;
-	const frameHeightMul = getFrameHeightMul(layoutType);
-	const baseFrameHeight = boardLayout.width * FRAME_SPRITE_SCALE.height;
-	const frameHeight =
-		(baseFrameHeight + FRAME_EXTEND_TOP + FRAME_EXTEND_BOTTOM) *
-		FRAME_SIZE_MUL *
-		frameHeightMul *
-		playScale;
-	const frameWidth =
-		boardLayout.width *
-		CLUSTER_FRAME_BG_RATIO *
-		FRAME_SPRITE_SCALE.width *
-		FRAME_SIZE_MUL *
-		playScale;
+	const { width: frameWidth, height: frameHeight } = getBoardFrameVisualSize(
+		boardLayout,
+		layoutType,
+		almostSquare,
+	);
 	const centerX = boardLayout.x * FRAME_POSITION_ADJUSTMENT;
 	const centerY = boardLayout.y * FRAME_POSITION_ADJUSTMENT + FRAME_OFFSET_Y;
 
@@ -177,13 +168,37 @@ export const getOlympusLandscapeHudLayout = (context: {
 	const boardLayout = context.stateGameDerived.boardLayout();
 	const layoutType = context.stateLayoutDerived.layoutType();
 
-	applyLandscapeUiRuntime(sizeType, main.width, almostSquare);
+	// Do not pass almostSquare into shared runtime (it applies 0.88 shrink). Olympus bumps below.
+	applyLandscapeUiRuntime(sizeType, main.width, false);
+	// Local scale only — never mutate portraitUiRuntime.scale (portrait reads it for button sizes).
+	const uiScale =
+		portraitUiRuntime.scale * (almostSquare ? ALMOST_SQUARE_HUD_MUL : 1);
 
-	const frame = getOlympusFrameBounds(boardLayout, layoutType);
+	const frame = getOlympusFrameBounds(boardLayout, layoutType, almostSquare);
 	const tune = landscapePhoneUiTune(sizeType, almostSquare);
-	const uiScale = portraitUiRuntime.scale;
 	const { buttonRowHalf } = portraitUiRuntime;
-	const shelf = LANDSCAPE_PANEL_SHELF;
+	const squareHud = almostSquare ? 1.15 : 1;
+	const shelf = almostSquare
+		? {
+				...LANDSCAPE_PANEL_SHELF,
+				innerWidthRatio: ALMOST_SQUARE_SHELF.innerWidthRatio,
+				panelGapX: ALMOST_SQUARE_SHELF.panelGapX,
+				sizeMul:
+					LANDSCAPE_PANEL_SHELF.sizeMul * squareHud * ALMOST_SQUARE_SHELF.plateSizeMul,
+				fontMul:
+					LANDSCAPE_PANEL_SHELF.fontMul * squareHud * ALMOST_SQUARE_SHELF.valueFontMul,
+			}
+		: {
+				...LANDSCAPE_PANEL_SHELF,
+				sizeMul: LANDSCAPE_PANEL_SHELF.sizeMul * squareHud,
+				fontMul: LANDSCAPE_PANEL_SHELF.fontMul * squareHud,
+			};
+	const side = {
+		...LANDSCAPE_SIDE_CONTROLS,
+		spinScale:
+			LANDSCAPE_SIDE_CONTROLS.spinScale * (almostSquare ? ALMOST_SQUARE_SPIN_MUL : 1),
+		bottomBarIconGap: LANDSCAPE_SIDE_CONTROLS.bottomBarIconGap * squareHud,
+	};
 
 	const yButtons = main.height - tune.bottomSafe - buttonRowHalf;
 
@@ -200,8 +215,14 @@ export const getOlympusLandscapeHudLayout = (context: {
 	const bandHeight = Math.max(48, bandBottom - bandTop);
 	const plateHeight = Math.round(
 		Math.min(
-			bandHeight * 0.9 * shelf.sizeMul,
-			WOODEN_PANEL_HEIGHT * uiScale * 1.28 * shelf.sizeMul,
+			bandHeight *
+				(almostSquare ? 0.98 : 0.9) *
+				shelf.sizeMul *
+				(almostSquare ? ALMOST_SQUARE_SHELF.plateHeightMul : 1),
+			WOODEN_PANEL_HEIGHT *
+				uiScale *
+				(almostSquare ? 1.44 : 1.28) *
+				shelf.sizeMul,
 		),
 	);
 
@@ -219,7 +240,6 @@ export const getOlympusLandscapeHudLayout = (context: {
 	const winX = balanceX + plateWidth + shelf.panelGapX;
 	const betX = winX + plateWidth + shelf.panelGapX;
 
-	const side = LANDSCAPE_SIDE_CONTROLS;
 	const frameLeft = frame.centerX - frame.width / 2;
 	const frameRight = frame.centerX + frame.width / 2;
 
@@ -242,11 +262,16 @@ export const getOlympusLandscapeHudLayout = (context: {
 	const buyScaleX = (leftColumnWidth * buyInner) / buyHit.width;
 	const buyScaleY = (buyPanelHeight * buyInner) / buyHit.height;
 
+	const squareHit = menuBetControlHitSize(6, uiScale);
+	const squareHalf = squareHit.width / 2;
+	const squareStep = squareHalf * 2 + side.bottomBarIconGap;
+	const bottomBarIconSide = squareHit.width - 12;
+
 	const spinHit = menuSpinHitSize(8, uiScale);
-	const betHit = menuBetControlHitSize(6, uiScale);
 	const spinHalfW = (spinHit.width / 2) * side.spinScale;
 	const spinHalfH = (spinHit.height / 2) * side.spinScale;
-	const betHalf = (betHit.height / 2) * side.betControlScale;
+	/** Same hit box as bottom bar icons — no extra 0.92 shrink on square landscape. */
+	const betHalf = almostSquare ? squareHalf : (squareHit.height / 2) * side.betControlScale;
 	const stackTight = side.stackGapPx - side.stackHugPx;
 
 	const frameVisualRight = frameRight - frame.width * side.visibleFrameInsetX;
@@ -256,13 +281,20 @@ export const getOlympusLandscapeHudLayout = (context: {
 		side.spinHugOverlap +
 		spinHalfW;
 	const spinY = frame.centerY;
-	const increaseY = spinY - spinHalfH - betHalf - stackTight;
-	const decreaseY = spinY + spinHalfH + betHalf + stackTight;
 
-	const squareHit = menuBetControlHitSize(6, uiScale);
-	const squareHalf = squareHit.width / 2;
-	const squareStep = squareHalf * 2 + side.bottomBarIconGap;
-	const bottomBarIconSide = squareHit.width - 12;
+	/** Square landscape: hug +/- to visible SPIN art (hit boxes are much larger). */
+	const stackTouchGap = ALMOST_SQUARE_SHELF.stackTouchGapPx;
+	const spinVisualHalfH =
+		(portraitUiRuntime.menuSpinHeight / 2) *
+		side.spinScale *
+		ALMOST_SQUARE_SHELF.spinVisualHalfMul;
+	const betVisualHalf = bottomBarIconSide / 2;
+	const increaseY = almostSquare
+		? spinY - spinVisualHalfH - betVisualHalf - stackTouchGap
+		: spinY - spinHalfH - betHalf - stackTight;
+	const decreaseY = almostSquare
+		? spinY + spinVisualHalfH + betVisualHalf + stackTouchGap
+		: spinY + spinHalfH + betHalf + stackTight;
 
 	const panelBottomY = yPanels + plateHeight / 2;
 	const yBottomBarIcons = panelBottomY + side.bottomBarGapBelowPanels + squareHalf;
@@ -286,13 +318,15 @@ export const getOlympusLandscapeHudLayout = (context: {
 	const bottomReservePx = main.height - gridTopLimitY + 8;
 	const rightReservePx = Math.max(0, main.width - spinColOuter + 12);
 
+	const hudNudgeUp = almostSquare ? ALMOST_SQUARE_HUD_NUDGE_UP : 0;
+
 	return {
 		uiScale,
 		bottomReservePx,
 		rightReservePx,
 		topReservePx: tune.topSafe,
-		yPanels,
-		yButtons,
+		yPanels: yPanels - hudNudgeUp,
+		yButtons: yButtons - hudNudgeUp,
 		balanceX,
 		winX,
 		betX,
@@ -310,17 +344,17 @@ export const getOlympusLandscapeHudLayout = (context: {
 		tumbleHistoryY,
 		settingsX,
 		muteX,
-		yBottomBarIcons,
+		yBottomBarIcons: yBottomBarIcons - hudNudgeUp,
 		bottomBarIconSide,
 		shelfInfoCenterX,
 		shelfInfoWidth,
 		autoX,
 		turboX,
 		spinStackX,
-		spinY,
-		increaseY,
-		decreaseY,
+		spinY: spinY - hudNudgeUp,
+		increaseY: increaseY - hudNudgeUp,
+		decreaseY: decreaseY - hudNudgeUp,
 		spinScale: side.spinScale,
-		betControlScale: side.betControlScale,
+		betControlScale: almostSquare ? 1 : side.betControlScale,
 	};
 };

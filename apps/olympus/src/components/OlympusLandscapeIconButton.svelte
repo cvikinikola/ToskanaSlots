@@ -12,6 +12,8 @@
 		activeAssetKey?: string;
 		active?: boolean;
 		iconSide?: number;
+		/** When set (portrait HUD), avoids reading landscape-inflated portraitUiRuntime.scale. */
+		hitUiScale?: number;
 		onpress?: () => void;
 		children?: import('svelte').Snippet;
 	};
@@ -22,13 +24,13 @@
 		activeAssetKey,
 		active = false,
 		iconSide: iconSideProp,
+		hitUiScale: hitUiScaleProp,
 		onpress,
 		children,
 		...buttonProps
 	}: Props = $props();
 
-	const uiScale = $derived(portraitUiRuntime.scale);
-	const hit = $derived(menuBetControlHitSize(6, uiScale));
+	const hit = $derived(menuBetControlHitSize(6, hitUiScaleProp ?? portraitUiRuntime.scale));
 	const iconSide = $derived(iconSideProp ?? hit.width - 12);
 	const spriteKey = $derived(active && activeAssetKey ? activeAssetKey : assetKey);
 </script>

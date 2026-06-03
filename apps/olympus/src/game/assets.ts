@@ -44,9 +44,10 @@ const assets = {
 	menu_panel_bet: sprite(`${MENU_BAR}/wooden_panel.webp`),
 	menu_frame_free_spins: sprite(`${MENU_BAR}/frame_free_spins.png`),
 	menu_frame: sprite(`${MENU_BAR}/frame.png`),
-	/** Swap paths when portrait/landscape frame PNGs are cut. */
 	menu_frame_portrait: sprite(`${MENU_BAR}/frame.png`),
 	menu_frame_landscape: sprite(`${MENU_BAR}/frame.png`),
+	/** Fallback if PNG fails to load. */
+	menu_frame_fallback: sprite(`${MENU_BAR}/frame.webp`),
 	// Menu bar — normalized WebP buttons (scripts/normalize-menu-buttons.mjs)
 	menu_plus: sprite(`${MENU_BAR_BUTTONS}/btn_plus.webp`),
 	menu_minus: sprite(`${MENU_BAR_BUTTONS}/btn_minus.webp`),

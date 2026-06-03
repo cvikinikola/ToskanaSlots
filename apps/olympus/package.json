@@ -4,6 +4,7 @@
 	"private": true,
 	"license": "MIT",
 	"scripts": {
+		"optimize:symbols": "node scripts/optimize-grid-symbols.mjs",
 		"format": "prettier --write --ignore-path=../../.prettierignore .",
 		"lint": "eslint \"src\"",
 		"dev": "vite dev --host --port 3005",

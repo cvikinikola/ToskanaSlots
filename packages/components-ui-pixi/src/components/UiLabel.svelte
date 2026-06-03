@@ -19,7 +19,7 @@
 		value: string;
 		tiled?: boolean;
 		stacked?: boolean;
-		/** Landscape shelf: title above the wooden plate, amount inside. */
+		/** Stacked shelf: title above the amount inside the wooden plate (BALANCE | WIN | BET). */
 		labelAbove?: boolean;
 		labelFill?: number;
 		valueFill?: number;
@@ -52,28 +52,33 @@
 			: UI_BASE_FONT_SIZE * 0.82,
 	);
 
-	const labelFontSize = $derived(
-		stackedPlate && props.label.length > 7
-			? baseLabelFontSize * 0.88
-			: baseLabelFontSize,
-	);
+	const labelAbovePlate = $derived(Boolean(props.labelAbove && stackedPlate));
+
+	const labelFontSize = $derived.by(() => {
+		let size = baseLabelFontSize;
+		if (labelAbovePlate) size *= 0.78;
+		else if (stackedPlate && props.label.length > 7) size *= 0.88;
+		return size;
+	});
 	const valueFontSize = $derived(
 		stackedPlate
 			? fitWoodenPanelValueFontSize(props.value, plateWidth, baseValueFontSize)
 			: baseValueFontSize,
 	);
 
-	const labelAbovePlate = $derived(Boolean(props.labelAbove && stackedPlate));
-
 	const labelY = $derived(
 		labelAbovePlate
-			? -plateHeight / 2 - Math.max(6, labelFontSize * 0.2) - labelFontSize * 0.55
+			? -plateHeight * 0.34
 			: stackedPlate
 				? plateHeight * WOODEN_PANEL_LABEL_Y_RATIO
 				: UI_BASE_FONT_SIZE * 0.22,
 	);
 	const valueY = $derived(
-		stackedPlate ? plateHeight * WOODEN_PANEL_VALUE_Y_RATIO : UI_BASE_FONT_SIZE * 1.05,
+		labelAbovePlate
+			? plateHeight * 0.14
+			: stackedPlate
+				? plateHeight * WOODEN_PANEL_VALUE_Y_RATIO
+				: UI_BASE_FONT_SIZE * 1.05,
 	);
 
 	const labelStyle = $derived({
@@ -108,9 +113,6 @@
 
 {#if props.stacked}
 	<Container>
-		{#if labelAbovePlate}
-			<Text anchor={{ x: 0.5, y: 0.5 }} text={props.label} style={labelStyle} y={labelY} />
-		{/if}
 		{#if props.tiled}
 			<UiLabelPlate
 				anchor={{ x: 0.5, y: 0.5 }}
@@ -126,9 +128,7 @@
 				height={plateHeight}
 			/>
 		{/if}
-		{#if !labelAbovePlate}
-			<Text anchor={{ x: 0.5, y: 0.5 }} text={props.label} style={labelStyle} y={labelY} />
-		{/if}
+		<Text anchor={{ x: 0.5, y: 0.5 }} text={props.label} style={labelStyle} y={labelY} />
 		<Text anchor={{ x: 0.5, y: 0.5 }} text={props.value} style={valueStyle} y={valueY} />
 	</Container>
 {:else}

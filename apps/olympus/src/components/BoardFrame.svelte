@@ -21,15 +21,11 @@
 	import { getContext } from '../game/context';
 
 	import {
-		CLUSTER_FRAME_BG_RATIO,
 		FRAME_POSITION_ADJUSTMENT,
-		FRAME_SPRITE_SCALE,
-		FRAME_EXTEND_BOTTOM,
-		FRAME_EXTEND_TOP,
 		FRAME_OFFSET_Y,
-		FRAME_SIZE_MUL,
+		getBoardFrameDisplaySize,
 		getFrameAssetKey,
-		getFrameHeightMul,
+		isAlmostSquareCanvas,
 	} from '../game/constants';
 
 
@@ -57,33 +53,27 @@
 
 
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
+	const mainLayout = $derived(context.stateLayoutDerived.mainLayout());
 
 	const playScale = $derived(boardLayout.scale ?? 1);
 
-	const frameHeightMul = $derived(
-		getFrameHeightMul(context.stateLayoutDerived.layoutType()),
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	const almostSquare = $derived(
+		isAlmostSquareCanvas(context.stateLayoutDerived.canvasSizes()),
 	);
 
 	const frameX = $derived(boardLayout.x * FRAME_POSITION_ADJUSTMENT);
-
-	const baseFrameHeight = $derived(boardLayout.width * FRAME_SPRITE_SCALE.height);
 
 	const frameY = $derived(
 		boardLayout.y * FRAME_POSITION_ADJUSTMENT + FRAME_OFFSET_Y,
 	);
 
-	const frameWidth = $derived(
-		boardLayout.width *
-			CLUSTER_FRAME_BG_RATIO *
-			FRAME_SPRITE_SCALE.width *
-			FRAME_SIZE_MUL,
+	const frameSize = $derived(
+		getBoardFrameDisplaySize(boardLayout, layoutType, almostSquare),
 	);
 
-	const frameHeight = $derived(
-		(baseFrameHeight + FRAME_EXTEND_TOP + FRAME_EXTEND_BOTTOM) *
-			FRAME_SIZE_MUL *
-			frameHeightMul,
-	);
+	const frameWidth = $derived(frameSize.width);
+	const frameHeight = $derived(frameSize.height);
 
 
 
@@ -140,6 +130,7 @@
 
 	<UiAssetSprite
 		assetKey={frameAssetKey}
+		fallbackAssetKey="menu_frame_fallback"
 		anchor={0.5}
 		x={0}
 		y={0}
