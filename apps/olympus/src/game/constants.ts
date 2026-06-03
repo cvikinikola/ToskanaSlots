@@ -116,6 +116,23 @@ export const getBgConfig = (
 
 export type LayoutType = 'desktop' | 'landscape' | 'tablet' | 'portrait';
 
+/** Slightly smaller play area on wide / large screens (grid + frame scale together). */
+export const getPlayAreaScale = (
+	layoutType: LayoutType,
+	canvasSizes: { width: number; height: number },
+): number => {
+	if (layoutType !== 'landscape' && layoutType !== 'desktop') return 1;
+
+	const maxSide = Math.max(canvasSizes.width, canvasSizes.height);
+	if (maxSide >= 1400) return 0.88;
+	if (maxSide >= 1100) return 0.92;
+	return 0.95;
+};
+
+/** Landscape/desktop: trim frame height so the cluster block looks less tall. */
+export const getFrameHeightMul = (layoutType: LayoutType): number =>
+	layoutType === 'landscape' || layoutType === 'desktop' ? 0.96 : 1;
+
 /** Grid frame sprite — replace portrait/landscape PNGs when art is ready. */
 export type FrameAssetKey = 'menu_frame' | 'menu_frame_portrait' | 'menu_frame_landscape';
 

@@ -11,6 +11,11 @@
 	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 </script>
 
-<Container x={boardLayout.x} y={boardLayout.y} pivot={boardLayout.pivot}>
+<Container
+	x={boardLayout.x}
+	y={boardLayout.y}
+	pivot={boardLayout.pivot}
+	scale={boardLayout.scale ?? 1}
+>
 	{@render props.children()}
 </Container>

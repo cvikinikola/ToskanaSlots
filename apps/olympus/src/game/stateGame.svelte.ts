@@ -19,6 +19,7 @@ import {
 	INITIAL_SYMBOL_STATE,
 	SCATTER_LAND_SOUND_MAP,
 	BOTTOM_ROW_INDEX,
+	getPlayAreaScale,
 } from './constants';
 
 // ─── Symbol land callbacks ────────────────────────────────────────────────────
@@ -121,6 +122,10 @@ const boardLayout = () => ({
 	y: stateLayoutDerived.mainLayout().height * 0.5,
 	anchor: { x: 0.5, y: 0.5 },
 	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
+	scale: getPlayAreaScale(
+		stateLayoutDerived.layoutType(),
+		stateLayoutDerived.canvasSizes(),
+	),
 	...BOARD_SIZES,
 });
 
