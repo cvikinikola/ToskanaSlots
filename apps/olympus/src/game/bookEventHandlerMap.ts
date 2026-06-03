@@ -110,6 +110,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
 		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
+		// QA 02.06.2026: defensively reset any lingering 'win' symbol states
+		// from the previous round so a gold glow can never bleed into the new
+		// spin's symbols (was visible on turbo when the multiplier sequence
+		// was still in flight as the next round began).
+		stateGame.board.forEach((reel) => {
+			reel.reelState.symbols.forEach((reelSymbol) => {
+				reelSymbol.symbolState = 'static';
+				reelSymbol.oncomplete = () => {};
+			});
+		});
 
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
 		if (isBonusGame) {
@@ -166,22 +176,37 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				amount: win.win,
 			})),
 		});
-		await sequence(bookEvent.wins, async (win) => {
-			await animateSymbols({ positions: win.positions });
-		});
+		// QA 02.06.2026: on turbo, animating each cluster sequentially felt
+		// laggy compared to a normal spin. Collapse all winning clusters into
+		// a single parallel animation so the whole win flashes at once.
+		if (stateBet.isTurbo) {
+			await animateSymbols({
+				positions: bookEvent.wins.flatMap((win) => win.positions),
+			});
+		} else {
+			await sequence(bookEvent.wins, async (win) => {
+				await animateSymbols({ positions: win.positions });
+			});
+		}
 	},
 
 	// ── boardMultiplierInfo ───────────────────────────────────────────────────
 	// Multiplier symbols (M) are on the board after a winning cascade.
-	// Sequence:
-	//  1. Update tumble win display to show pre-multiplier win
-	//  2. Animate each M symbol's "activate" state on the main board
-	//  3. Move multiplier values up to the global multiplier counter
-	//  4. Update the global multiplier display
-	//  5. Animate the win amount jumping to post-multiplier total
+	// Sequence (matches Gates-of-Olympus reference, per QA 02.06.2026):
+	//  1. Snap tumble-win panel to pre-multiplier win (`tumbleWin`)
+	//  2. Show "×" overlay starting at 0 (panel reads `WIN $X ×0`)
+	//  3. For each M symbol on the board in turn:
+	//       a. animate that symbol (glow/bounce)
+	//       b. add its value to the running board multiplier and update
+	//          the overlay so the player sees it grow (e.g. ×2 → ×4 → ×8)
+	//  4. Flash the global multiplier counter with the final boardMult
+	//  5. Count up the tumble-win panel to the post-multiplier `totalWin`
+	//  6. Hide the "×" overlay so the panel reads the final amount alone,
+	//     ready to drop into the WIN balance on `finalWin`.
 	boardMultiplierInfo: async (bookEvent: BookEventOfType<'boardMultiplierInfo'>) => {
 		updateRoundWinBookEventAmount(bookEvent.winInfo.tumbleWin);
-		// Show the pre-multiplier tumble win
+
+		// (1) Snap to pre-multiplier tumble win
 		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'tumbleWinAmountUpdate',
@@ -189,17 +214,41 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			animate: false,
 		});
 
-		// Animate each multiplier symbol on the main board (they glow/bounce)
-		await animateSymbols({ positions: bookEvent.multInfo.positions });
+		// (2) Reveal the "× N" overlay starting at 0
+		eventEmitter.broadcast({ type: 'tumbleWinAmountShowMultiplier', multiplier: 0 });
 
-		// Update the global multiplier counter display
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_update' });
+		// (3) Reveal each M-symbol multiplier, accumulating into the panel.
+		// Normal mode: animate one M at a time (Gates-of-Olympus pacing).
+		// Turbo (QA 02.06.2026): glow all M symbols in parallel and snap the
+		// running multiplier to the final value — otherwise the per-symbol
+		// sequence spilled into the next spin and left a gold glow behind.
+		if (stateBet.isTurbo) {
+			await animateSymbols({ positions: bookEvent.multInfo.positions });
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_update' });
+			eventEmitter.broadcast({
+				type: 'tumbleWinAmountShowMultiplier',
+				multiplier: bookEvent.winInfo.boardMult,
+			});
+		} else {
+			let runningMult = 0;
+			for (const mPosition of bookEvent.multInfo.positions) {
+				await animateSymbols({ positions: [mPosition] });
+				runningMult += mPosition.multiplier;
+				eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_update' });
+				eventEmitter.broadcast({
+					type: 'tumbleWinAmountShowMultiplier',
+					multiplier: runningMult,
+				});
+			}
+		}
+
+		// (4) Flash the persistent global multiplier counter with the final board mult
 		await eventEmitter.broadcastAsync({
 			type: 'globalMultiplierUpdate',
 			multiplier: bookEvent.winInfo.boardMult,
 		});
 
-		// Animate the tumble win counter to the post-multiplier total
+		// (5) Count up the tumble win to the post-multiplier total
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
 		updateRoundWinBookEventAmount(bookEvent.winInfo.totalWin);
 		await eventEmitter.broadcastAsync({
@@ -207,6 +256,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			amount: bookEvent.winInfo.totalWin,
 			animate: true,
 		});
+
+		// (6) Hide the "× N" overlay — the panel now shows the final amount
+		// alone, ready to drop into the WIN balance on `finalWin`.
+		eventEmitter.broadcast({ type: 'tumbleWinAmountHideMultiplier' });
 	},
 
 	// ── tumbleBoard ────────────────────────────────────────────────────────────
@@ -389,8 +442,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		stateGame.freeSpinOutroActive = true;
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
-		// Thunder boom as the free-spin finale
-		setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' }), 300);
+		// The thunder boom now lands when the money count-up FINISHES (fired from
+		// FreeSpinOutro), so the finale strike coincides with the final total.
 		winLevelSoundsPlay({ winLevelData });
 
 		await eventEmitter.broadcastAsync({

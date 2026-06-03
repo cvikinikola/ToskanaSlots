@@ -62,23 +62,31 @@
 			{@render props.amountBet({ stacked: true })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={1455} scale={0.8}>
-			{@render props.buttonDecrease({ anchor: 0.5 })}
+		<!--
+			QA 03.06.2026: nudge auto-spin / turbo left and add more spacing
+			between them. Turbo's right edge aligns with the BET plate right
+			edge (bet center 1400, plate half-width ~241 × scale 0.8 ≈ 193 →
+			right edge ≈ 1593; button half-width 60 × 0.8 ≈ 48 → turbo center
+			≈ 1545). Auto-spin sits ~150 px to its left.
+		-->
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={1395} scale={0.8}>
+			{@render props.buttonAutoSpin({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={1585} scale={0.8}>
-			{@render props.buttonIncrease({ anchor: 0.5 })}
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={1545} scale={0.8}>
+			{@render props.buttonTurbo({ anchor: 0.5 })}
 		</Container>
 	</Container>
 
 	<!--
-		QA (phone landscape): pull the right-side action column (autospin /
-		spin-stop / turbo) inward from the screen edge so it sits vertically
-		above the +/- buttons in the bottom row, aligned with their midpoint
-		(decrease 1455 / increase 1585 → centred at ~1520; with anchor x:1 and
-		children at LANDSCAPE_BASE_SIZE * 0.5, x = 1520 + 82 ≈ 1602 →
-		mainWidth - 318). Lifted the column ~80 px so the bottom button
-		(turbo) clears the bottom info bar.
+		QA (phone landscape): pull the right-side action column inward from the
+		screen edge so it sits vertically above the bottom row, aligned with
+		their midpoint. Lifted the column ~80 px so the bottom button clears
+		the bottom info bar.
+		QA 02.06.2026: on phone landscape, swap the +/- (decrease/increase)
+		buttons with the auto-spin / turbo buttons. Auto-spin + turbo now live
+		on the bottom row (next to the bet amount), while +/- moved into this
+		right column above/below the spin button.
 	-->
 	<Container
 		x={context.stateLayoutDerived.mainLayoutStandard().width - 318}
@@ -92,7 +100,7 @@
 		})}
 	>
 		<Container x={LANDSCAPE_BASE_SIZE * 0.5} y={LANDSCAPE_BASE_SIZE * 0.5 - 140} scale={0.8}>
-			{@render props.buttonAutoSpin({ anchor: 0.5 })}
+			{@render props.buttonDecrease({ anchor: 0.5 })}
 		</Container>
 
 		<Container x={LANDSCAPE_BASE_SIZE * 0.5} y={LANDSCAPE_BASE_SIZE * 0.5} scale={0.8}>
@@ -100,7 +108,7 @@
 		</Container>
 
 		<Container x={LANDSCAPE_BASE_SIZE * 0.5} y={LANDSCAPE_BASE_SIZE * 0.5 + 140} scale={0.8}>
-			{@render props.buttonTurbo({ anchor: 0.5 })}
+			{@render props.buttonIncrease({ anchor: 0.5 })}
 		</Container>
 	</Container>
 </MainContainer>

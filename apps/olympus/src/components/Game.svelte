@@ -43,9 +43,17 @@
 
 	// Shrink the painted-text titles on stacked (portrait/tablet) layouts so
 	// they don't crowd the centred reels.
-	const titleScale = $derived(
-		context.stateLayoutDerived.isStacked() ? 0.7 : 1,
-	);
+	// QA 03.06.2026: the HAMMER OF THOR logo overlapped the MULTIPLIER panel
+	// in the top-right corner on the SQUARE / "kockasti" screen, which is the
+	// `tablet` layout type (NOT covered by isStacked(), which only matches
+	// portrait). Scale it down there specifically, while keeping the existing
+	// portrait/mobile size.
+	const titleScale = $derived.by(() => {
+		const layoutType = context.stateLayoutDerived.layoutType();
+		if (layoutType === 'tablet') return 0.5; // square / kockasti screen
+		if (layoutType === 'portrait') return 0.7; // mobile portrait
+		return 1;
+	});
 	// On portrait/tablet Thor is rendered above the frame — hide the text title
 	// to avoid clashing with the 3-D character in the same area.
 </script>

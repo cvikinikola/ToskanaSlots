@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Container, BitmapText, Sprite } from 'pixi-svelte';
+	import { stateBet } from 'state-shared';
 	import type { SymbolState, RawSymbol } from '../game/types';
 	import { SYMBOL_SIZE } from '../game/constants';
 
@@ -38,9 +39,14 @@
 	const symbolSpriteSize = SYMBOL_SIZE * 1.04;
 
 	// Trigger oncomplete for animation states that have no real spine track yet.
+	// Turbo mode (QA 02.06.2026): shorten the win/explosion glow so the
+	// multiplier animation (which now plays one M-symbol at a time, see
+	// boardMultiplierInfo) finishes well before the next round starts —
+	// otherwise the gold animation leaked into the next spin's symbols.
 	$effect(() => {
 		if (props.state === 'win' || props.state === 'explosion') {
-			const t = setTimeout(() => props.oncomplete?.(), 400);
+			const duration = stateBet.isTurbo ? 140 : 400;
+			const t = setTimeout(() => props.oncomplete?.(), duration);
 			return () => clearTimeout(t);
 		}
 		if (props.state === 'land') {

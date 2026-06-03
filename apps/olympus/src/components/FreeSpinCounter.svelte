@@ -16,59 +16,64 @@
 
 	const context = getContext();
 
-	// Desktop / landscape: a compact panel that sits above TumbleHistory (left
-	// of the reel frame) so it scales with the board on every viewport.
-	const PANEL_W = SYMBOL_SIZE * 2.95;
-	const PANEL_H = SYMBOL_SIZE * 1.25;
-	// Stacked (portrait/tablet): a wider strip above the TumbleHistory row at
-	// the top of the frame so it is comfortably readable on small devices.
-	const PANEL_W_STACKED = SYMBOL_SIZE * 3.95;
-	const PANEL_H_STACKED = SYMBOL_SIZE * 1.3;
+	// QA 03.06.2026: use the SAME compact square frame as GlobalMultiplier
+	// (mirrored on the left side of the board) so the FREE SPINS counter
+	// can no longer overlap TumbleHistory and is symmetric with MULTIPLIER.
+	const PANEL_W = SYMBOL_SIZE * 1.85;
+	const PANEL_H = SYMBOL_SIZE * 1.18;
 	const GOLD = 0xffd147;
 
-	// Constants kept in sync with TumbleHistory.svelte positioning logic.
-	const HISTORY_PANEL_W = SYMBOL_SIZE * 2.95;
-	const HISTORY_PANEL_H_STACKED = SYMBOL_SIZE * 1.48;
-	const HISTORY_FRAME_PULL_IN = SYMBOL_SIZE * 1.2;
-	const HISTORY_DESKTOP_Y_BASE = SYMBOL_SIZE * 2.1;
-	const HISTORY_DESKTOP_Y_FREE_SPINS = SYMBOL_SIZE * 2.12;
+	const panelWidth = PANEL_W;
+	const panelHeight = PANEL_H;
+
+	// TumbleHistory geometry mirrored from TumbleHistory.svelte so the
+	// counter can align exactly with it on every viewport.
+	const TH_PANEL_W = SYMBOL_SIZE * 2.95;
+	const TH_PANEL_W_STACKED = SYMBOL_SIZE * 3.95;
+	const TH_PANEL_H_STACKED = SYMBOL_SIZE * 1.48;
+	const TH_FRAME_PULL_IN = SYMBOL_SIZE * 1.2;
+	const TH_DESKTOP_Y_BASE = SYMBOL_SIZE * 2.1;
+	const TH_DESKTOP_Y_FREE_SPINS = SYMBOL_SIZE * 2.12;
 
 	const isCompact = $derived(
 		['portrait', 'tablet'].includes(context.stateLayoutDerived.layoutType()),
 	);
 	const isFreeSpins = $derived(context.stateGame.gameType === 'freeSpins');
-	const panelWidth = $derived(isCompact ? PANEL_W_STACKED : PANEL_W);
-	const panelHeight = $derived(isCompact ? PANEL_H_STACKED : PANEL_H);
 
 	const frameBounds = $derived({
 		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
 		right: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
 		top: BOARD_SIZES.height / 2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
-		compactTop: BOARD_SIZES.height / 2.2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
+		// TumbleHistory uses 2.2 as the vertical divisor for its anchor.
+		thTop: BOARD_SIZES.height / 2.2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
 		centerX: BOARD_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
+		boardLeft: 0,
 	});
 
 	const position = $derived.by(() => {
 		if (isCompact) {
-			// Sit just above the TumbleHistory row at the top of the frame.
-			const historyRowCenterY = frameBounds.compactTop - SYMBOL_SIZE * 0.22;
-			const historyTop = historyRowCenterY - HISTORY_PANEL_H_STACKED / 2;
-			const gap = SYMBOL_SIZE * 0.22;
+			// Small / square / portrait screens: TumbleHistory is a wide strip
+			// centered at the top. Align the FREE SPINS panel's BOTTOM edge with
+			// the TumbleHistory bottom edge. Flush the panel's RIGHT edge to the
+			// board's LEFT edge so it hugs the top-left board corner and never
+			// clips off-screen on narrow portrait viewports (QA 03.06.2026).
+			const thCenterY = frameBounds.thTop - SYMBOL_SIZE * 0.22;
+			const thBottomY = thCenterY + TH_PANEL_H_STACKED / 2;
 			return {
-				x: frameBounds.centerX - panelWidth / 2,
-				y: historyTop - panelHeight - gap,
+				x: frameBounds.boardLeft - SYMBOL_SIZE * 0.55,
+				y: thBottomY - PANEL_H,
 			};
 		}
 
-		// Desktop / landscape: align horizontally with the TumbleHistory panel
-		// (left of the reel frame) and sit just above its top edge.
-		const historyX = frameBounds.left - HISTORY_PANEL_W + HISTORY_FRAME_PULL_IN;
-		const historyY =
-			frameBounds.top + (isFreeSpins ? HISTORY_DESKTOP_Y_FREE_SPINS : HISTORY_DESKTOP_Y_BASE);
-		const gap = SYMBOL_SIZE * 0.22;
+		// Big / landscape screens: align the FREE SPINS panel's RIGHT edge
+		// with the RIGHT edge of the TumbleHistory panel and sit just above
+		// it. TumbleHistory right edge = thLeft + PULL_IN.
+		const thRightEdge = frameBounds.left + TH_FRAME_PULL_IN;
+		const thTopY = frameBounds.thTop + (isFreeSpins ? TH_DESKTOP_Y_FREE_SPINS : TH_DESKTOP_Y_BASE);
+		const gap = SYMBOL_SIZE * 0.3;
 		return {
-			x: historyX + (HISTORY_PANEL_W - panelWidth) / 2,
-			y: historyY - panelHeight - gap,
+			x: thRightEdge - PANEL_W,
+			y: thTopY - PANEL_H - gap,
 		};
 	});
 
@@ -90,8 +95,8 @@
 	<BoardContainer>
 		<Container {...position}>
 			<UiAssetSprite
-				key="menu_panel_md"
-				assetKey="menu_panel_md"
+				key="menu_frame_free_spins"
+				assetKey="menu_frame_free_spins"
 				anchor={{ x: 0, y: 0 }}
 				width={panelWidth}
 				height={panelHeight}
@@ -99,29 +104,29 @@
 			/>
 
 			<BitmapText
-				anchor={{ x: 0.5, y: 0.5 }}
+				anchor={{ x: 0.5, y: 0 }}
 				x={panelWidth * 0.5}
-				y={panelHeight * (isCompact ? 0.28 : 0.26)}
-					text="FREE SPINS"
-					style={{
-						fontFamily: 'proxima-nova',
-						fontSize: SYMBOL_SIZE * (isCompact ? 0.17 : 0.16),
-						fill: GOLD,
-						fontWeight: '900',
-					}}
+				y={panelHeight * 0.25}
+				text="FREE SPINS"
+				style={{
+					fontFamily: 'proxima-nova',
+					fontSize: SYMBOL_SIZE * 0.12,
+					fill: GOLD,
+					fontWeight: '900',
+				}}
 			/>
 
 			<BitmapText
 				anchor={{ x: 0.5, y: 0.5 }}
 				x={panelWidth * 0.5}
-				y={panelHeight * (isCompact ? 0.62 : 0.6)}
-					text={`${current} / ${total}`}
-					style={{
-						fontFamily: 'proxima-nova',
-						fontSize: SYMBOL_SIZE * (isCompact ? 0.28 : 0.3),
-						fill: 0xfff0b8,
-						fontWeight: '900',
-					}}
+				y={panelHeight * 0.62}
+				text={`${current} / ${total}`}
+				style={{
+					fontFamily: 'proxima-nova',
+					fontSize: SYMBOL_SIZE * 0.22,
+					fill: 0xfff0b8,
+					fontWeight: '900',
+				}}
 			/>
 		</Container>
 	</BoardContainer>

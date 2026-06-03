@@ -23,6 +23,10 @@
 
 	const context = getContext();
 	const activeAudios = new Set<HTMLAudioElement>();
+	// Looping audios tracked by sound name so they can be stopped on demand
+	// (e.g. the "Jackpot Ascension" money count-up music or the big-win coin
+	// loop). A name maps to the single currently-playing looping instance.
+	const loopingAudios = new Map<string, HTMLAudioElement>();
 	let pageActive = $state(true);
 	let lastThunderAt = 0;
 	// Spin debounce must be long enough to cover the per-reel stagger
@@ -51,6 +55,11 @@
 			audio.currentTime = 0;
 		});
 		activeAudios.clear();
+		loopingAudios.forEach((audio) => {
+			audio.pause();
+			audio.currentTime = 0;
+		});
+		loopingAudios.clear();
 	};
 
 	const playAudio = (src: string, volume = 1, playbackRate = 1) => {
@@ -66,6 +75,28 @@
 		audio.addEventListener('ended', cleanup, { once: true });
 		audio.addEventListener('pause', cleanup, { once: true });
 		audio.play().catch(cleanup);
+	};
+
+	// Start (or restart) a named looping audio. Any previous instance under
+	// the same name is stopped first so loops never stack.
+	const playLoopAudio = (name: string, src: string, volume = 1) => {
+		stopLoopAudio(name);
+		if (!pageActive) return;
+		if (soundEffectVolume <= 0) return;
+
+		const audio = new Audio(src);
+		audio.loop = true;
+		audio.volume = Math.max(0, Math.min(1, volume * soundEffectVolume));
+		loopingAudios.set(name, audio);
+		audio.play().catch(() => loopingAudios.delete(name));
+	};
+
+	const stopLoopAudio = (name: string) => {
+		const audio = loopingAudios.get(name);
+		if (!audio) return;
+		audio.pause();
+		audio.currentTime = 0;
+		loopingAudios.delete(name);
 	};
 
 	$effect(() => {
@@ -95,7 +126,7 @@
 		},
 
 		// One-shot SFX
-		soundOnce: ({ name }) => {
+		soundOnce: ({ name, forcePlay = false }) => {
 			if (name === 'sfx_reel_spin') {
 				const now = performance.now();
 				if (now - lastReelSpinAt < REEL_SPIN_DEBOUNCE_MS) return;
@@ -131,7 +162,7 @@
 			}
 			if (name === 'sfx_thunder_clap') {
 				const now = performance.now();
-				if (now - lastThunderAt < 4500) return;
+				if (!forcePlay && now - lastThunderAt < 4500) return;
 				lastThunderAt = now;
 				playAudio('/assets/audio/thunder_clap.mp3', 0.5);
 				return;
@@ -179,15 +210,19 @@
 			playAudio('/assets/audio/destroy.mp3', 0.9);
 		},
 
-		// Looping SFX (e.g. coin shower during big win)
+		// Looping SFX (e.g. coin shower during big win, or the "Jackpot
+		// Ascension" money count-up music during the free-spin outro).
 		soundLoop: ({ name }) => {
-			// sound.players.loop.play({ name });
+			if (name === 'sfx_jackpot_ascension') {
+				playLoopAudio(name, '/assets/audio/Jackpot Ascension Free.mp3', 0.85);
+				return;
+			}
 			console.debug('[sound] loop →', name);
 		},
 
 		// Stop a specific sound
 		soundStop: ({ name }) => {
-			// sound.players.loop.stop({ name });
+			stopLoopAudio(name);
 			console.debug('[sound] stop →', name);
 		},
 

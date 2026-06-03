@@ -48,7 +48,9 @@ export type SoundEffectName =
 	// Win
 	| 'sfx_coin_clink'
 	| 'sfx_thunder'
-	| 'sfx_thunder_clap';
+	| 'sfx_thunder_clap'
+	// Free-spin outro money count-up ("Jackpot Ascension")
+	| 'sfx_jackpot_ascension';
 
 export type SoundName = MusicName | SoundEffectName;
 

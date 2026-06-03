@@ -21,37 +21,53 @@
 	const PANEL_H = SYMBOL_SIZE * 1.18;
 	const GOLD = 0xffd147;
 
+	// TumbleHistory geometry mirrored from TumbleHistory.svelte so the
+	// multiplier aligns symmetrically with the FREE SPINS counter (which is
+	// aligned to TumbleHistory on the left) on every viewport.
+	const TH_PANEL_H_STACKED = SYMBOL_SIZE * 1.48;
+	const TH_FRAME_PULL_IN = SYMBOL_SIZE * 1.2;
+	const TH_DESKTOP_Y_BASE = SYMBOL_SIZE * 2.1;
+	const TH_DESKTOP_Y_FREE_SPINS = SYMBOL_SIZE * 2.12;
+
 	const isCompact = $derived(
 		['portrait', 'tablet'].includes(context.stateLayoutDerived.layoutType()),
 	);
+	const isFreeSpins = $derived(context.stateGame.gameType === 'freeSpins');
 	const frameBounds = $derived({
 		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
 		right: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
 		top: BOARD_SIZES.height / 2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
-		compactTop: BOARD_SIZES.height / 2.2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
+		// TumbleHistory uses 2.2 as the vertical divisor for its anchor.
+		thTop: BOARD_SIZES.height / 2.2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
+		boardRight: BOARD_SIZES.width,
+		boardLeft: 0,
 	});
 
 	const position = $derived.by(() => {
-		const insetY = SYMBOL_SIZE * (isCompact ? 0.14 : 0.22);
-
 		if (isCompact) {
-			const rowCenterY = frameBounds.compactTop - SYMBOL_SIZE * 0.22;
+			// Small / square / portrait screens: mirror the FREE SPINS counter
+			// on the right. Align the panel's BOTTOM edge with the TumbleHistory
+			// bottom edge and flush its LEFT edge to the board's RIGHT edge so
+			// it hugs the top-right board corner and never clips off-screen on
+			// narrow portrait viewports (QA 03.06.2026).
+			const thCenterY = frameBounds.thTop - SYMBOL_SIZE * 0.22;
+			const thBottomY = thCenterY + TH_PANEL_H_STACKED / 2;
 			return {
-				x: frameBounds.right - PANEL_W - SYMBOL_SIZE * 0.86,
-				y: rowCenterY - PANEL_H / 2,
+				x: frameBounds.boardRight - PANEL_W + SYMBOL_SIZE * 0.55,
+				y: thBottomY - PANEL_H,
 			};
 		}
 
-		// Desktop / landscape: mirror the FREE SPINS counter (left of board).
-		// FreeSpinCounter overlaps the frame by ~1.2 SYMBOL_SIZE inside; mirror
-		// that overlap on the right so the multiplier hugs the board edge
-		// symmetrically. Y is aligned with the FREE SPINS panel top.
-		const FRAME_OVERLAP_INSIDE = SYMBOL_SIZE * 1.2;
-		// Matches FreeSpinCounter: historyY (frameBounds.top + 2.12) - panelH - gap(0.22)
-		const counterTopY = frameBounds.top + SYMBOL_SIZE * 2.12 - SYMBOL_SIZE * 1.25 - SYMBOL_SIZE * 0.22;
+		// Big / landscape screens: mirror the FREE SPINS counter. Its right
+		// edge aligns with TumbleHistory's right edge (frame.left + PULL_IN);
+		// mirrored on the right that is the panel's LEFT edge at
+		// frame.right - PULL_IN. Same height as FREE SPINS.
+		const thLeftEdgeMirrored = frameBounds.right - TH_FRAME_PULL_IN;
+		const thTopY = frameBounds.thTop + (isFreeSpins ? TH_DESKTOP_Y_FREE_SPINS : TH_DESKTOP_Y_BASE);
+		const gap = SYMBOL_SIZE * 0.3;
 		return {
-			x: frameBounds.right - FRAME_OVERLAP_INSIDE,
-			y: counterTopY + (SYMBOL_SIZE * 1.25 - PANEL_H) / 2 + insetY * 0,
+			x: thLeftEdgeMirrored,
+			y: thTopY - PANEL_H - gap,
 		};
 	});
 

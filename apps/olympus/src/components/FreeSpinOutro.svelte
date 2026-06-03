@@ -87,22 +87,57 @@
 			// own presentDuration (BIG/MEGA/EPIC).
 			const countUpDuration = Math.max(e.winLevelData?.presentDuration || 0, 3 * SECOND);
 
-			// 1) Fully animate the count-up to the final amount. Do NOT race with
-			//    a dismiss listener here — the player must see the money land on
-			//    the final value before anything else can interrupt.
-			if (countUpAmount.target === e.amount) {
-				await new Promise<void>((resolve) => setTimeout(resolve, countUpDuration));
-			} else {
-				await countUpAmount.set(e.amount, { duration: countUpDuration });
-			}
+			// Start the "Jackpot Ascension" money count-up music — it rises with
+			// the coins as the total counts up.
+			context.eventEmitter.broadcast({ type: 'soundLoop', name: 'sfx_jackpot_ascension' });
+
+			// 1) Animate the count-up to the final amount. The player may click /
+			//    press a key to SKIP straight to the final value — this resolves
+			//    early and lets the thunder land immediately for a snappy finish.
+			const animateCountUp =
+				countUpAmount.target === e.amount
+					? new Promise<void>((resolve) => setTimeout(resolve, countUpDuration))
+					: countUpAmount.set(e.amount, { duration: countUpDuration });
+
+			await new Promise<void>((resolve) => {
+				let settled = false;
+				const finish = () => {
+					if (settled) return;
+					settled = true;
+					window.removeEventListener('pointerdown', onSkip);
+					window.removeEventListener('keydown', onSkip);
+					resolve();
+				};
+				const onSkip = () => {
+					// Snap the amount to the final value, then finish.
+					countUpAmount.set(e.amount, { duration: 0 });
+					finish();
+				};
+				window.addEventListener('pointerdown', onSkip);
+				window.addEventListener('keydown', onSkip);
+				animateCountUp.then(finish);
+			});
 
 			countUpComplete = true;
 
-			// 2) Hold the final amount on screen until the player taps/clicks or
+			// 2) Thunder clap the instant the counting finishes (or is skipped),
+			//    and cut the ascension music so the boom stands alone.
+			context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_jackpot_ascension' });
+			context.eventEmitter.broadcast({
+				type: 'soundOnce',
+				name: 'sfx_thunder_clap',
+				forcePlay: true,
+			});
+
+			// 3) Hold the final amount on screen until the player taps/clicks or
 			//    the max hold elapses. Hold longer for the bigger win levels so
 			//    MEGA / EPIC banners stay readable.
 			const holdDuration = Math.max(e.winLevelData?.presentDuration || 0, 3 * SECOND);
 			await waitForDismiss(holdDuration);
+
+			// Safety: ensure the music is stopped even if this handler is torn
+			// down before step 2 ran (e.g. rapid re-entry).
+			context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_jackpot_ascension' });
 		},
 	});
 </script>
