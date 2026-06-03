@@ -1,15 +1,11 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	import {
-		applyLandscapeUiRuntime,
-		applyPortraitUiRuntime,
-		isCompactPortraitHud,
-	} from 'components-ui-pixi';
+	import { applyPortraitUiRuntime, isCompactPortraitHud } from 'components-ui-pixi';
 	import { EnableSpaceHold } from 'components-shared';
 	import UiFadeContainer from 'components-ui-pixi/src/components/UiFadeContainer.svelte';
 	import LayoutDesktop from 'components-ui-pixi/src/components/LayoutDesktop.svelte';
-	import LayoutPortrait from 'components-ui-pixi/src/components/LayoutPortrait.svelte';
+	import LayoutPortrait from './LayoutPortrait.svelte';
 	import LayoutTablet from 'components-ui-pixi/src/components/LayoutTablet.svelte';
 	import LabelBalance from 'components-ui-pixi/src/components/LabelBalance.svelte';
 	import LabelWin from 'components-ui-pixi/src/components/LabelWin.svelte';
@@ -28,6 +24,8 @@
 	import ButtonSoundSwitch from 'components-ui-pixi/src/components/ButtonSoundSwitch.svelte';
 
 	import LayoutLandscape from './LayoutLandscape.svelte';
+	import { getOlympusLandscapeHudLayout } from '../game/hudLandscapeLayout';
+	import { getOlympusPortraitHudLayout } from '../game/hudPortraitLayout';
 	import { getContext } from '../game/context';
 
 	type Props = {
@@ -49,31 +47,30 @@
 		LAYOUT_COMPONENT_MAP[context.stateLayoutDerived.layoutType()],
 	);
 
+	const hudContext = $derived({
+		stateLayoutDerived: context.stateLayoutDerived,
+		stateGameDerived: context.stateGameDerived,
+	});
+
+	/** Sync bar scale + plates whenever orientation changes (landscape leaves smaller runtime). */
 	$effect(() => {
 		const layoutType = context.stateLayoutDerived.layoutType();
-		const gameMain = context.stateLayoutDerived.mainLayout();
 		const stdMain = context.stateLayoutDerived.mainLayoutStandard();
 		const sizeType = context.stateLayoutDerived.canvasSizeType();
 		const ratioType = context.stateLayoutDerived.canvasRatioType();
 		const ratio = context.stateLayoutDerived.canvasRatio();
-		const runtimeSize =
-			layoutType === 'portrait' || layoutType === 'landscape' ? sizeType : 'desktop';
 
 		if (layoutType === 'landscape') {
-			applyLandscapeUiRuntime(
-				runtimeSize,
-				gameMain.width,
-				ratioType === 'almostSquare',
-			);
+			getOlympusLandscapeHudLayout(hudContext);
 		} else if (layoutType === 'portrait') {
+			getOlympusPortraitHudLayout(hudContext);
+		} else {
 			const compact = isCompactPortraitHud(ratioType, ratio)
 				? ratioType === 'almostSquare'
 					? ('almostSquare' as const)
 					: ('nearSquare' as const)
 				: false;
-			applyPortraitUiRuntime(runtimeSize, stdMain.width, compact);
-		} else {
-			applyPortraitUiRuntime(runtimeSize, stdMain.width);
+			applyPortraitUiRuntime(sizeType, stdMain.width, compact);
 		}
 	});
 </script>

@@ -18,6 +18,7 @@
 	import { getContext } from '../game/context';
 	import { BOARD_SIZES, SYMBOL_SIZE } from '../game/constants';
 	import { getOlympusLandscapeHudLayout } from '../game/hudLandscapeLayout';
+	import { getOlympusPortraitHudLayout } from '../game/hudPortraitLayout';
 	import type { TumbleHistoryLine as Line } from '../game/tumbleBreakdown';
 
 	const context = getContext();
@@ -50,26 +51,31 @@
 	let lines: TumbleHistoryLine[] = $state([]);
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const isLandscape = $derived(layoutType === 'landscape');
+	const isPortrait = $derived(layoutType === 'portrait');
+	const isHudPanel = $derived(isLandscape || isPortrait);
 	const isFreeSpins = $derived(context.stateGame.gameType === 'freeSpins');
-	const isCompact = $derived(['portrait', 'tablet'].includes(layoutType));
+	const isCompact = $derived(layoutType === 'tablet');
 	const visibleLines = $derived(
-		isLandscape ? lines : isCompact ? lines.slice(-3) : lines,
+		isHudPanel ? lines : isCompact ? lines.slice(-3) : lines,
 	);
 	const show = $derived(visibleLines.length > 0);
 
+	const hudContext = $derived({
+		stateLayoutDerived: context.stateLayoutDerived,
+		stateGameDerived: context.stateGameDerived,
+	});
+
 	const landscapeLayout = $derived(
-		isLandscape
-			? getOlympusLandscapeHudLayout({
-					stateLayoutDerived: context.stateLayoutDerived,
-					stateGameDerived: context.stateGameDerived,
-				})
-			: null,
+		isLandscape ? getOlympusLandscapeHudLayout(hudContext) : null,
 	);
 
-	const landscapeMetrics = $derived.by(() => {
-		if (!landscapeLayout) return null;
-		const w = landscapeLayout.leftColumnWidth;
-		const h = landscapeLayout.historyPanelHeight;
+	const portraitLayout = $derived(
+		isPortrait ? getOlympusPortraitHudLayout(hudContext) : null,
+	);
+
+	const panelLayout = $derived(landscapeLayout ?? portraitLayout);
+
+	const buildPanelMetrics = (w: number, h: number) => {
 		const innerPadLeft = w * 0.11;
 		const innerPadRight = w * 0.11;
 		const innerPadBottom = h * 0.1;
@@ -91,13 +97,35 @@
 			countInset: 8,
 			countSlot: w * 0.07,
 		};
+	};
+
+	const landscapeMetrics = $derived.by(() => {
+		if (!landscapeLayout) return null;
+		const w = landscapeLayout.leftColumnWidth;
+		const h = landscapeLayout.historyPanelHeight;
+		return buildPanelMetrics(w, h);
 	});
+
+	const portraitMetrics = $derived.by(() => {
+		if (!portraitLayout) return null;
+		const w = portraitLayout.historyPanelWidth;
+		const h = portraitLayout.historyPanelHeight;
+		return buildPanelMetrics(w, h);
+	});
+
+	const panelMetrics = $derived(landscapeMetrics ?? portraitMetrics);
 
 	const position = $derived.by(() => {
 		if (isLandscape && landscapeLayout) {
 			return {
 				x: landscapeLayout.tumbleHistoryX,
 				y: landscapeLayout.tumbleHistoryY,
+			};
+		}
+		if (isPortrait && portraitLayout) {
+			return {
+				x: portraitLayout.tumbleHistoryX,
+				y: portraitLayout.tumbleHistoryY,
 			};
 		}
 		if (isCompact) {
@@ -247,25 +275,25 @@
 	</Container>
 {/snippet}
 
-{#if isLandscape && landscapeLayout && landscapeMetrics}
+{#if isHudPanel && panelLayout && panelMetrics}
 	<Container x={position.x} y={position.y}>
 		<UiAssetSprite
 			assetKey="menu_tumble_history_panel"
 			anchor={0.5}
-			width={landscapeMetrics.panelWidth}
-			height={landscapeMetrics.panelHeight}
+			width={panelMetrics.panelWidth}
+			height={panelMetrics.panelHeight}
 		/>
 		{#if show}
 			<Container
-				x={-landscapeMetrics.panelWidth / 2 + landscapeMetrics.innerPadLeft}
-				y={landscapeMetrics.panelHeight / 2 - landscapeMetrics.innerPadBottom}
+				x={-panelMetrics.panelWidth / 2 + panelMetrics.innerPadLeft}
+				y={panelMetrics.panelHeight / 2 - panelMetrics.innerPadBottom}
 			>
 				{#each visibleLines as line, index (`${line.symbol}-${line.amount}-${index}`)}
 					{@render historyRowLandscape(
 						line,
-						-(visibleLines.length - 1 - index) * landscapeMetrics.rowStride,
+						-(visibleLines.length - 1 - index) * panelMetrics.rowStride,
 						index,
-						landscapeMetrics,
+						panelMetrics,
 					)}
 				{/each}
 			</Container>
