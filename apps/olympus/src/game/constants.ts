@@ -1,10 +1,4 @@
 import _ from 'lodash';
-import {
-	landscapeBottomReservePx,
-	landscapeRightReservePx,
-	landscapeTopReservePx,
-	portraitBottomReservePx,
-} from 'components-ui-pixi';
 import type { RawSymbol, SymbolState } from './types';
 
 export const BOARD_DIMENSIONS = { x: 7, y: 7 };
@@ -39,64 +33,67 @@ export const sanitizeRawSymbol = (raw: { name?: string; scatter?: boolean }): im
 export const sanitizePaddedBoard = (board: import('./types').RawSymbol[][]): import('./types').RawSymbol[][] =>
 	board.map((reel) => reel.map((sym) => sanitizeRawSymbol(sym)));
 
-/** menu_frame.png native size — used for aspect ratio and inset math. */
-const REEL_FRAME_NATIVE = { width: 1491, height: 1205 };
+/** Cluster: 7×7 grid at 80px cells → 560×560 play area. */
+export const SYMBOL_SIZE = 80;
 
-/** Base frame size before the small display bump (grid is derived from this). */
+export const BOARD_SIZES = {
+	width: SYMBOL_SIZE * BOARD_DIMENSIONS.x,
+	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
+};
+
+/** Cluster: inset within 560 box so symbols sit inside the frame window. */
+export const REEL_PADDING = 0.53;
+
+export const SYMBOL_STEP_X = SYMBOL_SIZE;
+export const SYMBOL_CELL_WIDTH = SYMBOL_SIZE;
+export const SYMBOL_CELL_HEIGHT = SYMBOL_SIZE;
+
+/** menu_frame.png — frame scales around the 560×560 board (cluster frame_bg ratios). */
+const REEL_FRAME_NATIVE = { width: 1491, height: 1205 };
 const REEL_FRAME_BASE = {
 	height: 925,
 	width: Math.round(925 * (REEL_FRAME_NATIVE.width / REEL_FRAME_NATIVE.height)),
 };
-
-/** Tiny frame bump so symbols don't clip the border art (~2%). */
 const REEL_FRAME_BUMP = 1.03;
 
-/** Outer frame sprite in board-native pixels (before board scale). */
 export const REEL_FRAME_SIZES = {
 	height: Math.round(REEL_FRAME_BASE.height * REEL_FRAME_BUMP),
 	width: Math.round(REEL_FRAME_BASE.width * REEL_FRAME_BUMP),
 };
 
+/** Cluster frame_bg aspect; used by ReelFramePanel and art reference. */
+export const FRAME_BG_RATIO = REEL_FRAME_SIZES.width / BOARD_SIZES.width;
+export const FRAME_SPRITE_SCALE = { width: 1.07, height: 1.19 };
+export const FRAME_POSITION_ADJUSTMENT = 1.01;
+
+/** Uniform frame scale bump (width + height). */
+export const FRAME_SIZE_MUL = 1.04;
+
+/** Nudge frame vs grid (px, main-layout). Negative = frame up, symbols unchanged. */
+export const FRAME_OFFSET_Y = -18;
+
 /**
- * Playable grid inset inside frame.png (fraction of frame width/height).
+ * Extra frame height (main-layout px; scales with MainContainer).
+ * Anchor 0.5 at board centre — only height changes, X/Y stay cluster-aligned.
  */
-export const REEL_FRAME_INSETS = {
-	left: 0.087,
-	right: 0.087,
-	top: 0.15,
-	bottom: 0.083,
-};
+export const FRAME_EXTEND_TOP = 20;
+export const FRAME_EXTEND_BOTTOM = 50;
 
-/** Visible 7×7 play area — derived from base frame minus decorative borders. */
-export const BOARD_SIZES = {
-	width: REEL_FRAME_BASE.width * (1 - REEL_FRAME_INSETS.left - REEL_FRAME_INSETS.right),
-	height: REEL_FRAME_BASE.height * (1 - REEL_FRAME_INSETS.top - REEL_FRAME_INSETS.bottom),
-};
+/** Cluster BoardFrame: frame_bg.png width ratio (937/806). */
+export const CLUSTER_FRAME_BG_RATIO = 937 / 806;
 
-export const SYMBOL_CELL_WIDTH = BOARD_SIZES.width / BOARD_DIMENSIONS.x;
-export const SYMBOL_CELL_HEIGHT = BOARD_SIZES.height / BOARD_DIMENSIONS.y;
+/** Scatter (S) renders slightly larger than paying symbols. */
+export const SCATTER_SYMBOL_SIZE_SCALE = 1.2;
 
-/** Row height for cascade reels — equals one grid cell. */
-export const SYMBOL_SIZE = SYMBOL_CELL_HEIGHT;
-
-/** Scatter (S) renders larger than paying symbols. */
-export const SCATTER_SYMBOL_SIZE_SCALE = 1.28;
-
-/** Horizontal distance between reel centres — equals one grid cell. */
-export const SYMBOL_STEP_X = SYMBOL_CELL_WIDTH;
-
-/** Extra nudge for frame artwork only (positive = down). Grid stays put. */
-const REEL_FRAME_NUDGE_Y = 14;
-
-/** Frame centre offset when top/bottom insets differ (title plaque at top). */
-export const REEL_FRAME_OFFSET = {
-	x: 0,
-	y:
-		(REEL_FRAME_SIZES.height * (REEL_FRAME_INSETS.bottom - REEL_FRAME_INSETS.top)) / 2 +
-		REEL_FRAME_NUDGE_Y,
-};
-
-export const REEL_PADDING = 0.53;
+/** Map a point from mainLayout space to canvas space (centred MainContainer). */
+export const mainLayoutPointToCanvas = (
+	point: { x: number; y: number },
+	canvasSizes: { width: number; height: number },
+	mainLayout: { width: number; height: number; scale: number },
+) => ({
+	x: canvasSizes.width * 0.5 + (point.x - mainLayout.width * 0.5) * mainLayout.scale,
+	y: canvasSizes.height * 0.5 + (point.y - mainLayout.height * 0.5) * mainLayout.scale,
+});
 
 export type BgConfig = {
 	key: 'bg' | 'bg_landscape' | 'bg_portrait' | 'bg_freespins';
@@ -119,123 +116,28 @@ export const getBgConfig = (
 
 export type LayoutType = 'desktop' | 'landscape' | 'tablet' | 'portrait';
 
+/** Grid frame sprite — replace portrait/landscape PNGs when art is ready. */
+export type FrameAssetKey = 'menu_frame' | 'menu_frame_portrait' | 'menu_frame_landscape';
+
+export const getFrameAssetKey = (layoutType: LayoutType): FrameAssetKey => {
+	if (layoutType === 'portrait') return 'menu_frame_portrait';
+	if (layoutType === 'landscape') return 'menu_frame_landscape';
+	return 'menu_frame';
+};
+
+/** 3-D overlays only — board position comes from cluster-style boardLayout(). */
 export const BOARD_LAYOUT_BY_TYPE: Record<
 	LayoutType,
 	{ center: { x: number; y: number }; fit: { w: number; h: number } }
 > = {
-	desktop: { center: { x: 0.510, y: 0.35 }, fit: { w: 0.68, h: 0.70 } },
-	landscape: { center: { x: 0.510, y: 0.35 }, fit: { w: 0.68, h: 0.70 } },
-	tablet: { center: { x: 0.5, y: 0.44 }, fit: { w: 0.97, h: 0.68 } },
-	portrait: { center: { x: 0.5, y: 0.42 }, fit: { w: 1.05, h: 0.84 } },
+	desktop: { center: { x: 0.5, y: 0.5 }, fit: { w: 0.68, h: 0.70 } },
+	landscape: { center: { x: 0.5, y: 0.5 }, fit: { w: 0.68, h: 0.70 } },
+	tablet: { center: { x: 0.5, y: 0.5 }, fit: { w: 0.97, h: 0.68 } },
+	portrait: { center: { x: 0.5, y: 0.5 }, fit: { w: 0.72, h: 0.50 } },
 };
 
-export type CanvasSizeType =
-	| 'smallMobile'
-	| 'mobile'
-	| 'tablet'
-	| 'largeTablet'
-	| 'desktop';
-
-/** Phone portrait — smaller grid, room for logo + bottom UI. */
-const PORTRAIT_PHONE_BOARD: Partial<
-	Record<CanvasSizeType, { center: { x: number; y: number }; fit: { w: number; h: number } }>
-> = {
-	smallMobile: { center: { x: 0.5, y: 0.38 }, fit: { w: 0.96, h: 0.7 } },
-	mobile: { center: { x: 0.5, y: 0.39 }, fit: { w: 0.98, h: 0.74 } },
-};
-
-/** Phone landscape — centred grid, stacked panels + buttons below. */
-const LANDSCAPE_PHONE_BOARD: Partial<
-	Record<CanvasSizeType, { center: { x: number; y: number }; fit: { w: number; h: number } }>
-> = {
-	smallMobile: { center: { x: 0.5, y: 0.5 }, fit: { w: 0.88, h: 0.96 } },
-	mobile: { center: { x: 0.5, y: 0.5 }, fit: { w: 0.90, h: 0.96 } },
-	tablet: { center: { x: 0.5, y: 0.5 }, fit: { w: 0.92, h: 0.98 } },
-	largeTablet: { center: { x: 0.5, y: 0.5 }, fit: { w: 0.94, h: 0.98 } },
-	desktop: { center: { x: 0.5, y: 0.5 }, fit: { w: 0.96, h: 0.98 } },
-};
-
-/** Canvas-height tiers — grid fills band above compact HUD. */
-const landscapeBoardLayoutByHeight = (canvasHeight: number) => {
-	if (canvasHeight >= 1000)
-		return { center: { x: 0.5, y: 0.5 }, fit: { w: 0.96, h: 0.98 } };
-	if (canvasHeight >= 820)
-		return { center: { x: 0.5, y: 0.5 }, fit: { w: 0.94, h: 0.96 } };
-	if (canvasHeight >= 680)
-		return { center: { x: 0.5, y: 0.5 }, fit: { w: 0.90, h: 0.94 } };
-	return { center: { x: 0.5, y: 0.5 }, fit: { w: 0.86, h: 0.90 } };
-};
-
-/** Square-ish landscape — grid uses almost all space above HUD. */
-const ALMOST_SQUARE_LANDSCAPE_BOARD = {
-	center: { x: 0.5, y: 0.5 },
-	fit: { w: 0.99, h: 1.0 },
-};
-
-/** Square-ish portrait — grid uses almost all space above HUD. */
-const ALMOST_SQUARE_PORTRAIT_BOARD = {
-	center: { x: 0.5, y: 0.44 },
-	fit: { w: 1.08, h: 0.96 },
-};
-
-/** Mild portrait (ratio ≥ 0.72) — larger grid, still room for HUD. */
-const NEAR_SQUARE_PORTRAIT_BOARD = {
-	center: { x: 0.5, y: 0.43 },
-	fit: { w: 1.05, h: 0.92 },
-};
-
-const portraitSquareBoost = (
-	canvasRatioType?: 'longWidth' | 'longHeight' | 'almostSquare',
-	canvasRatio?: number,
-) => {
-	if (canvasRatioType === 'almostSquare') return ALMOST_SQUARE_PORTRAIT_BOARD;
-	if (canvasRatioType === 'longHeight' && canvasRatio != null && canvasRatio >= 0.72) {
-		return NEAR_SQUARE_PORTRAIT_BOARD;
-	}
-	return undefined;
-};
-
-const compactPortraitHud = (
-	canvasRatioType?: 'longWidth' | 'longHeight' | 'almostSquare',
-	canvasRatio?: number,
-): 'almostSquare' | 'nearSquare' | false => {
-	if (canvasRatioType === 'almostSquare') return 'almostSquare';
-	if (canvasRatioType === 'longHeight' && canvasRatio != null && canvasRatio >= 0.72) {
-		return 'nearSquare';
-	}
-	return false;
-};
-
-const landscapeBoardLayout = (
-	canvasSizeType?: CanvasSizeType,
-	canvasHeight?: number,
-	canvasRatioType?: 'longWidth' | 'longHeight' | 'almostSquare',
-) => {
-	const base = BOARD_LAYOUT_BY_TYPE.landscape;
-	const fromSize = canvasSizeType ? LANDSCAPE_PHONE_BOARD[canvasSizeType] : undefined;
-	const fromHeight = canvasHeight ? landscapeBoardLayoutByHeight(canvasHeight) : undefined;
-	const fromAlmostSquare =
-		canvasRatioType === 'almostSquare' ? ALMOST_SQUARE_LANDSCAPE_BOARD : undefined;
-	return { ...base, ...fromSize, ...fromHeight, ...fromAlmostSquare };
-};
-
-const portraitBoardLayout = (
-	canvasSizeType?: CanvasSizeType,
-	canvasRatioType?: 'longWidth' | 'longHeight' | 'almostSquare',
-	canvasRatio?: number,
-) => {
-	const base = BOARD_LAYOUT_BY_TYPE.portrait;
-	const phone = canvasSizeType ? PORTRAIT_PHONE_BOARD[canvasSizeType] : undefined;
-	const fromSquare = portraitSquareBoost(canvasRatioType, canvasRatio);
-	return phone
-		? { ...base, ...phone, ...fromSquare }
-		: fromSquare
-			? { ...base, ...fromSquare }
-			: base;
-};
-
-export const getBoardCenterFraction = (layoutType: LayoutType) =>
-	BOARD_LAYOUT_BY_TYPE[layoutType].center;
+/** Cluster-style: frame/grid anchor at geometric centre of main layout. */
+export const getBoardCenterFraction = (_layoutType: LayoutType) => ({ x: 0.5, y: 0.5 });
 
 export const FRAME_PANEL_PAD = 24;
 
@@ -272,58 +174,6 @@ export const BOTTOM_UI_FRAC = 0.22;
 
 export const BG_FILL_COLOR = 0x06091a;
 
-/** Portrait top band — logo / title (fraction of main layout height). */
-const PORTRAIT_STACKED_TOP_FRAC = 140 / 1422;
-
-const stackedLayoutReserves = (
-	mainHeight: number,
-	layoutType: LayoutType,
-	canvasSizeType?: CanvasSizeType,
-	mainWidth = 1600,
-	canvasRatioType?: 'longWidth' | 'longHeight' | 'almostSquare',
-	canvasRatio?: number,
-): { top: number; bottom: number; right: number } => {
-	if (layoutType === 'portrait') {
-		const sizeType = canvasSizeType ?? 'desktop';
-		const compact = compactPortraitHud(canvasRatioType, canvasRatio);
-		return {
-			top:
-				compact === 'almostSquare'
-					? mainHeight * 0.04
-					: compact === 'nearSquare'
-						? mainHeight * 0.06
-						: mainHeight * PORTRAIT_STACKED_TOP_FRAC,
-			bottom: portraitBottomReservePx(
-				sizeType,
-				mainHeight,
-				mainWidth,
-				compact || false,
-			),
-			right: 0,
-		};
-	}
-	if (layoutType === 'landscape') {
-		const sizeType = canvasSizeType ?? 'desktop';
-		const almostSquare = canvasRatioType === 'almostSquare';
-		return {
-			top: landscapeTopReservePx(sizeType, mainHeight, almostSquare),
-			bottom: landscapeBottomReservePx(sizeType, mainHeight, mainWidth, almostSquare),
-			right: 0,
-		};
-	}
-	if (layoutType === 'tablet') {
-		return { top: 110, bottom: 400, right: 0 };
-	}
-	return { top: 48, bottom: 0, right: 0 };
-};
-
-const maxBoardScaleForBand = (
-	bandHeight: number,
-	topReserve: number,
-	bottomReserve: number,
-) =>
-	Math.max(0, (bandHeight - topReserve - bottomReserve) / REEL_FRAME_SIZES.height);
-
 export const getBgLayout = (
 	canvasSizes: { width: number; height: number },
 	layoutType: LayoutType,
@@ -335,154 +185,8 @@ export const getBgLayout = (
 	const scale = Math.max(cw / cfg.native.w, ch / cfg.native.h);
 	const width = cfg.native.w * scale;
 	const height = cfg.native.h * scale;
+
 	return { x: cw / 2, y: ch / 2, width, height, cfg };
-};
-
-export type BoardCenterViewport = {
-	canvasSizes: { width: number; height: number };
-	/** MainContainer scale from stateLayoutDerived.mainLayout(). */
-	mainScale: number;
-	canvasSizeType?: CanvasSizeType;
-	canvasHeight?: number;
-	canvasRatioType?: 'longWidth' | 'longHeight' | 'almostSquare';
-	canvasRatio?: number;
-};
-
-export const getBoardCenterMain = (
-	mainLayout: { width: number; height: number },
-	layoutType: LayoutType,
-	viewport?: BoardCenterViewport,
-) => {
-	const cfg =
-		layoutType === 'portrait'
-			? portraitBoardLayout(
-					viewport?.canvasSizeType,
-					viewport?.canvasRatioType,
-					viewport?.canvasRatio,
-				)
-			: layoutType === 'landscape'
-				? landscapeBoardLayout(
-						viewport?.canvasSizeType,
-						viewport?.canvasHeight,
-						viewport?.canvasRatioType,
-					)
-				: BOARD_LAYOUT_BY_TYPE[layoutType];
-
-	const { top: topReserve, bottom: bottomReserve, right: rightReserve } =
-		stackedLayoutReserves(
-			mainLayout.height,
-			layoutType,
-			viewport?.canvasSizeType,
-			mainLayout.width,
-			viewport?.canvasRatioType,
-			viewport?.canvasRatio,
-		);
-
-	const effectiveBottomReserve = bottomReserve;
-
-	const playWidth = Math.max(mainLayout.width - rightReserve, mainLayout.width * 0.55);
-	const fitW = playWidth * cfg.fit.w;
-	const fitH = mainLayout.height * cfg.fit.h;
-	let scale = Math.min(fitW / REEL_FRAME_SIZES.width, fitH / REEL_FRAME_SIZES.height);
-
-	scale = Math.min(
-		scale,
-		maxBoardScaleForBand(mainLayout.height, topReserve, effectiveBottomReserve),
-	);
-
-	if (viewport && viewport.mainScale > 0) {
-		const visibleMainH = viewport.canvasSizes.height / viewport.mainScale;
-		scale = Math.min(
-			scale,
-			maxBoardScaleForBand(visibleMainH, topReserve, effectiveBottomReserve),
-		);
-	}
-
-	const frameTopFromCenter = (s: number) =>
-		s * (REEL_FRAME_OFFSET.y - REEL_FRAME_SIZES.height / 2);
-	const frameBottomFromCenter = (s: number) =>
-		s * (REEL_FRAME_OFFSET.y + REEL_FRAME_SIZES.height / 2);
-
-	let y: number;
-
-	if (layoutType === 'landscape') {
-		let minCenterY = topReserve - frameTopFromCenter(scale);
-		let maxCenterY =
-			mainLayout.height - effectiveBottomReserve - frameBottomFromCenter(scale);
-
-		if (minCenterY > maxCenterY) {
-			scale = maxBoardScaleForBand(
-				viewport && viewport.mainScale > 0
-					? viewport.canvasSizes.height / viewport.mainScale
-					: mainLayout.height,
-				topReserve,
-				effectiveBottomReserve,
-			);
-			minCenterY = topReserve - frameTopFromCenter(scale);
-			maxCenterY =
-				mainLayout.height - effectiveBottomReserve - frameBottomFromCenter(scale);
-		}
-
-		y =
-			minCenterY <= maxCenterY
-				? (minCenterY + maxCenterY) / 2
-				: minCenterY;
-	} else {
-		y = mainLayout.height * cfg.center.y;
-
-		let minY = topReserve - frameTopFromCenter(scale);
-		let maxY =
-			mainLayout.height - effectiveBottomReserve - frameBottomFromCenter(scale);
-
-		if (viewport && viewport.mainScale > 0) {
-			const visibleMainH = viewport.canvasSizes.height / viewport.mainScale;
-			const cropTop =
-				layoutType === 'landscape'
-					? Math.max(0, mainLayout.height - visibleMainH)
-					: Math.max(0, (mainLayout.height - visibleMainH) * 0.5);
-			const minYVisible = cropTop + topReserve - frameTopFromCenter(scale);
-			minY = Math.max(minY, minYVisible);
-		}
-
-		if (minY > maxY) {
-			scale = maxBoardScaleForBand(
-				viewport && viewport.mainScale > 0
-					? viewport.canvasSizes.height / viewport.mainScale
-					: mainLayout.height,
-				topReserve,
-				effectiveBottomReserve,
-			);
-			minY = topReserve - frameTopFromCenter(scale);
-			maxY = mainLayout.height - effectiveBottomReserve - frameBottomFromCenter(scale);
-			if (viewport && viewport.mainScale > 0) {
-				const visibleMainH = viewport.canvasSizes.height / viewport.mainScale;
-				const cropTop =
-					layoutType === 'landscape'
-						? Math.max(0, mainLayout.height - visibleMainH)
-						: Math.max(0, (mainLayout.height - visibleMainH) * 0.5);
-				minY = Math.max(minY, cropTop + topReserve - frameTopFromCenter(scale));
-			}
-		}
-
-		if (y < minY) y = minY;
-		if (y > maxY) y = maxY;
-	}
-
-	if (layoutType === 'landscape' && viewport && viewport.mainScale > 0) {
-		const visibleMainH = viewport.canvasSizes.height / viewport.mainScale;
-		const cropTop = Math.max(0, mainLayout.height - visibleMainH);
-		const minCenterY = cropTop + topReserve - frameTopFromCenter(scale);
-		const maxCenterY =
-			mainLayout.height - effectiveBottomReserve - frameBottomFromCenter(scale);
-		if (y < minCenterY) y = minCenterY;
-		if (y > maxCenterY) y = maxCenterY;
-	}
-
-	return {
-		x: playWidth * cfg.center.x,
-		y,
-		scale,
-	};
 };
 
 export const getLoadingCenterFraction = (_layoutType: LayoutType) => {

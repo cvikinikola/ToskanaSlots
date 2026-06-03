@@ -159,7 +159,6 @@
 	<Container
 		x={context.stateGameDerived.boardLayout().x}
 		y={context.stateGameDerived.boardLayout().y}
-		scale={context.stateGameDerived.boardLayout().scale}
 		zIndex={20}
 	>
 		{#if flashAlpha > 0}

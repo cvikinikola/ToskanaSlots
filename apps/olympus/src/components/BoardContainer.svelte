@@ -7,17 +7,10 @@
 
 	const props: Props = $props();
 	const context = getContext();
+
+	const boardLayout = $derived(context.stateGameDerived.boardLayout());
 </script>
 
-<!--
-	Positions everything relative to the board's centre.
-	boardLayout() returns x/y at the canvas centre, with pivot at the board's own centre.
--->
-<Container
-	x={context.stateGameDerived.boardLayout().x}
-	y={context.stateGameDerived.boardLayout().y}
-	pivot={context.stateGameDerived.boardLayout().pivot}
-	scale={context.stateGameDerived.boardLayout().scale}
->
+<Container x={boardLayout.x} y={boardLayout.y} pivot={boardLayout.pivot}>
 	{@render props.children()}
 </Container>

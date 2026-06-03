@@ -44,6 +44,9 @@ const assets = {
 	menu_panel_bet: sprite(`${MENU_BAR}/panel_bet.webp`),
 	menu_frame_free_spins: sprite(`${MENU_BAR}/frame_free_spins.png`),
 	menu_frame: sprite(`${MENU_BAR}/frame.png`),
+	/** Swap paths when portrait/landscape frame PNGs are cut. */
+	menu_frame_portrait: sprite(`${MENU_BAR}/frame.png`),
+	menu_frame_landscape: sprite(`${MENU_BAR}/frame.png`),
 	// Menu bar — normalized WebP buttons (scripts/normalize-menu-buttons.mjs)
 	menu_plus: sprite(`${MENU_BAR_BUTTONS}/plus_icon.webp`),
 	menu_minus: sprite(`${MENU_BAR_BUTTONS}/minus_icon.webp`),
@@ -64,6 +67,17 @@ const assets = {
 	bird_glide_b: sprite(`${NATURE}/bird_glide_b.svg`),
 	bird_glide_c: sprite(`${NATURE}/bird_glide_c.svg`),
 	butterfly: sprite(`${NATURE}/butterfly.svg`),
+
+	reelhouse: {
+		type: 'spine' as const,
+		src: {
+			atlas: new URL('../../static/assets/spines/reelhouse/reelhouse_glow.atlas', import.meta.url)
+				.href,
+			skeleton: new URL('../../static/assets/spines/reelhouse/reelhouse_glow.json', import.meta.url)
+				.href,
+			scale: 2,
+		},
+	},
 };
 
 export default assets;

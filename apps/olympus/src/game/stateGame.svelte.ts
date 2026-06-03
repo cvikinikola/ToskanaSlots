@@ -12,7 +12,6 @@ import { eventEmitter } from './eventEmitter';
 import {
 	SYMBOL_SIZE,
 	BOARD_SIZES,
-	getBoardCenterMain,
 	INITIAL_BOARD,
 	BOARD_DIMENSIONS,
 	SPIN_OPTIONS_DEFAULT,
@@ -117,40 +116,13 @@ export const stateGame = $state({
 
 // ─── Derived computations ─────────────────────────────────────────────────────
 
-const boardLayout = () => {
-	const layoutType = stateLayoutDerived.layoutType();
-	const mainLayout =
-		layoutType === 'landscape'
-			? stateLayoutDerived.mainLayoutStandard()
-			: stateLayoutDerived.mainLayout();
-	const canvasSizes = stateLayoutDerived.canvasSizes();
-	const c = getBoardCenterMain(
-		mainLayout,
-		layoutType,
-		{
-			canvasSizes,
-			mainScale: mainLayout.scale,
-			canvasSizeType: stateLayoutDerived.canvasSizeType(),
-			canvasHeight: canvasSizes.height,
-			canvasRatioType: stateLayoutDerived.canvasRatioType(),
-			canvasRatio: stateLayoutDerived.canvasRatio(),
-		},
-	);
-	return {
-		x: c.x,
-		y: c.y,
-		scale: c.scale,
-		anchor: { x: 0.5, y: 0.5 },
-		// Native pivot — PIXI applies pivot in the child's pre-scale
-		// coordinate space, so it must stay at native board centre.
-		pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
-		// Visual width/height after scale — consumed by overlays
-		// (BoardMask, FreeSpinCounter, GlobalMultiplier, TumbleWinAmount)
-		// which position relative to the rendered board size.
-		width: BOARD_SIZES.width * c.scale,
-		height: BOARD_SIZES.height * c.scale,
-	};
-};
+const boardLayout = () => ({
+	x: stateLayoutDerived.mainLayout().width * 0.5,
+	y: stateLayoutDerived.mainLayout().height * 0.5,
+	anchor: { x: 0.5, y: 0.5 },
+	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
+	...BOARD_SIZES,
+});
 
 /**
  * Returns the current visible board as a raw 2D array of RawSymbol.

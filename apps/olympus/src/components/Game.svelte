@@ -17,12 +17,13 @@
 	import Background from './Background.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import MipmapEnabler from './MipmapEnabler.svelte';
+	import BoardFrame from './BoardFrame.svelte';
 	import Board from './Board.svelte';
 	import TumbleBoard from './TumbleBoard.svelte';
 	import TumbleWinAmount from './TumbleWinAmount.svelte';
+	import GlobalMultiplier from './GlobalMultiplier.svelte';
 	import TumbleHistory from './TumbleHistory.svelte';
 	import SpotMultipliers from './SpotMultipliers.svelte';
-	import ReelFramePanel from './ReelFramePanel.svelte';
 	import Win from './Win.svelte';
 	import WinSparks from './WinSparks.svelte';
 	import AmbientNature from './AmbientNature.svelte';
@@ -36,10 +37,6 @@
 	const context = getContext();
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
-
-	const gameAlignBottom = $derived(
-		context.stateLayoutDerived.layoutType() === 'landscape',
-	);
 </script>
 
 <App>
@@ -58,25 +55,22 @@
 		<Sound />
 		<NatureAmbience />
 
-		<MainContainer
-			standard={gameAlignBottom}
-			alignVertical={gameAlignBottom ? 'bottom' : undefined}
-		>
-			<ReelFramePanel />
+		<MainContainer>
+			<BoardFrame />
+		</MainContainer>
+
+		<MainContainer>
 			<Board />
 			<SpotMultipliers />
 			<WinGlow />
 			<WinSparks />
+			<TumbleWinAmount />
+			<GlobalMultiplier />
 		</MainContainer>
 
-		<MainContainer
-			standard={gameAlignBottom}
-			alignVertical={gameAlignBottom ? 'bottom' : undefined}
-		>
+		<MainContainer>
 			<TumbleBoard />
 			<TumbleHistory />
-			<TumbleWinAmount />
-			<FreeSpinCounter />
 		</MainContainer>
 
 		<AmbientNature />
@@ -89,7 +83,9 @@
 
 		<Win />
 		<FreeSpinIntro />
-
+		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
+			<FreeSpinCounter />
+		{/if}
 		<FreeSpinOutro />
 		<Transition />
 	{/if}

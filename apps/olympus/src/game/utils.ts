@@ -4,7 +4,7 @@ import { createGetEmptyPaddedBoard } from 'utils-slots';
 
 import {
 	SYMBOL_SIZE,
-	SYMBOL_STEP_X,
+	REEL_PADDING,
 	SYMBOL_COLORS,
 	BOARD_DIMENSIONS,
 } from './constants';
@@ -59,11 +59,12 @@ export const convertTorResumableBet = (betToResume: Bet) => {
 
 // ─── Symbol position helpers ──────────────────────────────────────────────────
 
-/** Pixel X coordinate for reel centre — evenly spans board width edge-to-edge. */
-export const getSymbolX = (reelIndex: number) => (reelIndex + 0.5) * SYMBOL_STEP_X;
+/** Pixel X — cluster REEL_PADDING keeps symbols inside the frame window. */
+export const getSymbolX = (reelIndex: number) => SYMBOL_SIZE * (reelIndex + REEL_PADDING);
 
-/** Pixel Y coordinate for visible row centre — evenly spans board height edge-to-edge. */
-export const getSymbolY = (symbolIndexOfBoard: number) => (symbolIndexOfBoard + 0.5) * SYMBOL_SIZE;
+/** Pixel Y — cluster: row centres at (index + 0.5) × cell size. */
+export const getSymbolY = (symbolIndexOfBoard: number) =>
+	(symbolIndexOfBoard + 0.5) * SYMBOL_SIZE;
 
 // ─── Symbol colour helper ─────────────────────────────────────────────────────
 

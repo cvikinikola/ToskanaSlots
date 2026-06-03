@@ -16,7 +16,7 @@
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
-	import { BOARD_SIZES, REEL_FRAME_OFFSET, REEL_FRAME_SIZES, SYMBOL_SIZE } from '../game/constants';
+	import { BOARD_SIZES, SYMBOL_SIZE } from '../game/constants';
 	import type { TumbleHistoryLine as Line } from '../game/tumbleBreakdown';
 
 	const context = getContext();
@@ -38,21 +38,16 @@
 	const visibleLines = $derived(isCompact ? lines.slice(-3) : lines);
 	const show = $derived(visibleLines.length > 0);
 
-	const frameBounds = $derived({
-		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
-		top: BOARD_SIZES.height / 2.2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
-	});
-
 	const position = $derived.by(() => {
 		if (isCompact) {
 			return {
-				x: BOARD_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
-				y: frameBounds.top - SYMBOL_SIZE * 0.35,
+				x: BOARD_SIZES.width / 2,
+				y: -SYMBOL_SIZE * 0.35,
 			};
 		}
 		return {
-			x: frameBounds.left + SYMBOL_SIZE * 0.5,
-			y: frameBounds.top + (isFreeSpins ? DESKTOP_Y_FREE_SPINS : DESKTOP_Y_BASE),
+			x: SYMBOL_SIZE * 0.5,
+			y: isFreeSpins ? DESKTOP_Y_FREE_SPINS : DESKTOP_Y_BASE,
 		};
 	});
 

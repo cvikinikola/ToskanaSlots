@@ -19,7 +19,7 @@
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, BOARD_SIZES, REEL_FRAME_OFFSET } from '../game/constants';
+	import { SYMBOL_SIZE, BOARD_SIZES } from '../game/constants';
 	import type { TumbleWinBreakdownLine as Line } from '../game/tumbleBreakdown';
 
 	const context = getContext();
@@ -39,7 +39,7 @@
 	let show = $state(false);
 	let breakdownLines: TumbleWinBreakdownLine[] = $state([]);
 
-	const centerX = BOARD_SIZES.width / 2 + REEL_FRAME_OFFSET.x;
+	const centerX = BOARD_SIZES.width / 2;
 
 	/** Bottom of 7×7 grid in board-local coords (pivot is board centre). */
 	const gridBottom = BOARD_SIZES.height;

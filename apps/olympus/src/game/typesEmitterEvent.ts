@@ -1,4 +1,5 @@
 import type { EmitterEventBoard } from '../components/Board.svelte';
+import type { EmitterEventBoardFrame } from '../components/BoardFrame.svelte';
 import type { EmitterEventTumbleBoard } from '../components/TumbleBoard.svelte';
 import type { EmitterEventSpotMultipliers } from '../components/SpotMultipliers.svelte';
 import type { EmitterEventTumbleWinAmount } from '../components/TumbleWinAmount.svelte';
@@ -19,6 +20,7 @@ import type { EmitterEventWinGlow } from '../components/WinGlow.svelte';
  */
 export type EmitterEventGame =
 	| EmitterEventBoard
+	| EmitterEventBoardFrame
 	| EmitterEventTumbleBoard
 	| EmitterEventSpotMultipliers
 	| EmitterEventTumbleWinAmount

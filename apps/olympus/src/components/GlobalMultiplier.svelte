@@ -13,7 +13,7 @@
 
 	import BoardContainer from './BoardContainer.svelte';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, BOARD_SIZES, REEL_FRAME_OFFSET, REEL_FRAME_SIZES } from '../game/constants';
+	import { SYMBOL_SIZE } from '../game/constants';
 
 	const context = getContext();
 
@@ -21,32 +21,19 @@
 	const PANEL_H = SYMBOL_SIZE * 1.18;
 	const GOLD = 0xffd147;
 
-	const isCompact = $derived(
-		['portrait', 'tablet'].includes(context.stateLayoutDerived.layoutType()),
+	const PANEL_WIDTH = SYMBOL_SIZE * 0.641;
+	const scale = $derived(context.stateLayoutDerived.isStacked() ? 1.28 : 1);
+	const desktopPosition = $derived({
+		x: context.stateGameDerived.boardLayout().width - PANEL_WIDTH * 1.3,
+		y: -SYMBOL_SIZE * 0.47,
+	});
+	const portraitPosition = $derived({
+		x: context.stateGameDerived.boardLayout().width - PANEL_WIDTH * 1.5,
+		y: -SYMBOL_SIZE * 0.55,
+	});
+	const position = $derived(
+		context.stateLayoutDerived.isStacked() ? portraitPosition : desktopPosition,
 	);
-	const frameBounds = $derived({
-		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
-		right: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
-		top: BOARD_SIZES.height / 2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
-		compactTop: BOARD_SIZES.height / 2.2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
-	});
-
-	const position = $derived.by(() => {
-		const insetY = SYMBOL_SIZE * (isCompact ? 0.14 : 0.22);
-
-		if (isCompact) {
-			const rowCenterY = frameBounds.compactTop - SYMBOL_SIZE * 0.22;
-			return {
-				x: frameBounds.right - PANEL_W - SYMBOL_SIZE * 0.86,
-				y: rowCenterY - PANEL_H / 2,
-			};
-		}
-
-		return {
-			x: frameBounds.right + SYMBOL_SIZE * 0.18,
-			y: frameBounds.top + insetY,
-		};
-	});
 
 	let show = $state(false);
 	let multiplier = $state(1);
@@ -77,38 +64,23 @@
 
 <FadeContainer {show}>
 	<BoardContainer>
-		<Container {...position}>
+		<Container {...position} scale={scale}>
 			<UiAssetSprite
-				key="menu_frame_free_spins"
-				assetKey="menu_frame_free_spins"
+				assetKey="menu_panel_win"
 				anchor={{ x: 0, y: 0 }}
 				width={PANEL_W}
 				height={PANEL_H}
-				alpha={flash ? 1 : 0.94}
+				alpha={flash ? 0.75 : 0.98}
 			/>
-
 			<BitmapText
-				anchor={{ x: 0.5, y: 0 }}
-				x={PANEL_W / 2}
-				y={PANEL_H * 0.25}
-				text="MULTIPLIER"
-				style={{
-					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.12,
-					fill: flash ? 0xffffff : GOLD,
-					fontWeight: '900',
-				}}
-			/>
-
-			<BitmapText
-				anchor={{ x: 0.5, y: 0.5 }}
-				x={PANEL_W / 2}
-				y={PANEL_H * 0.62}
+				x={PANEL_W * 0.5}
+				y={PANEL_H * 0.48}
+				anchor={0.5}
 				text={`x${multiplier}`}
 				style={{
 					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.34,
-					fill: flash ? 0xffffff : GOLD,
+					fontSize: SYMBOL_SIZE * 0.42,
+					fill: GOLD,
 					fontWeight: '900',
 				}}
 			/>

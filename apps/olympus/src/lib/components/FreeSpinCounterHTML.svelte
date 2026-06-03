@@ -41,9 +41,11 @@
 		const ml = stateLayoutDerived.mainLayout();
 		const cs = stateLayoutDerived.canvasSizes();
 		const s = ml.scale;
+		const boardW = boardLayout.width;
+		const boardH = boardLayout.height;
 
-		const panelX = boardLayout.x - boardLayout.width / 2 - PANEL_W - SYMBOL_SIZE * 0.3;
-		const panelY = boardLayout.y - boardLayout.height / 2;
+		const panelX = boardLayout.x - boardW / 2 - PANEL_W - SYMBOL_SIZE * 0.3;
+		const panelY = boardLayout.y - boardH / 2;
 
 		return {
 			left: cs.width / 2 + (panelX - ml.width / 2) * s,
