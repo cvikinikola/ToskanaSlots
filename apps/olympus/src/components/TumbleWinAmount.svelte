@@ -26,9 +26,9 @@
 
 	const GOLD = 0xffd147;
 
-	const isCompact = $derived(
-		['portrait', 'tablet'].includes(context.stateLayoutDerived.layoutType()),
-	);
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	const isLandscape = $derived(layoutType === 'landscape');
+	const isCompact = $derived(['portrait', 'tablet'].includes(layoutType));
 
 	const fontMain = $derived(SYMBOL_SIZE * (isCompact ? 0.34 : 0.38));
 	const fontSmall = $derived(SYMBOL_SIZE * (isCompact ? 0.30 : 0.34));
@@ -125,6 +125,7 @@
 	</Container>
 {/snippet}
 
+{#if !isLandscape}
 <FadeContainer {show}>
 	<BoardContainer>
 		{#each breakdownLines as line, index (line.symbol + line.amount + index)}
@@ -132,3 +133,4 @@
 		{/each}
 	</BoardContainer>
 </FadeContainer>
+{/if}

@@ -37,7 +37,7 @@ export const LANDSCAPE_PANEL_SHELF = {
 	labelAboveGap: 6,
 	/** Proportional bump for shelf portals (plates + type). */
 	sizeMul: 1.12,
-	fontMul: 1.12,
+	fontMul: 1.22,
 };
 
 /** Side column (+ / SPIN / −) and BUY BONUS beside the frame (landscape ref). */
@@ -49,8 +49,6 @@ export const LANDSCAPE_SIDE_CONTROLS = {
 	spinHugOverlap: 8,
 	/** AUTO / TURBO stay clear of the spin column. */
 	actionsGapFromSpinColumn: 10,
-	buyBelowTopRatio: 0.1,
-	buyLeftOfFrame: 10,
 	/** Vertical gap between +/- and SPIN (px); hug eats icon padding. */
 	stackGapPx: 0,
 	stackHugPx: 22,
@@ -62,6 +60,20 @@ export const LANDSCAPE_SIDE_CONTROLS = {
 	bottomBarLeftPad: 4,
 	bottomBarIconGap: 8,
 	bottomBarGapBelowPanels: 14,
+};
+
+/** Two separate left panels (landscape): BUY top, history lower-left (red markup). */
+export const LANDSCAPE_LEFT_COLUMN = {
+	gapFromFrame: 10,
+	widthRatio: 0.26,
+	heightMul: 2,
+	alignTopRatio: 0.05,
+	/** History panel height = buyPanelHeight × 2 (same width). */
+	historyToBuyRatio: 2,
+	buyHeightFromWidth: 0.36,
+	buyIconPadRatio: 0.14,
+	/** History sits on frame bottom — red lower box. */
+	historyLiftFromBottom: 22,
 };
 
 type BoardLayout = {
@@ -122,10 +134,20 @@ export type OlympusLandscapeHudLayout = Omit<
 	labelAbove: true;
 	buyX: number;
 	buyY: number;
+	buyScaleX: number;
+	buyScaleY: number;
+	leftColumnWidth: number;
+	buyPanelHeight: number;
+	historyPanelHeight: number;
+	tumbleHistoryX: number;
+	tumbleHistoryY: number;
 	settingsX: number;
 	muteX: number;
 	yBottomBarIcons: number;
 	bottomBarIconSide: number;
+	/** Gap between mute and auto — current win / free spins left. */
+	shelfInfoCenterX: number;
+	shelfInfoWidth: number;
 	spinStackX: number;
 	spinY: number;
 	increaseY: number;
@@ -201,9 +223,24 @@ export const getOlympusLandscapeHudLayout = (context: {
 	const frameLeft = frame.centerX - frame.width / 2;
 	const frameRight = frame.centerX + frame.width / 2;
 
+	const leftCol = LANDSCAPE_LEFT_COLUMN;
+	const leftColumnWidth = Math.round(frame.height * leftCol.widthRatio);
+	const buyPanelHeight = Math.round(
+		leftColumnWidth * leftCol.buyHeightFromWidth * leftCol.heightMul,
+	);
+	const historyPanelHeight = Math.round(
+		buyPanelHeight * leftCol.historyToBuyRatio,
+	);
+	const leftColumnCenterX = frameLeft - leftCol.gapFromFrame - leftColumnWidth / 2;
+	const buyY = frame.topY + Math.round(frame.height * leftCol.alignTopRatio) + buyPanelHeight / 2;
+	const buyX = leftColumnCenterX;
+	const tumbleHistoryX = leftColumnCenterX;
+	const tumbleHistoryY =
+		frame.bottomY - leftCol.historyLiftFromBottom - historyPanelHeight / 2;
 	const buyHit = menuIconHitSize(MENU_ICON_ASPECT.buyBonus, 6, uiScale);
-	const buyX = frameLeft - side.buyLeftOfFrame - buyHit.width / 2;
-	const buyY = frame.topY + frame.height * side.buyBelowTopRatio + buyHit.height / 2;
+	const buyInner = 1 - leftCol.buyIconPadRatio;
+	const buyScaleX = (leftColumnWidth * buyInner) / buyHit.width;
+	const buyScaleY = (buyPanelHeight * buyInner) / buyHit.height;
 
 	const spinHit = menuSpinHitSize(8, uiScale);
 	const betHit = menuBetControlHitSize(6, uiScale);
@@ -237,6 +274,12 @@ export const getOlympusLandscapeHudLayout = (context: {
 	const turboX = frameInnerRight - side.bottomBarLeftPad - squareHalf;
 	const autoX = turboX - squareStep;
 
+	const shelfInfoGap = 10;
+	const shelfInfoLeft = muteX + squareHalf + shelfInfoGap;
+	const shelfInfoRight = autoX - squareHalf - shelfInfoGap;
+	const shelfInfoCenterX = (shelfInfoLeft + shelfInfoRight) / 2;
+	const shelfInfoWidth = Math.max(48, shelfInfoRight - shelfInfoLeft);
+
 	const spinColOuter = spinStackX + spinHalfW + side.actionsGapFromSpinColumn;
 
 	const gridTopLimitY = frame.topY - tune.winGridGap;
@@ -258,10 +301,19 @@ export const getOlympusLandscapeHudLayout = (context: {
 		labelAbove: true,
 		buyX,
 		buyY,
+		buyScaleX,
+		buyScaleY,
+		leftColumnWidth,
+		buyPanelHeight,
+		historyPanelHeight,
+		tumbleHistoryX,
+		tumbleHistoryY,
 		settingsX,
 		muteX,
 		yBottomBarIcons,
 		bottomBarIconSide,
+		shelfInfoCenterX,
+		shelfInfoWidth,
 		autoX,
 		turboX,
 		spinStackX,

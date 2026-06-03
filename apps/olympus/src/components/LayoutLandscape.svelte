@@ -4,6 +4,7 @@
 	import { MainContainer } from 'components-layout';
 	import { Container, Rectangle } from 'pixi-svelte';
 
+	import { UiAssetSprite } from 'components-ui-pixi';
 	import type { LayoutUiProps } from 'components-ui-pixi';
 	import { getContext } from '../game/context';
 	import ButtonOlympusLandscapeAutoSpin from './ButtonOlympusLandscapeAutoSpin.svelte';
@@ -11,6 +12,7 @@
 	import ButtonOlympusLandscapeSound from './ButtonOlympusLandscapeSound.svelte';
 	import ButtonOlympusLandscapeTurbo from './ButtonOlympusLandscapeTurbo.svelte';
 	import { getOlympusLandscapeHudLayout } from '../game/hudLandscapeLayout';
+	import LandscapeShelfStatus from './LandscapeShelfStatus.svelte';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
@@ -41,7 +43,15 @@
 	</Container>
 
 	<Container x={layout.buyX} y={layout.buyY}>
-		{@render props.buttonBuyBonus({ anchor: 0.5 })}
+		<UiAssetSprite
+			assetKey="menu_buy_bonus_panel"
+			anchor={0.5}
+			width={layout.leftColumnWidth}
+			height={layout.buyPanelHeight}
+		/>
+		<Container x={0} y={0} scale={{ x: layout.buyScaleX, y: layout.buyScaleY }}>
+			{@render props.buttonBuyBonus({ anchor: 0.5 })}
+		</Container>
 	</Container>
 
 	<Container x={layout.settingsX} y={layout.yBottomBarIcons}>
@@ -51,6 +61,8 @@
 	<Container x={layout.muteX} y={layout.yBottomBarIcons}>
 		<ButtonOlympusLandscapeSound anchor={0.5} iconSide={layout.bottomBarIconSide} />
 	</Container>
+
+	<LandscapeShelfStatus />
 
 	<Container x={layout.autoX} y={layout.yBottomBarIcons}>
 		<ButtonOlympusLandscapeAutoSpin anchor={0.5} iconSide={layout.bottomBarIconSide} />

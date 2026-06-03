@@ -83,7 +83,7 @@
 
 		<Win />
 		<FreeSpinIntro />
-		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
+		{#if context.stateLayoutDerived.layoutType() === 'desktop'}
 			<FreeSpinCounter />
 		{/if}
 		<FreeSpinOutro />
