@@ -95,6 +95,16 @@
 
 	<BoardContext animate={true}>
 		<BoardContainer>
+			<!--
+				QA 04.06.2026: maska se primenjuje i na animate prolaz (win/explosion
+				simboli). Ranije je samo statički prolaz bio maskiran, pa je animate
+				prolaz bio jedina nemaskirana površina — kad bi QA usporio igru,
+				simbol u animaciji je mogao da "viri" iznad/ispod zlatnog frame-a.
+				PixiJS maska je tvrd GPU clip (y∈[0,500] native, unutar otvora
+				frame-a y∈[-112,612]) → nijedan simbol NIKAD ne može da izađe iz
+				frame-a, na svim uređajima (maska je u native koord. i skalira se).
+			-->
+			<BoardMask />
 			<BoardBase />
 		</BoardContainer>
 	</BoardContext>

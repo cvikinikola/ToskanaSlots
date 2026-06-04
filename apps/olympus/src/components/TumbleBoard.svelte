@@ -222,6 +222,13 @@
 
 	<BoardContext animate={true}>
 		<BoardContainer>
+			<!--
+				QA 04.06.2026: maska se primenjuje i na animate prolaz tumble board-a
+				(explosion simboli). Garantuje da nijedan simbol koji eksplodira ili
+				kaskadira NIKAD ne izađe iz zlatnog frame-a kad se igra uspori.
+				PixiJS maska je tvrd GPU clip — sve van y∈[0,500] native se ne crta.
+			-->
+			<BoardMask />
 			<TumbleBoardBase />
 		</BoardContainer>
 	</BoardContext>
