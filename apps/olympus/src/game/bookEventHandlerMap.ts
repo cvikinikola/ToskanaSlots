@@ -78,6 +78,40 @@ const resetSpinRawWinAmount = () => {
 	spinRawWinAmount = 0;
 };
 
+// QA 05.06.2026: množenje se prikazuje na KRAJU SPINA (ne odmah). Tokom spina
+// TumbleHistory i TumbleWinAmount panel pokazuju SIROVE iznose; ovde čuvamo
+// podatke za animaciju (sirovo → pomnoženo) koja se okida na kraju SVAKOG spina:
+//  - base game: zabeleženo u `boardMultiplierInfo`, odigrano u `finalWin`
+//  - free spins: zabeleženo u `winInfo`, odigrano u `updateFreeSpin` (sledeći
+//    spin) odnosno `freeSpinEnd` (poslednji spin).
+let spinEndMultiply: { raw: number; multiplied: number; multiplier: number } | null = null;
+
+const playSpinEndMultiply = async (): Promise<boolean> => {
+	const data = spinEndMultiply;
+	spinEndMultiply = null;
+	if (!data) return false;
+	// Ako nema stvarnog multiplikatora (×1) ili pomnoženi iznos nije veći od
+	// sirovog, nema šta da se animira.
+	if (!(data.multiplier > 1 && data.multiplied > data.raw && data.raw > 0)) return false;
+
+	eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
+	eventEmitter.broadcast({ type: 'tumbleWinAmountShowMultiplier', multiplier: data.multiplier });
+	// GoO-stil: veliki sjajni ×N orb iskoči u centru ploče i odleti u
+	// TumbleWinAmount panel — pa tek onda kre\u0107e count-up mno\u017eenja, da igra\u010du
+	// bude jasno da se dobitak mno\u017ei.
+	await eventEmitter.broadcastAsync({ type: 'multiplierFly', multiplier: data.multiplier });
+	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
+	// Pulse + gold flash da igrač jasno vidi da je iznos pomnožen.
+	eventEmitter.broadcast({ type: 'tumbleWinAmountPulse' });
+	await eventEmitter.broadcastAsync({
+		type: 'tumbleWinAmountUpdate',
+		amount: data.multiplied,
+		animate: true,
+	});
+	eventEmitter.broadcast({ type: 'tumbleWinAmountHideMultiplier' });
+	return true;
+};
+
 const updateRoundWinBookEventAmount = (bookEventAmount: number) => {
 	if (stateGame.gameType !== 'freeSpins') {
 		stateBet.winBookEventAmount = bookEventAmount;
@@ -121,6 +155,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'tumbleWinAmountReset' });
 		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
 		resetSpinRawWinAmount();
+		spinEndMultiply = null;
 		// QA 02.06.2026: defensively reset any lingering 'win' symbol states
 		// from the previous round so a gold glow can never bleed into the new
 		// spin's symbols (was visible on turbo when the multiplier sequence
@@ -175,6 +210,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		);
 		spinRawWinAmount += rawCascadeWin;
 
+		// QA 05.06.2026: zabeleži množenje za KRAJ SPINA (po spinu, ne odmah).
+		// U jednom free spinu svi cascade-i dele isti globalMult, pa je
+		// (sirovi zbir × globalMult) === server `totalWin`. Čuvamo poslednje
+		// vrednosti; animacija se odigrava u `updateFreeSpin`/`freeSpinEnd`.
+		if (stateGame.gameType === 'freeSpins') {
+			const spinMultiplier = bookEvent.wins[0]?.meta.globalMult ?? stateGame.globalMultiplier;
+			spinEndMultiply = {
+				raw: spinRawWinAmount,
+				multiplied: bookEvent.totalWin,
+				multiplier: spinMultiplier,
+			};
+		}
+
 		await eventEmitter.broadcastAsync({
 			type: 'tumbleWinAmountUpdate',
 			amount: spinRawWinAmount,
@@ -213,23 +261,22 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// ── boardMultiplierInfo ───────────────────────────────────────────────────
 	// Multiplier symbols (M) are on the board after a winning cascade.
 	// Sequence (matches Gates-of-Olympus reference, per QA 02.06.2026):
-	//  1. Snap tumble-win panel to pre-multiplier win (`tumbleWin`)
+	//  1. Snap tumble-win panel to pre-multiplier RAW win
 	//  2. Show "×" overlay starting at 0 (panel reads `WIN $X ×0`)
 	//  3. For each M symbol on the board in turn:
 	//       a. animate that symbol (glow/bounce)
 	//       b. add its value to the running board multiplier and update
 	//          the overlay so the player sees it grow (e.g. ×2 → ×4 → ×8)
 	//  4. Flash the global multiplier counter with the final boardMult
-	//  5. Count up the tumble-win panel to the post-multiplier `totalWin`
-	//  6. Hide the "×" overlay so the panel reads the final amount alone,
-	//     ready to drop into the WIN balance on `finalWin`.
+	//  5. QA 05.06.2026: keep the panel RAW and the "× N" overlay visible —
+	//     the actual multiply count-up (raw → totalWin) is deferred to the END
+	//     of the spin (`finalWin` → `playSpinEndMultiply()`), NOT applied here.
 	boardMultiplierInfo: async (bookEvent: BookEventOfType<'boardMultiplierInfo'>) => {
 		updateRoundWinBookEventAmount(bookEvent.winInfo.tumbleWin);
 
 		// QA 03.06.2026: panel prikazuje SIROVI tumble win (bez globalMult).
 		// spinRawWinAmount je već osvežen u prethodnom `winInfo` handleru.
 		const rawPreMultiplier = spinRawWinAmount;
-		const rawPostMultiplier = rawPreMultiplier * bookEvent.winInfo.boardMult;
 
 		// (1) Snap to pre-multiplier RAW tumble win
 		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
@@ -273,19 +320,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			multiplier: bookEvent.winInfo.boardMult,
 		});
 
-		// (5) Count up the tumble win to the post-multiplier RAW total
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
+		// (5) QA 05.06.2026: NE množimo panel odmah tokom spina. "× N" overlay
+		// ostaje vidljiv (igrač vidi koliko je multiplikatora skupljeno), ali
+		// iznos panela ostaje SIROV. Stvarno množenje (count-up raw → totalWin)
+		// odigrava se na KRAJU SPINA u `finalWin` preko `playSpinEndMultiply()`.
 		updateRoundWinBookEventAmount(bookEvent.winInfo.totalWin);
-		spinRawWinAmount = rawPostMultiplier;
-		await eventEmitter.broadcastAsync({
-			type: 'tumbleWinAmountUpdate',
-			amount: rawPostMultiplier,
-			animate: true,
-		});
-
-		// (6) Hide the "× N" overlay — the panel now shows the final amount
-		// alone, ready to drop into the WIN balance on `finalWin`.
-		eventEmitter.broadcast({ type: 'tumbleWinAmountHideMultiplier' });
+		spinEndMultiply = {
+			raw: rawPreMultiplier,
+			multiplied: bookEvent.winInfo.totalWin,
+			multiplier: bookEvent.winInfo.boardMult,
+		};
 	},
 
 	// ── tumbleBoard ────────────────────────────────────────────────────────────
@@ -368,6 +412,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
 		freeSpinWinBookEventAmount = stateBet.winBookEventAmount;
 		freeSpinTumbleWinBookEventAmount = 0;
+		spinEndMultiply = null;
 		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
 
 		// Animate each scatter one-by-one: individual lightning bolt + pop sound per scatter.
@@ -451,6 +496,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── updateFreeSpin ────────────────────────────────────────────────────────
 	updateFreeSpin: async (bookEvent: BookEventOfType<'updateFreeSpin'>) => {
+		// QA 05.06.2026: na kraju PRETHODNOG spina odigraj animaciju množenja
+		// (sirovo → pomnoženo) pre nego što commit-ujemo dobitak u WIN i pre nego
+		// što sledeći `reveal` resetuje panel.
+		const didMultiply = await playSpinEndMultiply();
+		if (didMultiply) await waitForTimeout(stateBet.isTurbo ? 350 : 700);
 		commitFreeSpinTumbleWin();
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		stateUi.freeSpinCounterShow = true;
@@ -465,6 +515,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── freeSpinEnd ───────────────────────────────────────────────────────────
 	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
+		// QA 05.06.2026: poslednji free spin nema `updateFreeSpin` posle sebe —
+		// odigraj njegovu animaciju množenja ovde, pre outro count-upa.
+		if (await playSpinEndMultiply()) {
+			await waitForTimeout(stateBet.isTurbo ? 350 : 700);
+		}
 		const winLevelData = getFreeSpinOutroWinLevelData(bookEvent.amount);
 
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
@@ -523,34 +578,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			playWinToBalanceCoins();
 		}
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
-		// QA 03.06.2026: tokom free spina panel je prikazivao SIROVU sumu (bez
-		// globalMult). Sada na kraju spina množimo × globalMult sa animacijom
-		// (overlay ×N + count-up od raw → raw×globalMult), pa zadržimo panel
-		// još trenutak pre nego što ga sakrijemo.
-		const globalMult = stateGame.globalMultiplier;
-		const rawTotal = spinRawWinAmount;
-		if (
-			stateGame.gameType === 'freeSpins' &&
-			globalMult > 0 &&
-			rawTotal > 0 &&
-			bookEvent.amount > rawTotal
-		) {
-			eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
-			eventEmitter.broadcast({
-				type: 'tumbleWinAmountShowMultiplier',
-				multiplier: globalMult,
-			});
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_win' });
-			// QA 03.06.2026: pulse + gold flash da igrač jasno vidi da je iznos
-			// pomnožen globalnim multiplikatorom.
-			eventEmitter.broadcast({ type: 'tumbleWinAmountPulse' });
-			await eventEmitter.broadcastAsync({
-				type: 'tumbleWinAmountUpdate',
-				amount: bookEvent.amount,
-				animate: true,
-			});
-			eventEmitter.broadcast({ type: 'tumbleWinAmountHideMultiplier' });
-		}
+		// QA 05.06.2026: animacija množenja na KRAJU SPINA (sirovo → pomnoženo).
+		// Base game: podaci su zabeleženi u `boardMultiplierInfo`. Free spins:
+		// svaki spin je već odigran u `updateFreeSpin`/`freeSpinEnd`, pa je ovde
+		// najčešće no-op.
+		await playSpinEndMultiply();
 		// QA 04.06.2026: Gates-of-Olympus ponašanje — TumbleHistory i
 		// TumbleWinAmount paneli ostaju vidljivi sve dok ne krene sledeći spin
 		// (reveal handler ih resetuje na početku). Više ih ne sakrivamo

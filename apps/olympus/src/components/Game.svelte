@@ -23,6 +23,7 @@
 	import TumbleWinAmount from './TumbleWinAmount.svelte';
 	import TumbleHistory from './TumbleHistory.svelte';
 	import GlobalMultiplier from './GlobalMultiplier.svelte';
+	import MultiplierFly from './MultiplierFly.svelte';
 	import ReelFramePanel from './ReelFramePanel.svelte';
 	import Win from './Win.svelte';
 	import WinSparks from './WinSparks.svelte';
@@ -88,6 +89,7 @@
 			<TumbleHistory />
 			<TumbleWinAmount />
 			<FreeSpinCounter />
+			<MultiplierFly />
 		</MainContainer>
 
 		<WinSparks />
