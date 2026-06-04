@@ -11,7 +11,7 @@
 	 * Sized to wrap the visible 6×5 board with comfortable padding.
 	 */
 	const FRAME_PADDING_X = 1.18;
-	const FRAME_PADDING_Y = 1.22;
+	const FRAME_PADDING_Y = 1.5;
 
 	const main = $derived(context.stateLayoutDerived.mainLayout());
 	const fraction = $derived(getBoardCenterFraction(context.stateLayoutDerived.layoutType()));

@@ -13,7 +13,7 @@
 
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
-	import { cubicOut } from 'svelte/easing';
+	import { backOut } from 'svelte/easing';
 
 	import { stateBet } from 'state-shared';
 	import { BoardContext } from 'components-shared';
@@ -106,35 +106,10 @@
 			});
 		},
 		tumbleBoardSlideDown: async () => {
-			// Gates-of-Olympus cascade pacing:
-			//  • each reel starts dropping slightly after the previous one
-			//    (per-reel stagger), so the player reads the cascade left → right
-			//  • inside a reel each symbol is offset by a small delay too, giving
-			//    the classic "stream" of symbols falling in instead of a single
-			//    rigid block dropping at once.
-			// Turbo mode (QA 03.06.2026): ranije je turbo skidao oba stagger-a
-			// i koristio 120ms pad — pa su simboli padali odjednom i animacija
-			// uništenja iz prethodnog cascade-a se "razlila" na sledeći niz.
-			// Sada turbo zadržava manji stagger + kraći ali ne instant pad,
-			// tako da svaki cascade ima jasan ritam i prethodni explosion stigne
-			// da se završi pre nego što novi simboli krenu da padaju.
-			// We RE-READ stateBet.isTurbo on every reel/symbol so that pressing
-			// STOP mid-cascade (which flips isTurbo on via ButtonTurbo's
-			// stopButtonClick subscriber) instantly fast-forwards the rest of
-			// the cascade — otherwise STOP in free spins appeared to do nothing
-			// (QA report).
-			// QA 03.06.2026: usklađeno sa Gates of Olympus ritmom — turbo zadržava
-			// jasne per-reel i per-symbol stagger vrednosti tako da svaki simbol
-			// vidno padne i explosion iz prethodnog cascade-a uvek stigne da se
-			// završi pre nego što novi simboli krenu.
-			const getTimings = () => {
-				const isTurbo = stateBet.isTurbo;
-				return {
-					REEL_STAGGER_MS: isTurbo ? 45 : 55,
-					SYMBOL_STAGGER_MS: isTurbo ? 30 : 35,
-					FALL_DURATION_MS: isTurbo ? 300 : 360,
-				};
-			};
+			// Original Olympus default tempo: brz padding bez per-reel/per-symbol
+			// stagger-a (200ms backOut). Stop-button/dedupe logika i sound poziv
+			// ostaju netaknuti.
+			const FALL_DURATION_MS = 200;
 			const getPromises = () =>
 				context.stateGameDerived.tumbleBoardCombined().map(async (tumbleReel, reelIndex) => {
 					const reelMoved = tumbleReel.some((tumbleSymbol, symbolIndex) => {
@@ -142,24 +117,13 @@
 						return targetY !== tumbleSymbol.symbolY.current;
 					});
 
-					if (reelMoved) {
-						await waitForResolve((resolve) =>
-							setTimeout(resolve, reelIndex * getTimings().REEL_STAGGER_MS),
-						);
-					}
-
 					await Promise.all(
 						tumbleReel.map(async (tumbleSymbol, symbolIndex) => {
 							const targetY = getSymbolY(symbolIndex - 1);
 							if (targetY !== tumbleSymbol.symbolY.current) {
-								// Top-most symbols arrive first; bottom symbols a tick later.
-								const symbolDelay =
-									(tumbleReel.length - 1 - symbolIndex) *
-									getTimings().SYMBOL_STAGGER_MS;
-								await waitForResolve((resolve) => setTimeout(resolve, symbolDelay));
 								await tumbleSymbol.symbolY.set(targetY, {
-									duration: getTimings().FALL_DURATION_MS,
-									easing: cubicOut,
+									duration: FALL_DURATION_MS,
+									easing: backOut,
 								});
 								if (symbolIndex > 0 && symbolIndex < tumbleReel.length - 1) {
 									tumbleSymbol.symbolState = 'land';

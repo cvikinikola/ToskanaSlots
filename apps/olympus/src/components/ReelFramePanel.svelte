@@ -1,3 +1,4 @@
+
 <script lang="ts">
 	import { UiAssetSprite } from 'components-ui-pixi';
 

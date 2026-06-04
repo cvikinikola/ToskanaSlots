@@ -7,6 +7,7 @@
 	type Props = {
 		reelIndex: number;
 		tumbleSymbol: TumbleSymbol;
+		isPadding: boolean;
 	};
 
 	const props: Props = $props();
@@ -21,6 +22,7 @@
 	x={getSymbolX(props.reelIndex)}
 	y={props.tumbleSymbol.symbolY.current}
 	{animating}
+	isPadding={props.isPadding}
 >
 	<Symbol
 		state={props.tumbleSymbol.symbolState}
