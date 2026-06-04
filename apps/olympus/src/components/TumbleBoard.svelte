@@ -112,18 +112,27 @@
 			//  • inside a reel each symbol is offset by a small delay too, giving
 			//    the classic "stream" of symbols falling in instead of a single
 			//    rigid block dropping at once.
-			// Turbo mode (QA): skip both staggers and shorten the fall so every
-			// symbol on every reel drops at once. We RE-READ stateBet.isTurbo on
-			// every reel/symbol so that pressing STOP mid-cascade (which flips
-			// isTurbo on via ButtonTurbo's stopButtonClick subscriber) instantly
-			// fast-forwards the rest of the cascade — otherwise STOP in free
-			// spins appeared to do nothing (QA report).
+			// Turbo mode (QA 03.06.2026): ranije je turbo skidao oba stagger-a
+			// i koristio 120ms pad — pa su simboli padali odjednom i animacija
+			// uništenja iz prethodnog cascade-a se "razlila" na sledeći niz.
+			// Sada turbo zadržava manji stagger + kraći ali ne instant pad,
+			// tako da svaki cascade ima jasan ritam i prethodni explosion stigne
+			// da se završi pre nego što novi simboli krenu da padaju.
+			// We RE-READ stateBet.isTurbo on every reel/symbol so that pressing
+			// STOP mid-cascade (which flips isTurbo on via ButtonTurbo's
+			// stopButtonClick subscriber) instantly fast-forwards the rest of
+			// the cascade — otherwise STOP in free spins appeared to do nothing
+			// (QA report).
+			// QA 03.06.2026: usklađeno sa Gates of Olympus ritmom — turbo zadržava
+			// jasne per-reel i per-symbol stagger vrednosti tako da svaki simbol
+			// vidno padne i explosion iz prethodnog cascade-a uvek stigne da se
+			// završi pre nego što novi simboli krenu.
 			const getTimings = () => {
 				const isTurbo = stateBet.isTurbo;
 				return {
-					REEL_STAGGER_MS: isTurbo ? 0 : 55,
-					SYMBOL_STAGGER_MS: isTurbo ? 0 : 35,
-					FALL_DURATION_MS: isTurbo ? 120 : 360,
+					REEL_STAGGER_MS: isTurbo ? 45 : 55,
+					SYMBOL_STAGGER_MS: isTurbo ? 30 : 35,
+					FALL_DURATION_MS: isTurbo ? 300 : 360,
 				};
 			};
 			const getPromises = () =>

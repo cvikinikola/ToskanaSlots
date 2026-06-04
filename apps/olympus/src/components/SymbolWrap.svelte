@@ -2,7 +2,6 @@
 	import type { Snippet } from 'svelte';
 	import { Container } from 'pixi-svelte';
 	import { getContextBoard } from 'components-shared';
-	import { SYMBOL_SIZE, BOARD_DIMENSIONS } from '../game/constants';
 
 	type Props = {
 		x: number;
@@ -24,20 +23,16 @@
 		(boardContext.animate && props.animating) || (!boardContext.animate && !props.animating),
 	);
 
-	// Symbol `y` is the sprite CENTRE (anchor 0.5), so the visible range
-	// must cover the full board height — from the top edge (y = 0) to the
-	// bottom edge (y = SYMBOL_SIZE * BOARD_DIMENSIONS.y). Using the row
-	// centres here (50 … 450) caused cascading symbols to stay hidden until
-	// their centre reached row 0, then "pop in" at row 0 and slide downward
-	// to the real target row — visually the first row was skipped and the
-	// reels appeared to stop one row lower than the spin result (QA bug
-	// "prvi red preleće, zaustavljanje na drugom redu").
-	const top = 0;
-	const bottom = SYMBOL_SIZE * BOARD_DIMENSIONS.y;
-	const inFrame = $derived(props.y >= top && props.y <= bottom);
+	// QA 03.06.2026: NEMA frame culling-a.
+	// Ranija `inFrame` provera (y unutar [0, BOARD_SIZES.height]) je sakrivala
+	// simbole dok im centar ne stigne na y=0 — pa su tokom fall-in animacije
+	// "pop-in" izgledali na vrhu prvog reda i delovalo je kao da reeli preskaču
+	// prvi red i zaustavljaju se na drugom. BoardMask već radi clipping za
+	// padding redove iznad/ispod board-a, tako da nije potrebno dodatno
+	// runtime culling — neka se simboli renderuju kontinuirano dok kaskadiraju.
 </script>
 
-{#if show && inFrame}
+{#if show}
 	<Container x={props.x} y={props.y}>
 		{@render props.children()}
 	</Container>

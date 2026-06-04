@@ -20,11 +20,16 @@
 		// and `tumbleWinAmountHideMultiplier` to clear it once the final
 		// post-multiplier total has been counted up.
 		| { type: 'tumbleWinAmountShowMultiplier'; multiplier: number }
-		| { type: 'tumbleWinAmountHideMultiplier' };
+		| { type: 'tumbleWinAmountHideMultiplier' }
+		// QA 03.06.2026: pulse + glow animacija na panelu kada se na kraju
+		// free spina prikazuje ×globalMult (finalWin handler) — da igrač jasno
+		// vidi da je iznos pomnožen.
+		| { type: 'tumbleWinAmountPulse' };
 </script>
 
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
 	import { Container, BitmapText } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { UiAssetSprite } from 'components-ui-pixi';
@@ -69,6 +74,10 @@
 	 */
 	let activeMultiplier: number | null = $state(null);
 
+	// QA 03.06.2026: panel pulse + gold flash animacija (vidi tumbleWinAmountPulse).
+	const pulseScale = new Tween(1, { duration: 0 });
+	let flashAmount = $state(0);
+
 	const panelWidth = $derived(isCompact ? PANEL_W_STACKED : PANEL_W);
 	const panelHeight = $derived(isCompact ? PANEL_H_STACKED : PANEL_H);
 	/** Round to nearest 1 so the tweened display doesn't show fractional currency units. */
@@ -101,10 +110,25 @@
 		right: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
 		top: BOARD_SIZES.height / 2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
 		bottom: BOARD_SIZES.height / 2 + REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
+		// Mirror TumbleHistory geometry so we can position the WIN panel
+		// directly under the TumbleHistory strip on portrait.
+		thTop: BOARD_SIZES.height / 2.2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
 	});
+
+	// TumbleHistory stacked panel height (mirrored from TumbleHistory.svelte).
+	const TH_PANEL_H_STACKED = SYMBOL_SIZE * 1.48;
 
 	const position = $derived.by(() => {
 		const x = BOARD_SIZES.width / 2 - panelWidth / 2;
+		const layoutType = context.stateLayoutDerived.layoutType();
+
+		if (layoutType === 'portrait') {
+			// QA 04.06.2026: na portretu Win panel je zaklanjao TumbleWinAmount —
+			// postavi panel neposredno iznad reel okvira (TumbleHistory je
+			// podignut iznad njega da napravi mesta).
+			const GAP = SYMBOL_SIZE * 0.09;
+			return { x, y: frameBounds.top - panelHeight - GAP };
+		}
 
 		return {
 			x,
@@ -162,12 +186,26 @@
 		tumbleWinAmountHideMultiplier: () => {
 			activeMultiplier = null;
 		},
+
+		// QA 03.06.2026: kratka pulse + gold flash animacija kada se na kraju
+		// free spina pomnoži sirovi total sa globalMult.
+		tumbleWinAmountPulse: async () => {
+			flashAmount = 1;
+			await pulseScale.set(1.22, { duration: 220, easing: cubicOut });
+			await pulseScale.set(1.0, { duration: 320, easing: cubicOut });
+			flashAmount = 0;
+		},
 	});
 </script>
 
 <FadeContainer {show}>
 	<BoardContainer>
-		<Container {...position}>
+		<Container
+			x={position.x + panelWidth / 2}
+			y={position.y + panelHeight / 2}
+			pivot={{ x: panelWidth / 2, y: panelHeight / 2 }}
+			scale={pulseScale.current}
+		>
 			<UiAssetSprite
 				key="menu_panel_md"
 				assetKey="menu_panel_md"
@@ -175,6 +213,7 @@
 				width={panelWidth}
 				height={panelHeight}
 				alpha={0.98}
+				tint={flashAmount > 0 ? 0xfff2a8 : 0xffffff}
 			/>
 
 			{#if singleWinLine}

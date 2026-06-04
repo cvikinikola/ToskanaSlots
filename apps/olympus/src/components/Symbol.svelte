@@ -43,9 +43,11 @@
 	// multiplier animation (which now plays one M-symbol at a time, see
 	// boardMultiplierInfo) finishes well before the next round starts —
 	// otherwise the gold animation leaked into the next spin's symbols.
+	// QA 03.06.2026: dodatno produženo turbo trajanje uništenja jer je 140ms
+	// bilo prekratko — animacija se "razlivala" na sledeći cascade.
 	$effect(() => {
 		if (props.state === 'win' || props.state === 'explosion') {
-			const duration = stateBet.isTurbo ? 140 : 400;
+			const duration = stateBet.isTurbo ? 360 : 400;
 			const t = setTimeout(() => props.oncomplete?.(), duration);
 			return () => clearTimeout(t);
 		}

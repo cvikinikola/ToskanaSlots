@@ -177,7 +177,48 @@
 				playAudio('/assets/audio/Massive_Thor_hammer__2-1779125404081.mp3', 0.9);
 				return;
 			}
-			// sound.players.once.play({ name });
+			// QA 04.06.2026: ranije su sledeci eventi bili stub-ovani (samo log u
+			// konzolu) pa se cula samo destrukcija. Sada su uvezani na realne
+			// audio fajlove iz /assets/audio.
+
+			// Mali "chime" na svaki winInfo (kluster pobeda) — kratak metalni
+			// udar prati paljenje TumbleWinAmount panela.
+			if (name === 'sfx_winlevel_small') {
+				playAudio('/assets/audio/Metal_slot_symbols_c_2-1779126634873.mp3', 0.55);
+				return;
+			}
+			// Svako M (multiplier) na board-u — kratak agresivan metalni udar.
+			if (name === 'sfx_multiplier_update' || name === 'sfx_multiplier_landing') {
+				playAudio('/assets/audio/Short_aggressive_met_2-1779125681996.mp3', 0.7);
+				return;
+			}
+			// Finalno mnozenje boardMult × win — Thor-ova munja kao tezak udar.
+			if (name === 'sfx_multiplier_win') {
+				playAudio('/assets/audio/Thor_lightning_strik_3-1779126268747.mp3', 0.75);
+				return;
+			}
+			// Eksplozija simbola tokom kaskade — paralelni metalni "crunch" uz
+			// destroy.mp3 (soundSymbolDestroy) za bogatiji udar.
+			if (name === 'sfx_tumble_explode') {
+				playAudio('/assets/audio/Metal_slot_symbols_c_1-1779126624972.mp3', 0.5);
+				return;
+			}
+			// Padanje simbola koji popunjavaju prazna polja — laksi metalni
+			// clatter, jedva primetan ali daje teksturu kaskadi.
+			if (name === 'sfx_tumble_fall') {
+				playAudio('/assets/audio/Small_Viking_slot_ma_3-1779126316047.mp3', 0.4);
+				return;
+			}
+			// Scatter (Viking warrior) sleti — Thor-ova munja po scatteru.
+			if (name === 'sfx_scatter_win_v2') {
+				playAudio('/assets/audio/Thor_lightning_strik_3-1779126268747.mp3', 0.7);
+				return;
+			}
+			// Free spin trigger "super" stinger — masivan Thor hammer udar.
+			if (name === 'sfx_superfreespin') {
+				playAudio('/assets/audio/Massive_Thor_hammer__2-1779125404081.mp3', 1.0);
+				return;
+			}
 			console.debug('[sound] sfx →', name);
 		},
 
@@ -215,6 +256,12 @@
 		soundLoop: ({ name }) => {
 			if (name === 'sfx_jackpot_ascension') {
 				playLoopAudio(name, '/assets/audio/Jackpot Ascension Free.mp3', 0.85);
+				return;
+			}
+			// Big-win coin shower loop — slow-rolling coin clinks dok traje
+			// win-level prezentacija.
+			if (name === 'sfx_bigwin_coinloop') {
+				playLoopAudio(name, '/assets/audio/clinking-coins.mp3', 0.7);
 				return;
 			}
 			console.debug('[sound] loop →', name);

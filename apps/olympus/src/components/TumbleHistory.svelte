@@ -53,6 +53,20 @@
 
 	const position = $derived.by(() => {
 		if (isCompact) {
+			const layoutType = context.stateLayoutDerived.layoutType();
+			if (layoutType === 'portrait') {
+				// QA 04.06.2026: na portretu TumbleWinAmount panel sedi između
+				// TumbleHistory strip-a i reel okvira — TumbleHistory mora gore
+				// da ne ulazi u njega. Sidri donju ivicu na fiksnom offsetu
+				// iznad reel okvira, ostavljajući prostor za WIN panel + gap.
+				const WIN_PANEL_H = SYMBOL_SIZE * 1.08;
+				const GAP = SYMBOL_SIZE * 0.18;
+				const bottomY = frameBounds.top - WIN_PANEL_H - GAP;
+				return {
+					x: frameBounds.centerX - PANEL_W_STACKED / 2,
+					y: bottomY - PANEL_H_STACKED,
+				};
+			}
 			const rowCenterY = frameBounds.top - SYMBOL_SIZE * 0.22;
 			return {
 				x: frameBounds.centerX - PANEL_W_STACKED / 2,

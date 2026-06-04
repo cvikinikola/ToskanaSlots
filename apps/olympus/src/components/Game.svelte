@@ -52,6 +52,7 @@
 		const layoutType = context.stateLayoutDerived.layoutType();
 		if (layoutType === 'tablet') return 0.5; // square / kockasti screen
 		if (layoutType === 'portrait') return 0.7; // mobile portrait
+		if (layoutType === 'landscape') return 0.6; // mobile landscape
 		return 1;
 	});
 	// On portrait/tablet Thor is rendered above the frame — hide the text title

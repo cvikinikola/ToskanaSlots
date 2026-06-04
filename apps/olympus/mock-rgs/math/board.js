@@ -36,12 +36,13 @@ const MULTIPLIER_RATE_FREE = 0.018;
 
 // Gates-of-Olympus multiplier ladder: 2× → 500×.
 // Weights skew heavily to the low end; the huge values are extremely rare.
-const MULTIPLIER_WEIGHTS = [
+const DEFAULT_MULTIPLIER_WEIGHTS = [
   [2, 50],   [3, 30],   [4, 18],   [5, 10],
   [6, 6],    [8, 3],    [10, 2],   [12, 1.2],
   [15, 0.6], [20, 0.3], [25, 0.15], [50, 0.05],
   [100, 0.02], [250, 0.005], [500, 0.001],
 ];
+const MULTIPLIER_WEIGHTS = DEFAULT_MULTIPLIER_WEIGHTS;
 
 // ─── Symbol / board generation ───────────────────────────────────────────────
 
