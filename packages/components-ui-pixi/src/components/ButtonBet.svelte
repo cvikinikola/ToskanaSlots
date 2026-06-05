@@ -6,11 +6,11 @@
 
 	import UiAssetSprite from './UiAssetSprite.svelte';
 	import ButtonBetProvider from './ButtonBetProvider.svelte';
-	import { UI_BASE_SIZE } from '../constants';
+	import { UI_BAR_ACTION_SIZE } from '../constants';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
-	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
+	const sizes = { width: UI_BAR_ACTION_SIZE, height: UI_BAR_ACTION_SIZE };
 	const isSpinKey = (key: string) => ['spin_default', 'spin_disabled'].includes(key);
 	const isDisabledKey = (key: string) => ['spin_disabled', 'stop_disabled'].includes(key);
 </script>
@@ -32,8 +32,8 @@
 					<UiAssetSprite
 						assetKey={isSpinKey(key) ? 'menu_spin' : 'menu_stop'}
 						anchor={0.5}
-						width={sizes.width * (isSpinKey(key) ? 0.96 : 1.04)}
-						height={sizes.height * (isSpinKey(key) ? 0.96 : 0.52)}
+						width={sizes.width * (isSpinKey(key) ? 1.05 : 1.04)}
+						height={sizes.height * (isSpinKey(key) ? 1.05 : 0.52)}
 						alpha={disabled || ['spin_disabled', 'stop_disabled'].includes(key) ? 0.5 : 1}
 					/>
 				</Container>

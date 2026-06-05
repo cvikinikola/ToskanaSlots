@@ -22,7 +22,7 @@
 	<h2>PAYTABLE</h2>
 	<p class="intro">
 		Wins are paid for clusters of <strong>8 or more</strong> matching symbols connected horizontally
-		or vertically anywhere on the 6×5 grid. Payouts are multiples of the total bet.
+		or vertically anywhere on the 7×7 grid. Payouts are multiples of the total bet.
 	</p>
 
 	<h3>High-paying symbols</h3>
@@ -64,7 +64,7 @@
 	<h3>Special symbols</h3>
 	<div class="special">
 		<div class="special-item">
-			<img src={`${SYMBOLS_BASE}/sym_s.webp`} alt="Scatter" />
+			<img src={`${SYMBOLS_BASE}/sym_s.png`} alt="Scatter" />
 			<div>
 				<strong>Scatter</strong> — Land <strong>4 or more</strong> Scatter symbols anywhere on
 				the grid to trigger the FREE SPINS round:

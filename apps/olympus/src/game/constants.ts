@@ -4,23 +4,77 @@ import type { RawSymbol, SymbolState } from './types';
 
 export const SYMBOL_SIZE = 100;
 
+/** Base drawn sprite size before per-symbol scale tweaks. */
+export const SYMBOL_SPRITE_BASE = SYMBOL_SIZE * 1.04;
 
-export const REEL_PADDING = 0.53;
+/** Ostale voćkice (vino, sir, masline, …) — sym_h1/h2/h4, sym_l2. */
+export const SYMBOL_SPRITE_SCALE = 0.95;
 
+/** Grožđa (sym_h3 crveno, sym_l3 roze, sym_l1 zeleno) — manja od ostalih voćkica. */
+export const GRAPE_SYMBOL_SPRITE_SCALE = 0.882; // H3 / L3 referenca
+export const GRAPE_SYMBOL_NAMES = new Set(['H3', 'L3', 'L1']);
 
-export const BOARD_DIMENSIONS = { x: 6, y: 5 };
+/** Zeleno grožđe (L1) — 4% manje od sym_h3. */
+export const GREEN_GRAPE_SYMBOL_SPRITE_SCALE = GRAPE_SYMBOL_SPRITE_SCALE * 0.96;
 
-export const SYMBOL_STEP_X = SYMBOL_SIZE * 1.15;
-
-export const BOARD_SIZES = {
-	width: SYMBOL_STEP_X * (BOARD_DIMENSIONS.x - 1) + SYMBOL_SIZE,
-	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
+export const SYMBOL_SPRITE_SCALE_BY_NAME: Record<string, number> = {
+	L1: GREEN_GRAPE_SYMBOL_SPRITE_SCALE,
+	H4: SYMBOL_SPRITE_SCALE * 0.90, // sym_h4 — samo ovo voće −3%
 };
 
+export const SYMBOL_DRAW_MAX_SCALE = SYMBOL_SPRITE_SCALE;
 
+/** Largest half-height/width of any symbol sprite (px). */
+export const SYMBOL_DRAW_HALF = (SYMBOL_SPRITE_BASE * SYMBOL_DRAW_MAX_SCALE) / 2;
+
+export const BOARD_DIMENSIONS = { x: 7, y: 7 };
+
+
+/** Okvir kraći samo po dužini (širina); visina i mreža 7×7 ostaju iste. */
+export const REEL_FRAME_LENGTH_SCALE = 0.85;
+
+const REEL_FRAME_BASE_WIDTH = SYMBOL_SIZE * 10.7;
+const REEL_FRAME_BASE_HEIGHT = SYMBOL_SIZE * 7.25;
+
+/** Fit na ekran — ne menja se, da voćkice zadrže istu veličinu. */
+export const REEL_FRAME_LAYOUT_SIZES = {
+	width: REEL_FRAME_BASE_WIDTH,
+	height: REEL_FRAME_BASE_HEIGHT,
+};
+
+/** Crtani okvir + sidrenje panela (MULTIPLIER, TUMBLE HISTORY, …). */
 export const REEL_FRAME_SIZES = {
-	width: SYMBOL_SIZE * 10.7,
-	height: SYMBOL_SIZE * 7.25, // povećano za 0.5 * SYMBOL_SIZE
+	width: REEL_FRAME_BASE_WIDTH * REEL_FRAME_LENGTH_SCALE,
+	height: REEL_FRAME_BASE_HEIGHT,
+};
+
+/**
+ * Playable width inside menu_frame (horizontal). Tune if symbols sit inside/outside
+ * the gold border — higher = grid reaches closer to the frame inner edge.
+ */
+export const REEL_FRAME_INNER_WIDTH_RATIO = 0.91;
+
+export const BOARD_INNER_WIDTH = REEL_FRAME_SIZES.width * REEL_FRAME_INNER_WIDTH_RATIO;
+
+/** Horizontal pitch — outer sprite edges stay inside inner frame width. */
+export const REEL_STEP_X =
+	(BOARD_INNER_WIDTH - 2 * SYMBOL_DRAW_HALF) / (BOARD_DIMENSIONS.x - 1);
+
+/** Playable height inside menu_frame — lower = more vertical inset (symbols off the wall). */
+export const REEL_FRAME_INNER_HEIGHT_RATIO = 0.93;
+
+export const BOARD_INNER_HEIGHT = REEL_FRAME_SIZES.height * REEL_FRAME_INNER_HEIGHT_RATIO;
+
+/** Vertical pitch — outer sprite edges stay inside inner frame height. */
+export const REEL_STEP_Y =
+	(BOARD_INNER_HEIGHT - 2 * SYMBOL_DRAW_HALF) / (BOARD_DIMENSIONS.y - 1);
+
+/** Aligns reel `(i+0.5)×step` layout with `SYMBOL_DRAW_HALF + i×step`. */
+export const BOARD_SYMBOL_OFFSET_Y = SYMBOL_DRAW_HALF - REEL_STEP_Y * 0.5;
+
+export const BOARD_SIZES = {
+	width: BOARD_INNER_WIDTH,
+	height: BOARD_INNER_HEIGHT,
 };
 
 
@@ -35,9 +89,10 @@ export type BgConfig = {
 };
 
 export const BG_CONFIGS: Record<'landscape' | 'portrait' | 'freespins', BgConfig> = {
-	landscape: { key: 'bg_landscape', native: { w: 2560, h: 1080 } },
-	portrait: { key: 'bg_portrait', native: { w: 1024, h: 1536 } },
-	freespins: { key: 'bg_freespins', native: { w: 1536, h: 1024 } },
+	// Vineyard background (same asset; native matches PNG aspect for cover-fit).
+	landscape: { key: 'bg_landscape', native: { w: 320, h: 178 } },
+	portrait: { key: 'bg_portrait', native: { w: 320, h: 178 } },
+	freespins: { key: 'bg_freespins', native: { w: 320, h: 178 } },
 };
 
 
@@ -120,6 +175,9 @@ export const BOTTOM_UI_FRAC = 0.22;
 
 export const BG_FILL_COLOR = 0x06091a;
 
+/** Looping vineyard background (MP4, muted autoplay). */
+export const BG_VIDEO_MP4_SRC = '/assets/sprites/thor/bg_landscape.mp4';
+
 
 export const getBgLayout = (
 	canvasSizes: { width: number; height: number },
@@ -143,7 +201,10 @@ export const getBoardCenterMain = (
 	const cfg = BOARD_LAYOUT_BY_TYPE[layoutType];
 	const fitW = mainLayout.width * cfg.fit.w;
 	const fitH = mainLayout.height * cfg.fit.h;
-	const scale = Math.min(fitW / REEL_FRAME_SIZES.width, fitH / REEL_FRAME_SIZES.height);
+	const scale = Math.min(
+		fitW / REEL_FRAME_LAYOUT_SIZES.width,
+		fitH / REEL_FRAME_LAYOUT_SIZES.height,
+	);
 	return {
 		x: mainLayout.width * cfg.center.x,
 		y: mainLayout.height * cfg.center.y,
@@ -157,30 +218,35 @@ export const getLoadingCenterFraction = (_layoutType: LayoutType) => {
 };
 
 
+/** Per reel: top padding + 7 visible rows + bottom padding (9 symbols). */
 export const INITIAL_BOARD: RawSymbol[][] = [
 	[
 		{ name: 'H1' }, { name: 'L1' }, { name: 'H2' },
-		{ name: 'L3' }, { name: 'H4' }, { name: 'L2' }, { name: 'H3' },
+		{ name: 'L3' }, { name: 'H4' }, { name: 'L2' }, { name: 'H3' }, { name: 'L1' }, { name: 'H1' },
 	],
 	[
 		{ name: 'L2' }, { name: 'H3' }, { name: 'L1' },
-		{ name: 'H1' }, { name: 'L4' }, { name: 'H2' }, { name: 'L3' },
+		{ name: 'H1' }, { name: 'L1' }, { name: 'H2' }, { name: 'L3' }, { name: 'H4' }, { name: 'L2' },
 	],
 	[
 		{ name: 'H4' }, { name: 'L3' }, { name: 'H3' },
-		{ name: 'L2' }, { name: 'H1' }, { name: 'L1' }, { name: 'H2' },
+		{ name: 'L2' }, { name: 'H1' }, { name: 'L1' }, { name: 'H2' }, { name: 'L1' }, { name: 'H4' },
 	],
 	[
-		{ name: 'L1' }, { name: 'H2' }, { name: 'L4' },
-		{ name: 'H3' }, { name: 'L3' }, { name: 'H4' }, { name: 'L2' },
+		{ name: 'L1' }, { name: 'H2' }, { name: 'L1' },
+		{ name: 'H3' }, { name: 'L3' }, { name: 'H4' }, { name: 'L2' }, { name: 'H1' }, { name: 'L1' },
 	],
 	[
-		{ name: 'H3' }, { name: 'L4' }, { name: 'H1' },
-		{ name: 'L2' }, { name: 'H2' }, { name: 'L3' }, { name: 'H4' },
+		{ name: 'H3' }, { name: 'L1' }, { name: 'H1' },
+		{ name: 'L2' }, { name: 'H2' }, { name: 'L3' }, { name: 'H4' }, { name: 'L3' }, { name: 'H3' },
 	],
 	[
 		{ name: 'L3' }, { name: 'H4' }, { name: 'L2' },
-		{ name: 'H1' }, { name: 'L1' }, { name: 'H3' }, { name: 'L4' },
+		{ name: 'H1' }, { name: 'L1' }, { name: 'H3' }, { name: 'L1' }, { name: 'H2' }, { name: 'L3' },
+	],
+	[
+		{ name: 'H2' }, { name: 'L1' }, { name: 'H1' },
+		{ name: 'L3' }, { name: 'H3' }, { name: 'L2' }, { name: 'H4' }, { name: 'L1' }, { name: 'H2' },
 	],
 ];
 
@@ -213,8 +279,6 @@ export const SPIN_OPTIONS_FAST = {
 	reelPaddingMultiplierAnticipated: 2,
 	reelFallOutDelay: 20,
 };
-
-
 
 export const SYMBOL_COLORS: Record<string, number> = {
 	H1: 0xd62828, // Odin's ruby      – deep red

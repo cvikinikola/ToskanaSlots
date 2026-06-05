@@ -7,15 +7,15 @@
  * used by `scripts/gen-books.mjs`, so storybook books and DEV-mode play
  * cannot drift apart.
  *
- * Payouts are emitted directly from the paytable. Do not apply RTP scale to
- * individual wins; QA compares visible symbol wins against the paytable.
+ * Payouts come from paytable.js + tuning.js scales (target ~96% RTP).
  */
 
 import { runBaseSpin, runBonusBuy } from './math/index.js';
+import { BONUS_BUY_COST_MULTIPLIER } from './math/tuning.js';
 
 // ─── Tuning ──────────────────────────────────────────────────────────────────
 
-const BONUS_BUY_COST_MULT = 100;
+const BONUS_BUY_COST_MULT = BONUS_BUY_COST_MULTIPLIER;
 const BET_MODE_COST_MULTIPLIER = {
   BASE: 1,
   ANTE: 1.2,
@@ -66,26 +66,25 @@ export const mockRgsPlugin = () => ({
         balance: { amount: 1000000000000, currency: 'USD' },
         config: {
           gameID: 'thor-1000',
-          minBet: 100000,
-          maxBet: 1000000000,
+          minBet: 200000,
+          maxBet: 240000000,
           stepBet: 100000,
           defaultBetLevel: 1000000,
           betLevels: [
-            100000,
             200000,
+            400000,
             500000,
             1000000,
             2000000,
             5000000,
             10000000,
-            25000000,
-            50000000,
-            75000000,
+            20000000,
+            40000000,
+            60000000,
             100000000,
+            120000000,
             200000000,
-            500000000,
-            800000000,
-            1000000000,
+            240000000,
           ],
           betModes: {
             BASE: { mode: 'BASE', costMultiplier: 1, feature: false },

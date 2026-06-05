@@ -4,8 +4,15 @@ import { createGetEmptyPaddedBoard } from 'utils-slots';
 
 import {
 	SYMBOL_SIZE,
-	SYMBOL_STEP_X,
+	REEL_STEP_X,
+	REEL_STEP_Y,
 	SYMBOL_COLORS,
+	SYMBOL_SPRITE_BASE,
+	SYMBOL_SPRITE_SCALE,
+	GRAPE_SYMBOL_NAMES,
+	GRAPE_SYMBOL_SPRITE_SCALE,
+	SYMBOL_SPRITE_SCALE_BY_NAME,
+	SYMBOL_DRAW_HALF,
 	BOARD_DIMENSIONS,
 } from './constants';
 import { eventEmitter } from './eventEmitter';
@@ -20,14 +27,22 @@ export const { playBookEvent, playBookEvents } = createPlayBookUtils({ bookEvent
 
 export const playBet = async (bet: Bet) => {
 	stateBet.winBookEventAmount = 0;
-	await playBookEvents(bet.state);
-	eventEmitter.broadcast({ type: 'stopButtonEnable' });
+	try {
+		await playBookEvents(bet.state);
+	} catch (error) {
+		console.error('[playBet] book event playback failed:', error);
+		eventEmitter.broadcast({ type: 'boardShow' });
+		eventEmitter.broadcast({ type: 'tumbleBoardHide' });
+		eventEmitter.broadcast({ type: 'spotMultipliersClear' });
+	} finally {
+		eventEmitter.broadcast({ type: 'stopButtonEnable' });
+	}
 };
 
 // ─── Resume bet ───────────────────────────────────────────────────────────────
 
 const BOOK_EVENT_TYPES_TO_RESERVE_FOR_SNAPSHOT = [
-	'updateGlobalMult',
+	'spotMultiplierUpdate',
 	'freeSpinTrigger',
 	'updateFreeSpin',
 	'setTotalWin',
@@ -51,13 +66,28 @@ export const convertTorResumableBet = (betToResume: Bet) => {
 
 // ─── Symbol position helpers ──────────────────────────────────────────────────
 
-/** Pixel X coordinate for the left edge of reel `reelIndex` (centred in cell). */
+/** Pixel X — 7 columns; sprite edges stay inside inner frame (see REEL_STEP_X). */
 export const getSymbolX = (reelIndex: number) =>
-	SYMBOL_SIZE / 2 +
-	reelIndex * SYMBOL_STEP_X;
+	SYMBOL_DRAW_HALF + reelIndex * REEL_STEP_X;
 
-/** Pixel Y coordinate for the top edge of visible row `symbolIndexOfBoard` (centred in cell). */
-export const getSymbolY = (symbolIndexOfBoard: number) => (symbolIndexOfBoard + 0.5) * SYMBOL_SIZE;
+const normalizeSymbolName = (name: string) => (name === 'L4' ? 'L1' : name);
+
+export const getSymbolSpriteScale = (name: string) => {
+	const id = normalizeSymbolName(name);
+	if (id in SYMBOL_SPRITE_SCALE_BY_NAME) return SYMBOL_SPRITE_SCALE_BY_NAME[id];
+	return GRAPE_SYMBOL_NAMES.has(id) ? GRAPE_SYMBOL_SPRITE_SCALE : SYMBOL_SPRITE_SCALE;
+};
+
+export const getSymbolSpriteSize = (name: string) =>
+	SYMBOL_SPRITE_BASE * getSymbolSpriteScale(name);
+
+/** Pixi asset key — L4 nije u mreži 7×7; zeleno grožđe je L1 (sym_l1). */
+export const getSymbolAssetKey = (name: string) =>
+	`sym_${normalizeSymbolName(name).toLowerCase()}`;
+
+/** Pixel Y — 7 rows; sprite edges stay inside inner frame (see REEL_STEP_Y). */
+export const getSymbolY = (symbolIndexOfBoard: number) =>
+	SYMBOL_DRAW_HALF + symbolIndexOfBoard * REEL_STEP_Y;
 
 // ─── Symbol colour helper ─────────────────────────────────────────────────────
 

@@ -1,42 +1,32 @@
 /**
- * Pay table for the pay-anywhere cluster slot.
+ * Pay table for the connected-cluster slot.
  *
  * Server-side source of truth for win calculation. Keep symbol set in sync
- * with the client visuals in `apps/olympus/src/game/config.ts` (the client
- * does NOT compute wins; it only displays symbols and amounts the server
- * sends in book events).
+ * with the client visuals in `apps/olympus/src/game/config.ts`.
  *
- * Source of truth: `docs/PAYTABLE.md` / Viking Thor 1000 paytable PDF.
- *   8+   → tier 0
- *   9+   → tier 1
- *   12+  → tier 2
- *   15+  → tier 3
- *   20+  → tier 4
- *   30+  → tier 5
- *
- * Values are × bet.
+ * Wins require ≥ MIN_CLUSTER_SIZE orthogonally connected matching symbols.
+ * Values are × bet — NEVER scaled; RTP tuning lives in board generation (tuning.js).
  */
 
+import { PAYING_SYMBOL_NAMES } from './symbols.js';
+
 export const PAYOUT_TABLE = {
-  // High symbols
-  H1: [[8, 10],  [9, 25], [12, 50], [15, 125], [20, 250], [30, 2500]],
-  H2: [[8, 8],   [9, 20], [12, 40], [15, 100], [20, 200], [30, 2000]],
-  H3: [[8, 5],   [9, 12], [12, 25], [15, 75],  [20, 150], [30, 1500]],
-  H4: [[8, 3],   [9, 8],  [12, 15], [15, 50],  [20, 100], [30, 1000]],
-  // Low symbols
-  L1: [[8, 2],   [9, 5],  [12, 10], [15, 25],  [20, 50],  [30, 500]],
-  L2: [[8, 1.5], [9, 4],  [12, 8],  [15, 20],  [20, 40],  [30, 400]],
-  L3: [[8, 1],   [9, 3],  [12, 6],  [15, 15],  [20, 30],  [30, 300]],
-  L4: [[8, 0.5], [9, 2],  [12, 4],  [15, 10],  [20, 20],  [30, 200]],
+  H1: [[5, 2], [6, 3], [7, 3.5], [8, 4], [9, 5], [10, 10], [11, 15], [12, 30], [13, 70], [14, 140], [15, 300]],
+  H2: [[5, 1.5], [6, 2], [7, 2.5], [8, 3], [9, 4], [10, 8], [11, 12], [12, 25], [13, 60], [14, 120], [15, 200]],
+  H3: [[5, 1], [6, 1.5], [7, 2], [8, 2.5], [9, 3], [10, 6], [11, 9], [12, 20], [13, 40], [14, 80], [15, 120]],
+  H4: [[5, 0.8], [6, 1], [7, 1.5], [8, 2], [9, 2.5], [10, 4], [11, 6], [12, 10], [13, 20], [14, 40], [15, 80]],
+  L1: [[5, 0.6], [6, 0.8], [7, 1], [8, 1.5], [9, 2], [10, 3], [11, 5], [12, 7], [13, 16], [14, 30], [15, 60]],
+  L2: [[5, 0.5], [6, 0.6], [7, 0.8], [8, 1], [9, 1.5], [10, 2], [11, 3], [12, 5], [13, 10], [14, 20], [15, 40]],
+  L3: [[5, 0.4], [6, 0.5], [7, 0.6], [8, 0.8], [9, 1], [10, 1.5], [11, 2], [12, 2.5], [13, 6], [14, 12], [15, 20]],
 };
 
-/** Symbols that count toward pay-anywhere wins (excludes S / M). */
-export const PAYING_SYMBOLS = Object.keys(PAYOUT_TABLE);
+/** Symbols that count toward cluster wins (excludes S). */
+export const PAYING_SYMBOLS = PAYING_SYMBOL_NAMES;
 
-/** Minimum cluster size required for a win. */
-export const MIN_CLUSTER_SIZE = 8;
+/** Minimum connected cluster size required for a win. */
+export const MIN_CLUSTER_SIZE = 5;
 
-/** Per-unit-bet payout multiplier for `count` of `symbol`. */
+/** Per-unit-bet payout multiplier for `count` of `symbol` (exact paytable tier). */
 export const getPayoutMultiplier = (symbol, count) => {
   if (count < MIN_CLUSTER_SIZE) return 0;
   const tiers = PAYOUT_TABLE[symbol];

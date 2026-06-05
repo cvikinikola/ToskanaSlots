@@ -29,21 +29,21 @@ type BookEventWinInfo = {
 		win: number;
 		positions: Position[];
 		meta: {
-			/** Current accumulated global multiplier when this win was calculated */
-			globalMult: number;
+			/** Combined spot multiplier applied to this win (×1 when no spots) */
+			spotMult: number;
+			/** Sum of spot multipliers on winning positions (0 when none) */
+			spotMultSum: number;
 			winWithoutMult: number;
 			/** Position for displaying the win amount overlay */
 			overlay: Position;
+			/** @deprecated legacy books — use spotMult */
+			globalMult?: number;
 		};
 	}[];
 };
 
 /**
- * Fired when multiplier symbols (M) are present on the board after a win.
- * The client should:
- *   1. Animate the M symbols on the board
- *   2. Collect them into the global multiplier counter
- *   3. Show the updated totalWin (tumbleWin × boardMult)
+ * @deprecated Legacy M-symbol multiplier event. New math uses spotMultiplierUpdate.
  */
 type BookEventBoardMultiplierInfo = {
 	index: number;
@@ -88,7 +88,7 @@ type BookEventSetTotalWin = {
 };
 
 /**
- * 4+ scatter symbols triggered free spins.
+ * 3+ VINAR (S) scatters anywhere on the grid triggered free spins.
  * Client should show the free spins intro animation.
  */
 type BookEventFreeSpinTrigger = {
@@ -99,10 +99,10 @@ type BookEventFreeSpinTrigger = {
 };
 
 /**
- * 3+ scatters landed DURING free spins.
+ * 3+ scatters landed DURING free spins (pay anywhere).
  * Client should animate the scatters, show a "+N FREE SPINS" panel,
  * and bump the free-spin counter total.
- * (Math: extra spins are appended to the running free-spin loop.)
+ * (Math: extra spins use the same 3→10 … 7+→30 table as the base trigger.)
  */
 type BookEventFreeSpinRetrigger = {
 	index: number;
@@ -121,8 +121,28 @@ type BookEventUpdateFreeSpin = {
 };
 
 /**
- * Global multiplier update during free spins.
- * When globalMult === 1 it means the multiplier has reset (new free spin cycle).
+ * Grid spot multiplier sync after winning symbols explode.
+ * Spots persist through cascades; cleared after base-game tumble sequence.
+ */
+type BookEventSpotMultiplierUpdate = {
+	index: number;
+	type: 'spotMultiplierUpdate';
+	spots: {
+		reel: number;
+		row: number;
+		explosionCount: number;
+		multiplier: number;
+	}[];
+};
+
+/** Clear all spot markers (end of base-game tumble sequence or round reset). */
+type BookEventSpotMultipliersClear = {
+	index: number;
+	type: 'spotMultipliersClear';
+};
+
+/**
+ * @deprecated Legacy free-spin global multiplier. Spot multipliers replace this.
  */
 type BookEventUpdateGlobalMult = {
 	index: number;
@@ -175,6 +195,8 @@ export type BookEvent =
 	| BookEventFreeSpinTrigger
 	| BookEventFreeSpinRetrigger
 	| BookEventUpdateFreeSpin
+	| BookEventSpotMultiplierUpdate
+	| BookEventSpotMultipliersClear
 	| BookEventUpdateGlobalMult
 	| BookEventFreeSpinEnd
 	| BookEventSetWin

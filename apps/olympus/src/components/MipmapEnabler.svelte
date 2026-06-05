@@ -48,10 +48,6 @@
 		for (const [key, val] of Object.entries(assets)) {
 			if (
 				key.startsWith('sym_') ||
-				key === 'bg' ||
-				key === 'bg_landscape' ||
-				key === 'bg_portrait' ||
-				key === 'bg_freespins' ||
 				key === 'warrior' ||
 				key === 'logo' ||
 				key.startsWith('menu_')

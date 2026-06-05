@@ -3,12 +3,12 @@
 	import { stateBet, stateBetDerived } from 'state-shared';
 
 	import UiButton from './UiButton.svelte';
-	import { UI_BASE_SIZE } from '../constants';
+	import { UI_BAR_ICON_SIZE } from '../constants';
 	import { getContext } from '../context';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
-	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
+	const sizes = { width: UI_BAR_ICON_SIZE, height: UI_BAR_ICON_SIZE };
 	const active = $derived(stateBet.isTurbo);
 	const disabled = $derived(stateBet.isSpaceHold);
 

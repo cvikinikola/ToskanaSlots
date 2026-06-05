@@ -3,6 +3,7 @@
 	import { stateBet } from 'state-shared';
 	import type { SymbolState, RawSymbol } from '../game/types';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { getSymbolAssetKey, getSymbolSpriteSize } from '../game/utils';
 
 	type Props = {
 		x?: number;
@@ -15,8 +16,7 @@
 
 	const props: Props = $props();
 
-	/** Asset key for the symbol sprite (registered in src/game/assets.ts). */
-	const spriteKey = $derived(`sym_${props.rawSymbol.name.toLowerCase()}`);
+	const spriteKey = $derived(getSymbolAssetKey(props.rawSymbol.name));
 
 	/**
 	 * Visual feedback per state:
@@ -36,7 +36,7 @@
 	);
 
 	const scale = $derived(props.state === 'win' ? 1.05 : 1);
-	const symbolSpriteSize = SYMBOL_SIZE * 1.04;
+	const symbolSpriteSize = $derived(getSymbolSpriteSize(props.rawSymbol.name));
 
 	// Trigger oncomplete for animation states that have no real spine track yet.
 	// Turbo mode (QA 02.06.2026): shorten the win/explosion glow so the

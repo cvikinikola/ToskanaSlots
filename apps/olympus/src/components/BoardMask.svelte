@@ -18,10 +18,10 @@
 	Sized in BOARD-NATIVE pixels (same coordinate space as the symbols
 	inside `BoardContainer`, which applies the scale itself).
 
-	stake.com pravilo (QA 04.06.2026): igra je 6×5 — vidi se TAČNO 5 redova
-	u celosti. Maska je zato visoka tačno BOARD_SIZES.height (y∈[0,500]) →
-	svih 30 simbola (6×5) je potpuno vidljivo, a oba padding reda (gornji
-	y<0, donji y>500) su POTPUNO odsečena maskom. Padding redovi su samo
+	stake.com pravilo (QA 04.06.2026): igra je 7×7 — vidi se TAČNO 7 redova
+	u celosti. Maska je zato visoka tačno BOARD_SIZES.height →
+	svih 49 simbola (7×7) je potpuno vidljivo, a oba padding reda (gornji
+	y<0, donji y>BOARD_SIZES.height) su POTPUNO odsečena maskom. Padding redovi su samo
 	rezervoar iz kog simboli upadaju tokom kaskade (GoO stil: simbol postane
 	vidljiv tek kad pređe gornju ivicu y=0 i sklizne u svoj red) i NIKAD se
 	ne vide — ni u mirovanju, ni tokom spina, ni kad se igra uspori.

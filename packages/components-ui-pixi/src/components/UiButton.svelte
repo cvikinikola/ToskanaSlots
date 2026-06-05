@@ -35,13 +35,9 @@
 
 	const defaultImageKey = $derived(iconAssetMap[icon]);
 	const imageKey = $derived(active && icon === 'turbo' ? 'menu_turbo_active' : defaultImageKey);
-	const isWideImage = $derived(['turbo', 'autoSpin'].includes(icon));
-	// QA: menu / plus / minus icons were rendered as 1.14×0.82 of the plate,
-	// which made them look horizontally stretched and vertically squashed.
-	// Use near-square scaling for the narrow icons so they read as natural
-	// glyphs inside the plate.
-	const imageWidth = $derived(buttonProps.sizes.width * (isWideImage ? 1.12 : 0.92));
-	const imageHeight = $derived(buttonProps.sizes.height * (isWideImage ? 0.82 : 0.92));
+	// Full-frame PNG plates (plus / minus / turbo / auto-spin) — square fit.
+	const imageWidth = $derived(buttonProps.sizes.width * 0.95);
+	const imageHeight = $derived(buttonProps.sizes.height * 0.95);
 	const text = $derived(i18nDerived[icon]());
 	const compactText = $derived(buttonProps.sizes.width <= UI_BASE_SIZE * 1.35);
 	const textFontSize = $derived(UI_BASE_FONT_SIZE * (compactText ? 0.56 : 0.85));
@@ -58,6 +54,7 @@
 				<UiAssetSprite
 					assetKey={imageKey}
 					fallbackAssetKey={defaultImageKey}
+					key={imageKey}
 					anchor={0.5}
 					width={imageWidth}
 					height={imageHeight}

@@ -8,7 +8,7 @@
 	<section>
 		<h3>The Grid</h3>
 		<p>
-			Hammer of Thor is played on a <strong>6 reels × 5 rows</strong> grid with a
+			Hammer of Thor is played on a <strong>7 reels × 7 rows</strong> grid with a
 			<strong>cluster pays</strong> mechanic. Wins are awarded when 8 or more identical symbols
 			form a connected cluster horizontally and/or vertically — paylines are not used.
 		</p>

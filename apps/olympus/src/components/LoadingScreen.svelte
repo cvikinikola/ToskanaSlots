@@ -7,15 +7,11 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE, getLoadingCenterFraction } from '../game/constants';
-	import { stateGame } from '../game/stateGame.svelte';
-
 	type Props = { onloaded: () => void };
 	const props: Props = $props();
 	const context = getContext();
 
-	const loaded = $derived(
-		context.stateApp.loaded && stateGame.thor3DReady,
-	);
+	const loaded = $derived(context.stateApp.loaded);
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const centerFraction = $derived(getLoadingCenterFraction(layoutType));
 	// Tighter logo + spacing on portrait/tablet so it doesn't overflow.

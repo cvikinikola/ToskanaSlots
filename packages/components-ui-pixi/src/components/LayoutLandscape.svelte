@@ -4,12 +4,31 @@
 	import { MainContainer } from 'components-layout';
 	import { Container, Rectangle, anchorToPivot } from 'pixi-svelte';
 
-	import { LANDSCAPE_BASE_SIZE, LANDSCAPE_BACKGROUND_WIDTH_LIST } from '../constants';
+	import {
+		LANDSCAPE_BASE_SIZE,
+		LANDSCAPE_BACKGROUND_WIDTH_LIST,
+		UI_BAR_ACTION_SIZE,
+		UI_BAR_ICON_SIZE,
+	} from '../constants';
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
+
+	const BAR_SCALE = 0.8;
+	const BOTTOM_ROW_Y = LANDSCAPE_BASE_SIZE * 0.5 - 90;
+	const MENU_X = 239;
+	const BALANCE_COUNTER_X = 420; // balance plate (unchanged)
+
+	const iconHalf = (UI_BAR_ICON_SIZE * BAR_SCALE) / 2;
+	const buyBonusHalf = (UI_BAR_ACTION_SIZE * 1.48 * BAR_SCALE) / 2;
+
+	const AUTO_SPIN_X = 1395;
+	const BAR_GAP = 14;
+
+	/** Landscape only: buy bonus tucked against the left edge of auto-spin. */
+	const buyBonusX = AUTO_SPIN_X - iconHalf - BAR_GAP - buyBonusHalf;
 </script>
 
 <Container x={20}>
@@ -42,15 +61,15 @@
 				• buy bonus keeps same spacing from menu (was 175 gap)
 				• decrease / increase: shifted left (was 1580 / 1715)
 		-->
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={239} scale={0.8}>
-			{@render props.buttonMenu({ anchor: 0.5 })}
-		</Container>
-
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={414} scale={0.8}>
+		<Container y={BOTTOM_ROW_Y} x={buyBonusX} scale={BAR_SCALE}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5} x={420} scale={0.8}>
+		<Container y={BOTTOM_ROW_Y} x={MENU_X} scale={BAR_SCALE}>
+			{@render props.buttonMenu({ anchor: 0.5 })}
+		</Container>
+
+		<Container y={LANDSCAPE_BASE_SIZE * 0.5} x={BALANCE_COUNTER_X} scale={BAR_SCALE}>
 			{@render props.amountBalance({ stacked: true })}
 		</Container>
 
@@ -69,11 +88,11 @@
 			right edge ≈ 1593; button half-width 60 × 0.8 ≈ 48 → turbo center
 			≈ 1545). Auto-spin sits ~150 px to its left.
 		-->
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={1395} scale={0.8}>
+		<Container y={BOTTOM_ROW_Y} x={AUTO_SPIN_X} scale={BAR_SCALE}>
 			{@render props.buttonAutoSpin({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5 - 90} x={1545} scale={0.8}>
+		<Container y={BOTTOM_ROW_Y} x={1545} scale={BAR_SCALE}>
 			{@render props.buttonTurbo({ anchor: 0.5 })}
 		</Container>
 	</Container>

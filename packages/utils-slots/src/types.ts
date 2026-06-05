@@ -40,6 +40,8 @@ type ReelCreateOptions<TRawSymbol extends object, TSymbolState extends string> =
 	initialSymbolState: TSymbolState;
 	reelIndex: number;
 	symbolHeight: number;
+	/** Added to every row Y so sprites can inset inside a frame (default 0). */
+	symbolOffsetY?: number;
 	onReelSpinStart?: () => void;
 	onReelStopping: () => void;
 	onSymbolLand: (args: { rawSymbol: TRawSymbol }) => void;

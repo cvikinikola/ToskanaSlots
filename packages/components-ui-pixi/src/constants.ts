@@ -2,6 +2,12 @@ import { WHITE } from 'constants-shared/colors';
 
 export const UI_BASE_SIZE = 150;
 
+/** Auto-spin, turbo, bet +/- (60% of base — 50% + 20% bump). */
+export const UI_BAR_ICON_SIZE = UI_BASE_SIZE * 0.6;
+
+/** Spin and buy-bonus (+20% of base). */
+export const UI_BAR_ACTION_SIZE = UI_BASE_SIZE * 1.2;
+
 export const UI_BASE_FONT_SIZE = UI_BASE_SIZE * 0.3;
 
 export const UI_TEXT_STYLES = {

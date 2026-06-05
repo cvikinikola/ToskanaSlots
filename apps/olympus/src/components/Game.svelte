@@ -14,7 +14,7 @@
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
 	import Sound from './Sound.svelte';
-	import Background from './Background.svelte';
+	import BackgroundVideo from './BackgroundVideo.svelte';
 	import BottomUiBackdrop from './BottomUiBackdrop.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import MipmapEnabler from './MipmapEnabler.svelte';
@@ -27,9 +27,6 @@
 	import ReelFramePanel from './ReelFramePanel.svelte';
 	import Win from './Win.svelte';
 	import WinSparks from './WinSparks.svelte';
-	import LightningCrackle from './LightningCrackle.svelte';
-	import AmbientLightning from './AmbientLightning.svelte';
-	import SkyLightning from './SkyLightning.svelte';
 	import WinGlow from './WinGlow.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
@@ -56,10 +53,18 @@
 		if (layoutType === 'landscape') return 0.6; // mobile landscape
 		return 1;
 	});
-	// On portrait/tablet Thor is rendered above the frame — hide the text title
-	// to avoid clashing with the 3-D character in the same area.
 </script>
 
+<style lang="scss">
+	.game-pixi {
+		position: relative;
+		z-index: 1;
+	}
+</style>
+
+<BackgroundVideo />
+
+<div class="game-pixi">
 <App>
 	<EnableSound />
 	<EnableHotkey />
@@ -67,8 +72,6 @@
 	<EnablePixiExtension />
 
 	<MipmapEnabler />
-
-	<Background />
 
 	{#if context.stateLayout.showLoadingScreen}
 		<LoadingScreen onloaded={() => (context.stateLayout.showLoadingScreen = false)} />
@@ -93,9 +96,6 @@
 		</MainContainer>
 
 		<WinSparks />
-		<LightningCrackle />
-		<AmbientLightning />
-		<SkyLightning />
 		<WinGlow />
 
 		<UI>
@@ -120,6 +120,7 @@
 		<Transition />
 	{/if}
 </App>
+</div>
 
 <Modals>
 	{#snippet version()}

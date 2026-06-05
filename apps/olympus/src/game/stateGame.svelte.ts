@@ -11,6 +11,8 @@ import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
 import {
 	SYMBOL_SIZE,
+	REEL_STEP_Y,
+	BOARD_SYMBOL_OFFSET_Y,
 	BOARD_SIZES,
 	getBoardCenterMain,
 	INITIAL_BOARD,
@@ -42,7 +44,8 @@ const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
 const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 	const reel = createReelForCascading<RawSymbol, SymbolState>({
 		reelIndex,
-		symbolHeight: SYMBOL_SIZE,
+		symbolHeight: REEL_STEP_Y,
+		symbolOffsetY: BOARD_SYMBOL_OFFSET_Y,
 		initialSymbols: INITIAL_BOARD[reelIndex],
 		initialSymbolState: INITIAL_SYMBOL_STATE,
 		// soundReelSpin is now broadcast from the 'reveal' book-event handler

@@ -7,12 +7,22 @@
  */
 
 import { choiceWeighted, defaultRng } from './rng.js';
+import { sanitizeGridSymbol, sanitizePaddedBoard } from './symbols.js';
+import {
+  SCATTER_RATE,
+  BASE_SYMBOL_WEIGHTS,
+  buildSymbolWeights,
+  neighborRefillBias,
+} from './tuning.js';
+
+export { GRID_SYMBOL_NAMES, PAYING_SYMBOL_NAMES, GRID_SYMBOLS, sanitizeGridSymbol, sanitizePaddedBoard } from './symbols.js';
+export { SCATTER_RATE, BASE_SYMBOL_WEIGHTS, buildSymbolWeights };
 
 // ─── Layout ──────────────────────────────────────────────────────────────────
 
 export const BOARD_CONFIG = {
-  numReels: 6,
-  numRows: 5,
+  numReels: 7,
+  numRows: 7,
   paddingTop: 1,
   paddingBottom: 1,
 };
@@ -20,52 +30,43 @@ export const BOARD_CONFIG = {
 export const COLUMN_HEIGHT =
   BOARD_CONFIG.numRows + BOARD_CONFIG.paddingTop + BOARD_CONFIG.paddingBottom;
 
-// ─── Reel weights (Gates-of-Olympus style: lows dominate) ────────────────────
-//
-// Keep symbols fairly even. With pay-anywhere 8+ wins on a 30-cell grid,
-// heavily weighted low symbols make almost every spin a winner.
-
-const SYMBOL_WEIGHTS = [
-  ['L4', 12], ['L3', 12], ['L2', 11], ['L1', 10],
-  ['H4', 9],  ['H3', 8],  ['H2', 7],  ['H1', 6],
-];
-
-const SCATTER_RATE = 0.004;
-const MULTIPLIER_RATE_BASE = 0.005;
-const MULTIPLIER_RATE_FREE = 0.018;
-
-// Gates-of-Olympus multiplier ladder: 2× → 500×.
-// Weights skew heavily to the low end; the huge values are extremely rare.
-const DEFAULT_MULTIPLIER_WEIGHTS = [
-  [2, 50],   [3, 30],   [4, 18],   [5, 10],
-  [6, 6],    [8, 3],    [10, 2],   [12, 1.2],
-  [15, 0.6], [20, 0.3], [25, 0.15], [50, 0.05],
-  [100, 0.02], [250, 0.005], [500, 0.001],
-];
-const MULTIPLIER_WEIGHTS = DEFAULT_MULTIPLIER_WEIGHTS;
-
 // ─── Symbol / board generation ───────────────────────────────────────────────
 
+const applyBias = (weights, biasSymbol, biasMultiplier) => {
+  if (!biasSymbol) return weights;
+  return weights.map(([name, weight]) =>
+    name === biasSymbol ? [name, weight * biasMultiplier] : [name, weight],
+  );
+};
+
 /**
- * Produce a single random symbol.
- *  - Scatters: can land in both base and free-spin mode
- *    (3+ during free spins triggers a retrigger of extra spins).
- *  - Multipliers: ~2x denser in free spins.
+ * Produce a single random grid symbol (H1–H4, L1–L3, or S).
+ *
+ * @param {object} opts
+ * @param {Array<[string, number]>} [opts.symbolWeights]
+ * @param {string} [opts.refillBiasSymbol]  symbol below in column (tumble refill)
+ * @param {boolean} [opts.freeSpinMode]
+ * @param {boolean} [opts.bonusBuyMode]
  */
 export const generateSymbol = ({
   freeSpinMode = false,
+  bonusBuyMode = false,
   allowScatter = true,
-  allowMultiplier = true,
+  symbolWeights = BASE_SYMBOL_WEIGHTS,
+  refillBiasSymbol = null,
   rng = defaultRng,
 } = {}) => {
   if (allowScatter && rng() < SCATTER_RATE) {
-    return { name: 'S', scatter: true };
+    return sanitizeGridSymbol({ name: 'S', scatter: true });
   }
-  const multRate = freeSpinMode ? MULTIPLIER_RATE_FREE : MULTIPLIER_RATE_BASE;
-  if (allowMultiplier && rng() < multRate) {
-    return { name: 'M', multiplier: choiceWeighted(MULTIPLIER_WEIGHTS, rng) };
-  }
-  return { name: choiceWeighted(SYMBOL_WEIGHTS, rng) };
+
+  const biasedWeights = applyBias(
+    symbolWeights,
+    refillBiasSymbol,
+    neighborRefillBias(freeSpinMode, bonusBuyMode),
+  );
+  const name = choiceWeighted(biasedWeights, rng);
+  return sanitizeGridSymbol({ name });
 };
 
 /** Fresh board sized to BOARD_CONFIG. */
@@ -128,7 +129,14 @@ export const dropAndFill = (sparseBoard, opts = {}) => {
     const kept = sparseBoard[r].filter((s) => s !== null);
     const need = COLUMN_HEIGHT - kept.length;
     const fresh = [];
-    for (let i = 0; i < need; i++) fresh.push(generateSymbol(opts));
+    for (let i = 0; i < need; i++) {
+      fresh.push(
+        generateSymbol({
+          ...opts,
+          refillBiasSymbol: kept.length > 0 ? kept[0].name : null,
+        }),
+      );
+    }
     board.push([...fresh, ...kept]);
     newSymbols.push(fresh);
   }
