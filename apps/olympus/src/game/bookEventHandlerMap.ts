@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { tick } from 'svelte';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
 import { stateBet, stateUi } from 'state-shared';
@@ -354,9 +355,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	//  5. Settle the main board with the resulting symbols
 	//  6. Hide tumble overlay, show main board
 	tumbleBoard: async (bookEvent: BookEventOfType<'tumbleBoard'>) => {
-		eventEmitter.broadcast({ type: 'boardHide' });
+		// Paint tumble overlay before hiding the main board — boardHide first caused
+		// a blank frame where non-winning symbols (esp. bottom row) vanished in QA.
 		eventEmitter.broadcast({ type: 'tumbleBoardShow' });
 		eventEmitter.broadcast({ type: 'tumbleBoardInit', addingBoard: bookEvent.newSymbols });
+		await tick();
+		eventEmitter.broadcast({ type: 'boardHide' });
 
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_tumble_explode' });
 		await eventEmitter.broadcastAsync({

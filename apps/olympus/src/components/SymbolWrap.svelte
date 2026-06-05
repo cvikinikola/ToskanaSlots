@@ -3,8 +3,6 @@
 	import { Container } from 'pixi-svelte';
 	import { getContextBoard } from 'components-shared';
 
-	import { BOARD_SIZES } from '../game/constants';
-
 	type Props = {
 		x: number;
 		y: number;
@@ -49,15 +47,10 @@
 	//    igrača (rezervoar iz kog ulizgavaju pravi simboli), gasimo ih bez
 	//    obzira na trenutni y. Isto važi i u mirovanju (y=−50 / y=550).
 	//
-	// 2) VIDLJIVI 5×6 simboli: cull na ivici maske (y < 0 ili y > height).
-	//    Maska je tvrd GPU clip na y∈[0, 500]; ako simbol malo premaši ivicu
-	//    (npr. `backOut` bounce kod fall-in landing-a — row 4 nakratko ode
-	//    par piksela ispod y=450), MASKA ga lepo odseče i vidi se tek mali
-	//    sjaj, a simbol NE nestane. Time se izbegava da poslednji red
-	//    „proguta" donja ivica tokom landing bounce-a.
-	const invisible = $derived(
-		props.isPadding || props.y < 0 || props.y > BOARD_SIZES.height,
-	);
+	// 2) VIDLJIVI simboli iznad grida: sakrij dok su u rezervoaru (y < 0).
+	//    Donju ivicu reže BoardMask (GPU clip) — runtime y > height gasio je ceo
+	//    sprite i donji red je treperio tokom tumble eksplozije u QA.
+	const invisible = $derived(props.isPadding || props.y < 0);
 </script>
 
 {#if show}

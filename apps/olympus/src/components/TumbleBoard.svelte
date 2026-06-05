@@ -22,6 +22,7 @@
 	import TumbleBoardBase from './TumbleBoardBase.svelte';
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
+	import { TUMBLE_OPTIONS } from '../game/constants';
 	import { getSymbolY } from '../game/utils';
 	import { getContext } from '../game/context';
 	import type { RawSymbol } from '../game/types';
@@ -29,6 +30,15 @@
 	const context = getContext();
 
 	let show = $state(false);
+
+	// Refill symbols are held here at init and only materialised at slideDown.
+	// Keeping `tumbleBoardAdding` EMPTY during the explosion phase means the
+	// combined array length stays 9 (top pad + 7 rows + bottom pad), so the
+	// index→row mapping (and the combined-index isPadding in TumbleBoardBase)
+	// stays valid. If adding were prepended during the explosion, every base
+	// symbol's combined index would shift up and bottom rows would be wrongly
+	// treated as padding (the symbols-vanish bug).
+	let pendingAddingBoard: RawSymbol[][] = [];
 
 	const createTumbleSymbol = ({ initY, rawSymbol }: { initY: number; rawSymbol: RawSymbol }) => {
 		const symbolY = new Tween(initY);
@@ -54,9 +64,12 @@
 	};
 
 	const initTumbleBoardBase = () => {
-		return context.stateGameDerived.boardRaw().map((rawSymbolReel) => {
+		return context.stateGameDerived.boardRaw().map((rawSymbolReel, reelIndex) => {
+			const reelSymbols = context.stateGame.board[reelIndex].reelState.symbols;
 			const tumbleReelBase = rawSymbolReel.map((rawSymbol, symbolIndex) => {
-				const initY = getSymbolY(symbolIndex - 1);
+				// Snapshot live Y from the main board so the overlay matches exactly
+				// when boardHide fires — recalculating getSymbolY caused a 1-frame gap.
+				const initY = reelSymbols[symbolIndex].symbolY.current;
 				return createTumbleSymbol({ initY, rawSymbol });
 			});
 			return tumbleReelBase;
@@ -67,10 +80,13 @@
 		tumbleBoardShow: () => (show = true),
 		tumbleBoardHide: () => (show = false),
 		tumbleBoardInit: ({ addingBoard }) => {
-			context.stateGame.tumbleBoardAdding = initTumbleBoardAdding({ addingBoard });
+			// Defer refill symbols until slideDown (see pendingAddingBoard above).
+			pendingAddingBoard = addingBoard;
+			context.stateGame.tumbleBoardAdding = [];
 			context.stateGame.tumbleBoardBase = initTumbleBoardBase();
 		},
 		tumbleBoardReset: () => {
+			pendingAddingBoard = [];
 			context.stateGame.tumbleBoardAdding = [];
 			context.stateGame.tumbleBoardBase = [];
 		},
@@ -106,10 +122,17 @@
 			});
 		},
 		tumbleBoardSlideDown: async () => {
-			// Original Olympus default tempo: brz padding bez per-reel/per-symbol
-			// stagger-a (200ms backOut). Stop-button/dedupe logika i sound poziv
-			// ostaju netaknuti.
-			const FALL_DURATION_MS = 200;
+			// Materialise refill symbols now (deferred from init). After
+			// removeExploded the base has shrunk by N per reel, so prepending the
+			// N adding symbols restores the combined length back to 9 and the
+			// index→row mapping stays correct.
+			context.stateGame.tumbleBoardAdding = initTumbleBoardAdding({
+				addingBoard: pendingAddingBoard,
+			});
+
+			// Constant velocity (like a regular spin): each symbol's fall duration is
+			// proportional to how far it drops, so refill symbols coming from the top
+			// move at the SAME speed as short-dropping kept symbols.
 			const getPromises = () =>
 				context.stateGameDerived.tumbleBoardCombined().map(async (tumbleReel, reelIndex) => {
 					const reelMoved = tumbleReel.some((tumbleSymbol, symbolIndex) => {
@@ -121,8 +144,13 @@
 						tumbleReel.map(async (tumbleSymbol, symbolIndex) => {
 							const targetY = getSymbolY(symbolIndex - 1);
 							if (targetY !== tumbleSymbol.symbolY.current) {
+								const distance = Math.abs(targetY - tumbleSymbol.symbolY.current);
+								const duration = Math.max(
+									TUMBLE_OPTIONS.fallMinDurationMs,
+									distance / TUMBLE_OPTIONS.fallSpeedPxPerMs,
+								);
 								await tumbleSymbol.symbolY.set(targetY, {
-									duration: FALL_DURATION_MS,
+									duration,
 									easing: backOut,
 								});
 								if (symbolIndex > 0 && symbolIndex < tumbleReel.length - 1) {
@@ -177,13 +205,6 @@
 </script>
 
 {#if show}
-	<BoardContext animate={false}>
-		<BoardContainer>
-			<BoardMask />
-			<TumbleBoardBase />
-		</BoardContainer>
-	</BoardContext>
-
 	<BoardContext animate={true}>
 		<BoardContainer>
 			<!--

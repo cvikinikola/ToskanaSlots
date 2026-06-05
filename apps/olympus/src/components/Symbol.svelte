@@ -2,7 +2,7 @@
 	import { Container, BitmapText, Sprite } from 'pixi-svelte';
 	import { stateBet } from 'state-shared';
 	import type { SymbolState, RawSymbol } from '../game/types';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { SYMBOL_SIZE, TUMBLE_OPTIONS } from '../game/constants';
 	import { getSymbolAssetKey, getSymbolSpriteSize } from '../game/utils';
 
 	type Props = {
@@ -22,7 +22,7 @@
 	 * Visual feedback per state:
 	 *  - win:           bright tint + slight scale-up
 	 *  - postWinStatic: full colour fallback after win animation
-	 *  - explosion:     red flash, fires oncomplete after 400ms
+	 *  - explosion:     red flash, fires oncomplete after TUMBLE_OPTIONS.explosionDurationMs
 	 *  - default:       full colour
 	 */
 	const tint = $derived(
@@ -46,14 +46,22 @@
 	// QA 03.06.2026: dodatno produženo turbo trajanje uništenja jer je 140ms
 	// bilo prekratko — animacija se "razlivala" na sledeći cascade.
 	$effect(() => {
-		if (props.state === 'win' || props.state === 'explosion') {
-			const duration = stateBet.isTurbo ? 360 : 400;
+		if (props.state === 'win') {
+			const duration = stateBet.isTurbo
+				? TUMBLE_OPTIONS.winDurationTurboMs
+				: TUMBLE_OPTIONS.winDurationMs;
+			const t = setTimeout(() => props.oncomplete?.(), duration);
+			return () => clearTimeout(t);
+		}
+		if (props.state === 'explosion') {
+			const duration = stateBet.isTurbo
+				? TUMBLE_OPTIONS.explosionDurationTurboMs
+				: TUMBLE_OPTIONS.explosionDurationMs;
 			const t = setTimeout(() => props.oncomplete?.(), duration);
 			return () => clearTimeout(t);
 		}
 		if (props.state === 'land') {
-			// Short bounce/settle delay before the symbol is considered done landing.
-			const t = setTimeout(() => props.oncomplete?.(), 120);
+			const t = setTimeout(() => props.oncomplete?.(), TUMBLE_OPTIONS.landDurationMs);
 			return () => clearTimeout(t);
 		}
 	});

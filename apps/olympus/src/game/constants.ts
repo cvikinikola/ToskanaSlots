@@ -255,29 +255,47 @@ export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 
 
 export const SPIN_OPTIONS_DEFAULT = {
-	symbolFallInSpeed: 5,
-	symbolFallInInterval: 40,
-	symbolFallInBounceSpeed: 2,
+	symbolFallInSpeed: 3,
+	symbolFallInInterval: 65,
+	symbolFallInBounceSpeed: 1.2,
 	symbolFallInBounceSizeMulti: 0.1,
-	symbolFallOutSpeed: 8,
-	symbolFallOutInterval: 20,
-	reelFallInDelay: 60,
+	symbolFallOutSpeed: 5,
+	symbolFallOutInterval: 35,
+	reelFallInDelay: 100,
 	reelPaddingMultiplierNormal: 1.5,
 	reelPaddingMultiplierAnticipated: 3,
-	reelFallOutDelay: 40,
+	reelFallOutDelay: 70,
 };
 
 export const SPIN_OPTIONS_FAST = {
-	symbolFallInSpeed: 12,
-	symbolFallInInterval: 20,
-	symbolFallInBounceSpeed: 5,
+	symbolFallInSpeed: 8,
+	symbolFallInInterval: 35,
+	symbolFallInBounceSpeed: 3,
 	symbolFallInBounceSizeMulti: 0.05,
-	symbolFallOutSpeed: 16,
-	symbolFallOutInterval: 10,
-	reelFallInDelay: 20,
+	symbolFallOutSpeed: 10,
+	symbolFallOutInterval: 18,
+	reelFallInDelay: 40,
 	reelPaddingMultiplierNormal: 1,
 	reelPaddingMultiplierAnticipated: 2,
-	reelFallOutDelay: 20,
+	reelFallOutDelay: 35,
+};
+
+/** Cascade / tumble animation timings (ms). */
+export const TUMBLE_OPTIONS = {
+	/**
+	 * Constant fall velocity (px per ms) for cascade refill — mirrors a regular
+	 * spin where every symbol shares one speed and arrives staggered by distance.
+	 * Lower = slower. Replaces the old fixed-duration drop, which made far-falling
+	 * refill symbols race ahead of short-dropping kept symbols.
+	 */
+	fallSpeedPxPerMs: 0.6,
+	/** Floor so a 1-row drop still reads as a deliberate move. */
+	fallMinDurationMs: 150,
+	explosionDurationMs: 650,
+	explosionDurationTurboMs: 500,
+	winDurationMs: 650,
+	winDurationTurboMs: 500,
+	landDurationMs: 200,
 };
 
 export const SYMBOL_COLORS: Record<string, number> = {

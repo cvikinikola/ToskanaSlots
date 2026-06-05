@@ -85,7 +85,6 @@
 		<MainContainer>
 			<ReelFramePanel />
 			<Board />
-			<SpotMultipliers />
 			<GlobalMultiplier />
 		</MainContainer>
 
@@ -95,6 +94,16 @@
 			<TumbleWinAmount />
 			<FreeSpinCounter />
 			<MultiplierFly />
+		</MainContainer>
+
+		<!--
+			Spot multipliers (Sugar Rush) su POZICIONI overlay i moraju ostati
+			vidljivi PREKO ćelije i tokom eksplozije/refill-a. Zato se crtaju POSLE
+			TumbleBoard grupe (koja prekriva prvi MainContainer), inače bi novi
+			refill simbol prekrio marker i delovalo bi da se spot „izgubi".
+		-->
+		<MainContainer>
+			<SpotMultipliers />
 		</MainContainer>
 
 		<WinSparks />

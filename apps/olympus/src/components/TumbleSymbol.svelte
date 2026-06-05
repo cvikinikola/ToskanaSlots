@@ -12,10 +12,9 @@
 
 	const props: Props = $props();
 
-	/** Tumble symbols are always "animating" so they render in the animate pass. */
-	const animating = $derived(
-		props.tumbleSymbol.symbolState === 'win' || props.tumbleSymbol.symbolState === 'explosion',
-	);
+	// Tumble overlay: always the animate pass — avoids static↔animate pass switches
+	// when a symbol enters 'explosion', which briefly unmounted neighbours in QA.
+	const animating = true;
 </script>
 
 <SymbolWrap

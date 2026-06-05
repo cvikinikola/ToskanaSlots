@@ -7,13 +7,13 @@
 </script>
 
 {#each context.stateGameDerived.tumbleBoardCombined() as tumbleSymbols, reelIndex (reelIndex)}
-	{#each tumbleSymbols as tumbleSymbol, symbolIndex}
+	{#each tumbleSymbols as tumbleSymbol, symbolIndex (tumbleSymbol)}
 		<!--
-			isPadding: simbol čiji `targetY = getSymbolY(symbolIndex - 1)` pada van
-			vidljivih 7 redova — to su gornji rezervoar (symbolIndex 0 → y<0)
-			i svaki preostali sufiks ispod poslednjeg vidljivog reda (symbolIndex > BOARD_DIMENSIONS.y).
-			Ovi su uvek nevidljivi: ne smeju da se prikazuju ni u
-			mirovanju ni dok tranzituju kroz vidljivi opseg tokom slideDown-a.
+			isPadding iz KOMBINOVANOG indeksa (konačni raspored): index 0 = gornji
+			rezervoar (cilj y<0), index > BOARD_DIMENSIONS.y = donji rezervoar.
+			Vidljivi su tačno index 1..7 (redovi 0..6). Adding simboli se kreiraju
+			tek u slideDown, pa kombinovana dužina ostaje 9 i ovo mapiranje je
+			ispravno i tokom eksplozije i posle refill-a.
 		-->
 		<TumbleSymbol
 			{reelIndex}
