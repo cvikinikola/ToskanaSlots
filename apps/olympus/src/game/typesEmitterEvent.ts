@@ -13,6 +13,7 @@ import type { EmitterEventTransition } from '../components/Transition.svelte';
 import type { EmitterEventWinSparks } from '../components/WinSparks.svelte';
 import type { EmitterEventLightningCrackle } from '../components/LightningCrackle.svelte';
 import type { EmitterEventWinGlow } from '../components/WinGlow.svelte';
+import type { EmitterEventSpotMultipliers } from '../components/SpotMultipliers.svelte';
 
 /**
  * The union of all typed emitter events for this game.
@@ -33,4 +34,5 @@ export type EmitterEventGame =
 	| EmitterEventTransition
 	| EmitterEventWinSparks
 	| EmitterEventLightningCrackle
-	| EmitterEventWinGlow;
+	| EmitterEventWinGlow
+	| EmitterEventSpotMultipliers;

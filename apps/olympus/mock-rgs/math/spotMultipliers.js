@@ -52,8 +52,11 @@ export const appliedSpotMultiplier = (spotSum) => (spotSum > 0 ? spotSum : 1);
 /** Record explosions after a win; returns changed spots for book events. */
 export const recordExplosions = (state, positions) => {
   const updates = [];
+  const seen = new Set();
   for (const p of positions) {
     const key = spotKey(p.reel, p.row);
+    if (seen.has(key)) continue;
+    seen.add(key);
     const prev = state.spots.get(key) ?? { explosionCount: 0, multiplier: 0 };
     const explosionCount = prev.explosionCount + 1;
     const multiplier = multiplierFromExplosionCount(explosionCount);

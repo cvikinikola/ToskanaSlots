@@ -96,7 +96,10 @@ export const runTumbleSequence = ({
     });
     emit({ type: 'updateTumbleWin', amount: toBookAmount(tumbleWin) });
 
-    const exploding = wins.flatMap((w) => w.boardPositions);
+    const exploding = wins.flatMap((w) => w.boardPositions).filter((p, i, arr) => {
+      const key = `${p.reel},${p.row}`;
+      return arr.findIndex((q) => q.reel === p.reel && q.row === p.row) === i;
+    });
     recordExplosions(spotState, exploding);
     emit({
       type: 'spotMultiplierUpdate',

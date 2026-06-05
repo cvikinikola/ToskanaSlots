@@ -332,6 +332,18 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		};
 	},
 
+	// ── spotMultiplierUpdate ───────────────────────────────────────────────────
+	// Grid-position multipliers (Sugar Rush). Emitted after explosions, before
+	// tumbleBoard — spots must survive refill/drop and only clear when the full
+	// tumble sequence ends (finalWin / freeSpinEnd), never mid-cascade.
+	spotMultiplierUpdate: async (bookEvent: BookEventOfType<'spotMultiplierUpdate'>) => {
+		eventEmitter.broadcast({ type: 'spotMultiplierUpdate', spots: bookEvent.spots });
+	},
+
+	spotMultipliersClear: async () => {
+		eventEmitter.broadcast({ type: 'spotMultipliersClear' });
+	},
+
 	// ── tumbleBoard ────────────────────────────────────────────────────────────
 	// Core cascade animation step.
 	// Sequence:
@@ -414,6 +426,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		freeSpinTumbleWinBookEventAmount = 0;
 		spinEndMultiply = null;
 		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
+		// Base-game tumble ended — free spins start with a fresh spot grid.
+		eventEmitter.broadcast({ type: 'spotMultipliersClear' });
 
 		// Animate each scatter one-by-one: individual lightning bolt + pop sound per scatter.
 		// This gives the player clear visual feedback for each one landing.
@@ -550,6 +564,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		eventEmitter.broadcast({ type: 'tumbleWinAmountHide' });
 		eventEmitter.broadcast({ type: 'tumbleHistoryReset' });
+		eventEmitter.broadcast({ type: 'spotMultipliersClear' });
 
 		await eventEmitter.broadcastAsync({ type: 'transition' });
 		await eventEmitter.broadcastAsync({ type: 'uiShow' });
@@ -578,6 +593,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			playWinToBalanceCoins();
 		}
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
+		// Base game: tumble sequence finished — reset spot markers for next spin.
+		if (stateGame.gameType === 'basegame') {
+			eventEmitter.broadcast({ type: 'spotMultipliersClear' });
+		}
 		// QA 05.06.2026: animacija množenja na KRAJU SPINA (sirovo → pomnoženo).
 		// Base game: podaci su zabeleženi u `boardMultiplierInfo`. Free spins:
 		// svaki spin je već odigran u `updateFreeSpin`/`freeSpinEnd`, pa je ovde

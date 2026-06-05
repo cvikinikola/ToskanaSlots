@@ -23,6 +23,7 @@
 	import TumbleWinAmount from './TumbleWinAmount.svelte';
 	import TumbleHistory from './TumbleHistory.svelte';
 	import GlobalMultiplier from './GlobalMultiplier.svelte';
+	import SpotMultipliers from './SpotMultipliers.svelte';
 	import MultiplierFly from './MultiplierFly.svelte';
 	import ReelFramePanel from './ReelFramePanel.svelte';
 	import Win from './Win.svelte';
@@ -84,6 +85,7 @@
 		<MainContainer>
 			<ReelFramePanel />
 			<Board />
+			<SpotMultipliers />
 			<GlobalMultiplier />
 		</MainContainer>
 
