@@ -176,7 +176,8 @@ export const BOTTOM_UI_FRAC = 0.22;
 export const BG_FILL_COLOR = 0x06091a;
 
 /** Looping vineyard background (MP4, muted autoplay). */
-export const BG_VIDEO_MP4_SRC = '/assets/sprites/thor/bg_landscape.mp4';
+export const BG_VIDEO_BASE_SRC = '/assets/sprites/menuBar/bg_night.mp4';
+export const BG_VIDEO_FREESPIN_SRC = '/assets/sprites/thor/bg_landscape.mp4';
 
 
 export const getBgLayout = (

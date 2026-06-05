@@ -12,29 +12,27 @@
 	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
 	const sizes = { width: UI_BAR_ACTION_SIZE, height: UI_BAR_ACTION_SIZE };
 	const isSpinKey = (key: string) => ['spin_default', 'spin_disabled'].includes(key);
-	const isDisabledKey = (key: string) => ['spin_disabled', 'stop_disabled'].includes(key);
+	const isDisabledKey = (key: string) => key === 'spin_disabled';
+	const betAssetKey = (key: string) => (isSpinKey(key) ? 'menu_spin' : 'menu_spin_stop');
+	const betButtonScale = 1.08;
 </script>
 
 <ButtonBetProvider>
-	{#snippet children({ key, onpress })}
-		<OnHotkey hotkey="Space" {disabled} {onpress} />
-		<!--
-			QA: when the bet button is in a *_disabled state (e.g. STOP during
-			free spins) it must look and behave like AutoSpin while disabled —
-			no pointer cursor, no hover scale, no click feedback.
-		-->
-		<Button {...props} {sizes} {onpress} disabled={disabled || isDisabledKey(key)}>
+	{#snippet children({ key, onpress, pressDisabled })}
+		<OnHotkey hotkey="Space" disabled={disabled || pressDisabled} {onpress} />
+		<Button {...props} {sizes} {onpress} disabled={disabled || isDisabledKey(key) || pressDisabled}>
 			{#snippet children({ center, hovered, pressed })}
 				<Container
 					{...center}
 					scale={pressed ? 0.94 : hovered ? 1.04 : 1}
 				>
 					<UiAssetSprite
-						assetKey={isSpinKey(key) ? 'menu_spin' : 'menu_stop'}
+						assetKey={betAssetKey(key)}
+						fallbackAssetKey="menu_spin"
 						anchor={0.5}
-						width={sizes.width * (isSpinKey(key) ? 1.05 : 1.04)}
-						height={sizes.height * (isSpinKey(key) ? 1.05 : 0.52)}
-						alpha={disabled || ['spin_disabled', 'stop_disabled'].includes(key) ? 0.5 : 1}
+						width={sizes.width * betButtonScale}
+						height={sizes.height * betButtonScale}
+						alpha={disabled || key === 'spin_disabled' ? 0.5 : 1}
 					/>
 				</Container>
 			{/snippet}

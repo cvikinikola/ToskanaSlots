@@ -593,6 +593,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── finalWin ──────────────────────────────────────────────────────────────
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
+		// Simboli su stali — spin dugme odmah, animacije nastavljaju u pozadini.
+		eventEmitter.broadcast({ type: 'stopButtonEnable' });
 		if (bookEvent.amount > 0) {
 			playWinToBalanceCoins();
 		}
@@ -601,18 +603,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (stateGame.gameType === 'basegame') {
 			eventEmitter.broadcast({ type: 'spotMultipliersClear' });
 		}
-		// QA 05.06.2026: animacija množenja na KRAJU SPINA (sirovo → pomnoženo).
-		// Base game: podaci su zabeleženi u `boardMultiplierInfo`. Free spins:
-		// svaki spin je već odigran u `updateFreeSpin`/`freeSpinEnd`, pa je ovde
-		// najčešće no-op.
-		await playSpinEndMultiply();
-		// QA 04.06.2026: Gates-of-Olympus ponašanje — TumbleHistory i
-		// TumbleWinAmount paneli ostaju vidljivi sve dok ne krene sledeći spin
-		// (reveal handler ih resetuje na početku). Više ih ne sakrivamo
-		// eksplicitno na kraju spina, samo malo zadržimo radi audio ritma i
-		// count-up animacije.
-		const holdMs = stateBet.isTurbo ? 700 : 1200;
-		await waitForTimeout(holdMs);
+		// Animacija množenja u pozadini — ne blokira spin dugme.
+		void playSpinEndMultiply();
 	},
 
 	// ── createBonusSnapshot ───────────────────────────────────────────────────

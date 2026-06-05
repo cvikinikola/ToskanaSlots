@@ -15,6 +15,7 @@
 				{
 					key: ButtonBetKey;
 					onpress: () => void;
+					pressDisabled: boolean;
 				},
 			]
 		>;
@@ -23,7 +24,16 @@
 	const props: Props = $props();
 	const context = getContext();
 
-	let stopDisabled = $state(false);
+	let stopClickDisabled = $state(false);
+	let stopForceInactive = $state(false);
+	let roundPlaybackComplete = $state(false);
+	let wasBetting = false;
+
+	$effect(() => {
+		const betting = context.stateXstateDerived.isBetting();
+		if (betting && !wasBetting) roundPlaybackComplete = false;
+		wasBetting = betting;
+	});
 
 	const bet = () => {
 		if (stateBetDerived.activeBetMode()?.type === 'buy') stateBet.activeBetModeKey = 'BASE';
@@ -31,7 +41,7 @@
 	};
 
 	const stop = () => {
-		if (!stopDisabled) {
+		if (!stopClickDisabled && !stopForceInactive) {
 			if (stateBetDerived.hasAutoBetCounter()) stateBet.autoSpinsCounter = 0;
 			context.eventEmitter.broadcast({ type: 'stopButtonClick' });
 		}
@@ -42,37 +52,36 @@
 
 		if (context.stateXstateDerived.isIdle()) {
 			bet();
-		} else {
+		} else if (!roundPlaybackComplete) {
 			stop();
 		}
 	};
 
 	const getKey = () => {
-		if (context.stateXstateDerived.isIdle()) {
+		if (context.stateXstateDerived.isIdle() || roundPlaybackComplete) {
 			if (!stateBetDerived.isBetCostAvailable()) return 'spin_disabled';
 			return 'spin_default';
 		}
 
-		if (!context.stateXstateDerived.isIdle()) {
-			if (stopDisabled) return 'stop_disabled';
-			if (stateBetDerived.hasAutoBetCounter()) return 'stop_default';
-			if (stateBet.isTurbo) return 'stop_disabled';
-			return 'stop_default';
-		}
-
-		return 'spin_default';
+		return 'stop_default';
 	};
 
 	const key = $derived.by(getKey);
+	const pressDisabled = $derived.by(() => {
+		if (context.stateXstateDerived.isIdle()) return false;
+		if (roundPlaybackComplete) return true;
+		return stopClickDisabled || stopForceInactive;
+	});
 
 	context.eventEmitter.subscribeOnMount({
-		stopButtonClick: () => (stopDisabled = true),
-		stopButtonEnable: () => (stopDisabled = false),
-		// Allows games to keep STOP greyed-out without triggering the turbo
-		// side-effect that stopButtonClick has (e.g. during free spins where
-		// the user shouldn't be able to interrupt the auto-played sequence).
-		stopButtonDisable: () => (stopDisabled = true),
+		stopButtonClick: () => (stopClickDisabled = true),
+		stopButtonEnable: () => {
+			roundPlaybackComplete = true;
+			stopClickDisabled = false;
+			stopForceInactive = false;
+		},
+		stopButtonDisable: () => (stopForceInactive = true),
 	});
 </script>
 
-{@render props.children({ key, onpress })}
+{@render props.children({ key, onpress, pressDisabled })}
