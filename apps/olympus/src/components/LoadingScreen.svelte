@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Container, BitmapText, Sprite } from 'pixi-svelte';
+	import { Container, BitmapText } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
 	import { OnHotkey } from 'components-shared';
@@ -25,13 +25,18 @@
 			x={context.stateLayoutDerived.mainLayout().width * centerFraction.x}
 			y={context.stateLayoutDerived.mainLayout().height * centerFraction.y}
 		>
-			<!-- Title logo (placeholder Hammer of Thor SVG) -->
-			<Sprite
-				key="logo"
+			<BitmapText
 				anchor={0.5}
 				y={-SYMBOL_SIZE * 2.0 * logoScale}
-				width={SYMBOL_SIZE * 6.5 * logoScale}
-				height={SYMBOL_SIZE * 4.3 * logoScale}
+				text="Toskany Harvest"
+				style={{
+					fontFamily: 'proxima-nova',
+					fontSize: SYMBOL_SIZE * 0.55 * logoScale,
+					fill: 0xf5d78e,
+					fontWeight: '700',
+					stroke: { color: 0x3d2817, width: 5 },
+					letterSpacing: 1,
+				}}
 			/>
 
 			<BitmapText

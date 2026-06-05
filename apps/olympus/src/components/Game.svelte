@@ -4,9 +4,9 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, REM } from 'pixi-svelte';
+	import { App, BitmapText, REM } from 'pixi-svelte';
 
-	import { UI, UiAssetSprite } from 'components-ui-pixi';
+	import { UI } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
@@ -114,12 +114,19 @@
 				<!-- Single title used (logo snippet renders 'HAMMER OF THOR' top-right) -->
 			{/snippet}
 			{#snippet logo()}
-				<UiAssetSprite
-					assetKey="menu_logo"
+				<BitmapText
+					text="Toskany Harvest"
 					anchor={{ x: 1, y: 0 }}
+					x={0}
 					y={context.stateLayoutDerived.isStacked() ? REM * 0.5 : 0}
-					width={REM * 13.8 * titleScale}
-					height={REM * 2.95 * titleScale}
+					style={{
+						fontFamily: 'proxima-nova',
+						fontSize: REM * 1.05 * titleScale,
+						fill: 0xf5d78e,
+						fontWeight: '700',
+						stroke: { color: 0x3d2817, width: 5 },
+						letterSpacing: 1,
+					}}
 				/>
 			{/snippet}
 		</UI>
