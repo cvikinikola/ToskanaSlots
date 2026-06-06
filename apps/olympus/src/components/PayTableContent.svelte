@@ -1,90 +1,127 @@
 <script lang="ts">
-	const SYMBOLS_BASE = '/assets/sprites/thor';
+	import config from '../game/config';
+	import {
+		SYMBOL_LABELS,
+		UI_SYMBOL_LABELS,
+		formatSymbolLabel,
+		symbolAssetPath,
+	} from '../game/symbolLabels';
+	import type { SymbolName } from '../game/types';
 
-	const highSymbols = [
-		{ key: 'h1', label: 'Zeus', payouts: { '8-9': 5, '10-11': 12.5, '12-14': 25, '15-19': 62.5, '20-29': 125, '30+': 1250 } },
-		{ key: 'h2', label: 'Athena', payouts: { '8-9': 4, '10-11': 10, '12-14': 20, '15-19': 50, '20-29': 100, '30+': 1000 } },
-		{ key: 'h3', label: 'Poseidon', payouts: { '8-9': 2.5, '10-11': 6, '12-14': 12.5, '15-19': 37.5, '20-29': 75, '30+': 750 } },
-		{ key: 'h4', label: 'Hades', payouts: { '8-9': 1.5, '10-11': 4, '12-14': 7.5, '15-19': 25, '20-29': 50, '30+': 500 } },
-	];
+	const PAYING_SYMBOLS: SymbolName[] = ['H1', 'H2', 'H3', 'H4', 'L1', 'L2', 'L3'];
 
-	const lowSymbols = [
-		{ key: 'l1', label: 'Medusa', payouts: { '8-9': 1, '10-11': 2.5, '12-14': 5, '15-19': 12.5, '20-29': 25, '30+': 250 } },
-		{ key: 'l2', label: 'Pegasus', payouts: { '8-9': 0.75, '10-11': 2, '12-14': 4, '15-19': 10, '20-29': 20, '30+': 200 } },
-		{ key: 'l3', label: 'Minotaur', payouts: { '8-9': 0.5, '10-11': 1.5, '12-14': 3, '15-19': 7.5, '20-29': 15, '30+': 150 } },
-		{ key: 'l4', label: 'Lyre', payouts: { '8-9': 0.25, '10-11': 1, '12-14': 2, '15-19': 5, '20-29': 10, '30+': 100 } },
-	];
+	type PaytableTier = { size: number; sizeLabel: string; multiplier: number };
 
-	const clusterRanges = ['8-9', '10-11', '12-14', '15-19', '20-29', '30+'] as const;
+	const parsePaytable = (symbolKey: SymbolName): PaytableTier[] =>
+		config.symbols[symbolKey].paytable.map((entry) => {
+			const size = Number(Object.keys(entry)[0]);
+			const multiplier = Number(Object.values(entry)[0]);
+			return {
+				size,
+				sizeLabel: size === 15 ? '15+' : String(size),
+				multiplier,
+			};
+		});
+
+	const formatMultiplier = (value: number) =>
+		Number.isInteger(value) ? String(value) : value.toFixed(1).replace(/\.0$/, '');
+
+	const freeSpinRows = Object.entries(config.freeSpins.awarded).map(([count, spins]) => ({
+		count: Number(count),
+		spins,
+		label: Number(count) >= 7 ? `${count}+` : count,
+	}));
 </script>
 
 <div class="pay-table">
-	<h2>PAYTABLE</h2>
+	<h2>PAYTABLE / ISPLATNA TABELA</h2>
 	<p class="intro">
-		Wins are paid for clusters of <strong>8 or more</strong> matching symbols connected horizontally
-		or vertically anywhere on the 7×7 grid. Payouts are multiples of the total bet.
+		Dobitak za klaster od <strong>5 ili više</strong> istih simbola povezanih horizontalno ili
+		vertikalno na mreži 7×7. Vrednosti su množilac ukupnog uloga (<strong>× bet</strong>).
 	</p>
 
-	<h3>High-paying symbols</h3>
-	<div class="grid">
-		{#each highSymbols as sym (sym.key)}
-			<div class="row">
-				<img src={`${SYMBOLS_BASE}/sym_${sym.key}.webp`} alt={sym.label} />
-				<div class="name">{sym.label}</div>
-				<div class="payouts">
-					{#each clusterRanges as range}
-						<div class="cell">
-							<span class="range">{range}</span>
-							<span class="value">×{sym.payouts[range]}</span>
+	<div class="legend">
+		<span>Klastar</span>
+		<span>Isplata</span>
+	</div>
+
+	<div class="symbol-list">
+		{#each PAYING_SYMBOLS as symbolKey (symbolKey)}
+			{@const tiers = parsePaytable(symbolKey)}
+			<article class="symbol-card">
+				<header class="symbol-head">
+					<img
+						class="symbol-img"
+						src={symbolAssetPath(symbolKey)}
+						alt={formatSymbolLabel(symbolKey, false)}
+					/>
+					<div class="symbol-meta">
+						<strong class="symbol-code">{symbolKey}</strong>
+						<span class="symbol-name">{SYMBOL_LABELS[symbolKey].en}</span>
+						<span class="symbol-name-sr">{SYMBOL_LABELS[symbolKey].sr}</span>
+						<span class="asset-key">{SYMBOL_LABELS[symbolKey].assetKey}</span>
+					</div>
+				</header>
+
+				<div class="tier-grid">
+					{#each tiers as tier (`${symbolKey}-${tier.size}`)}
+						<div class="tier">
+							<span class="tier-size">{tier.sizeLabel}</span>
+							<span class="tier-value">×{formatMultiplier(tier.multiplier)}</span>
 						</div>
 					{/each}
 				</div>
-			</div>
+			</article>
 		{/each}
 	</div>
 
-	<h3>Low-paying symbols</h3>
-	<div class="grid">
-		{#each lowSymbols as sym (sym.key)}
-			<div class="row">
-				<img src={`${SYMBOLS_BASE}/sym_${sym.key}.webp`} alt={sym.label} />
-				<div class="name">{sym.label}</div>
-				<div class="payouts">
-					{#each clusterRanges as range}
-						<div class="cell">
-							<span class="range">{range}</span>
-							<span class="value">×{sym.payouts[range]}</span>
-						</div>
-					{/each}
+	<h3>Specijalni simboli</h3>
+
+	<div class="special-list">
+		<article class="special-card">
+			<header class="symbol-head">
+				<img
+					class="symbol-img"
+					src={symbolAssetPath('S')}
+					alt={formatSymbolLabel('S', false)}
+				/>
+				<div class="symbol-meta">
+					<strong class="symbol-code">S</strong>
+					<span class="symbol-name">{SYMBOL_LABELS.S.en}</span>
+					<span class="symbol-name-sr">{SYMBOL_LABELS.S.sr} (scatter)</span>
+					<span class="asset-key">{SYMBOL_LABELS.S.assetKey}</span>
 				</div>
+			</header>
+			<p class="special-note">Nema cluster isplate — pokreće free spinove kad padne bilo gde na gridu.</p>
+			<div class="tier-grid scatter-grid">
+				{#each freeSpinRows as row (`scatter-${row.count}`)}
+					<div class="tier">
+						<span class="tier-size">{row.label}×</span>
+						<span class="tier-value">{row.spins} FS</span>
+					</div>
+				{/each}
 			</div>
-		{/each}
-	</div>
+		</article>
 
-	<h3>Special symbols</h3>
-	<div class="special">
-		<div class="special-item">
-			<img src={`${SYMBOLS_BASE}/sym_s.png`} alt="Scatter" />
-			<div>
-				<strong>Scatter</strong> — Land <strong>4 or more</strong> Scatter symbols anywhere on
-				the grid to trigger the FREE SPINS round:
-				<ul>
-					<li>4 Scatters → 15 Free Spins</li>
-					<li>5 Scatters → 20 Free Spins</li>
-					<li>6 Scatters → 25 Free Spins</li>
-				</ul>
-				During FREE SPINS, landing 3+ additional Scatters retriggers more spins.
-			</div>
-		</div>
-		<div class="special-item">
-			<img src={`${SYMBOLS_BASE}/sym_m.webp`} alt="Multiplier" />
-			<div>
-				<strong>Multiplier</strong> — Appears during the FREE SPINS round with values from
-				<strong>×2 to ×500</strong>. Every multiplier symbol that lands while there is at least
-				one winning cluster adds its value to a Global Multiplier that is applied to the total
-				win at the end of the spin.
-			</div>
-		</div>
+		<article class="special-card">
+			<header class="symbol-head">
+				<img
+					class="symbol-img"
+					src={`/assets/sprites/thor/${UI_SYMBOL_LABELS.M.assetFile}`}
+					alt={UI_SYMBOL_LABELS.M.en}
+				/>
+				<div class="symbol-meta">
+					<strong class="symbol-code">M</strong>
+					<span class="symbol-name">{UI_SYMBOL_LABELS.M.en}</span>
+					<span class="symbol-name-sr">{UI_SYMBOL_LABELS.M.sr} (samo UI)</span>
+					<span class="asset-key">{UI_SYMBOL_LABELS.M.assetKey}</span>
+				</div>
+			</header>
+			<p class="special-note">
+				Ne pada na grid. Spot množitelji na poljima (×{config.spotMultipliers.startMultiplier} do
+				×{config.spotMultipliers.maxMultiplier}) množe dobitak klastera na toj ćeliji.
+			</p>
+		</article>
 	</div>
 </div>
 
@@ -92,124 +129,151 @@
 	.pay-table {
 		color: #ffe27a;
 		font-family: 'proxima-nova', serif;
-		max-width: 760px;
+		max-width: 720px;
 		padding: 0.5rem 1rem 1.5rem;
 
 		h2 {
 			text-align: center;
 			margin: 0 0 0.75rem;
-			letter-spacing: 0.15em;
+			letter-spacing: 0.12em;
 			color: #ffefb0;
+			font-size: 1.15rem;
 		}
 
 		h3 {
-			margin: 1.25rem 0 0.5rem;
+			margin: 1.5rem 0 0.65rem;
 			letter-spacing: 0.1em;
 			color: #ffd86b;
 			border-bottom: 1px solid rgba(255, 216, 107, 0.35);
 			padding-bottom: 0.25rem;
+			font-size: 0.95rem;
 		}
 
 		.intro {
 			color: #f5e7c0;
-			line-height: 1.4;
+			line-height: 1.45;
 			margin: 0 0 1rem;
+			font-size: 0.92rem;
 		}
 
-		.grid {
+		.legend {
+			display: none;
+		}
+
+		.symbol-list,
+		.special-list {
 			display: flex;
 			flex-direction: column;
-			gap: 0.5rem;
+			gap: 0.65rem;
 		}
 
-		.row {
-			display: grid;
-			grid-template-columns: 56px 90px 1fr;
+		.symbol-card,
+		.special-card {
+			background: rgba(255, 255, 255, 0.04);
+			border: 1px solid rgba(255, 216, 107, 0.22);
+			border-radius: 10px;
+			padding: 0.65rem 0.75rem;
+		}
+
+		.symbol-head {
+			display: flex;
 			align-items: center;
-			gap: 0.75rem;
-			background: rgba(255, 255, 255, 0.04);
-			border: 1px solid rgba(255, 216, 107, 0.18);
-			border-radius: 8px;
-			padding: 0.4rem 0.6rem;
-
-			img {
-				width: 48px;
-				height: 48px;
-				object-fit: contain;
-			}
-
-			.name {
-				font-weight: 700;
-				color: #fff5d4;
-			}
-
-			.payouts {
-				display: grid;
-				grid-template-columns: repeat(6, 1fr);
-				gap: 0.3rem;
-			}
-
-			.cell {
-				display: flex;
-				flex-direction: column;
-				align-items: center;
-				background: rgba(0, 0, 0, 0.35);
-				border-radius: 4px;
-				padding: 0.2rem 0.1rem;
-				font-size: 0.8rem;
-
-				.range {
-					color: #c9b27c;
-					font-size: 0.7rem;
-				}
-
-				.value {
-					color: #ffefb0;
-					font-weight: 700;
-				}
-			}
+			gap: 0.85rem;
+			margin-bottom: 0.55rem;
 		}
 
-		.special {
+		.symbol-img {
+			width: 72px;
+			height: 72px;
+			object-fit: contain;
+			flex-shrink: 0;
+			filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
+		}
+
+		.symbol-meta {
 			display: flex;
 			flex-direction: column;
-			gap: 0.75rem;
+			gap: 0.12rem;
+			min-width: 0;
 		}
 
-		.special-item {
+		.symbol-code {
+			font-size: 1rem;
+			color: #ffefb0;
+			letter-spacing: 0.08em;
+		}
+
+		.symbol-name {
+			font-size: 0.95rem;
+			font-weight: 700;
+			color: #fff5d4;
+		}
+
+		.symbol-name-sr {
+			font-size: 0.85rem;
+			color: #e8d9a8;
+		}
+
+		.asset-key {
+			font-size: 0.72rem;
+			color: #a89460;
+			font-family: monospace;
+		}
+
+		.tier-grid {
 			display: grid;
-			grid-template-columns: 64px 1fr;
-			align-items: flex-start;
-			gap: 0.75rem;
-			background: rgba(255, 255, 255, 0.04);
-			border: 1px solid rgba(255, 216, 107, 0.18);
-			border-radius: 8px;
-			padding: 0.5rem 0.6rem;
+			grid-template-columns: repeat(6, 1fr);
+			gap: 0.35rem;
+		}
+
+		.scatter-grid {
+			grid-template-columns: repeat(5, 1fr);
+		}
+
+		.tier {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			background: rgba(0, 0, 0, 0.38);
+			border: 1px solid rgba(255, 216, 107, 0.12);
+			border-radius: 6px;
+			padding: 0.28rem 0.15rem;
+			min-height: 2.6rem;
+		}
+
+		.tier-size {
+			font-size: 0.72rem;
+			color: #c9b27c;
+			line-height: 1.2;
+		}
+
+		.tier-value {
+			font-size: 0.82rem;
+			font-weight: 800;
+			color: #ffefb0;
+			line-height: 1.2;
+		}
+
+		.special-note {
+			margin: 0 0 0.55rem;
 			color: #f5e7c0;
+			font-size: 0.86rem;
 			line-height: 1.4;
-
-			img {
-				width: 56px;
-				height: 56px;
-				object-fit: contain;
-			}
-
-			ul {
-				margin: 0.35rem 0 0;
-				padding-left: 1.1rem;
-			}
 		}
 
 		@media (max-width: 640px) {
-			.row {
-				grid-template-columns: 48px 1fr;
-				.name {
-					grid-column: 2;
-				}
-				.payouts {
-					grid-column: 1 / -1;
-					grid-template-columns: repeat(3, 1fr);
-				}
+			.tier-grid {
+				grid-template-columns: repeat(4, 1fr);
+			}
+
+			.scatter-grid {
+				grid-template-columns: repeat(3, 1fr);
+			}
+
+			.symbol-img {
+				width: 56px;
+				height: 56px;
 			}
 		}
 	}

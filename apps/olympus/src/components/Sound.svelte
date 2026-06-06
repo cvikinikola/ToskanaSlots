@@ -209,7 +209,7 @@
 				playAudio('/assets/audio/Small_Viking_slot_ma_3-1779126316047.mp3', 0.4);
 				return;
 			}
-			// Scatter (Viking warrior) sleti — Thor-ova munja po scatteru.
+			// Scatter (Vinar) sleti — scatter stinger.
 			if (name === 'sfx_scatter_win_v2') {
 				playAudio('/assets/audio/Thor_lightning_strik_3-1779126268747.mp3', 0.7);
 				return;

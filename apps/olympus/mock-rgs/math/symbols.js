@@ -1,8 +1,9 @@
 /**
  * Allowed symbols on the 7×7 grid — keep in sync with
- * `apps/olympus/src/game/constants.ts → GRID_SYMBOL_NAMES`.
+ * `apps/olympus/src/game/symbolLabels.ts` and `config.ts`.
  *
- * 7 paying symbols (H1–H4, L1–L3) + scatter (S).
+ * H1 Red Wine Bottle, H2 Pecorino Cheese, H3 Black Grapes, H4 Red Grapes,
+ * L1 White Grapes, L2 Olives, L3 Sunflower, S Vinar (scatter).
  */
 
 export const GRID_SYMBOL_NAMES = ['H1', 'H2', 'H3', 'H4', 'L1', 'L2', 'L3', 'S'];

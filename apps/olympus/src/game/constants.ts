@@ -8,14 +8,14 @@ export const SYMBOL_SIZE = 100;
 /** Base drawn sprite size before per-symbol scale tweaks. */
 export const SYMBOL_SPRITE_BASE = SYMBOL_SIZE * 1.04;
 
-/** Ostale voćkice (vino, sir, masline, …) — sym_h1/h2/h4, sym_l2. */
+/** Ostale voćkice (vino, sir, masline, …) — sym_h1, sym_h2, sym_h4, sym_l2. */
 export const SYMBOL_SPRITE_SCALE = 0.95;
 
-/** Grožđa (sym_h3 crveno, sym_l3 roze, sym_l1 zeleno) — manja od ostalih voćkica. */
-export const GRAPE_SYMBOL_SPRITE_SCALE = 0.882; // H3 / L3 referenca
-export const GRAPE_SYMBOL_NAMES = new Set(['H3', 'L3', 'L1']);
+/** Grožđe (sym_h3 crno, sym_h4 crveno, sym_l1 belo) — manja od ostalih voćkica. */
+export const GRAPE_SYMBOL_SPRITE_SCALE = 0.882;
+export const GRAPE_SYMBOL_NAMES = new Set(['H3', 'H4', 'L1']);
 
-/** Zeleno grožđe (L1) — 4% manje od sym_h3. */
+/** Belo grožđe (L1) — 4% manje od sym_h3. */
 export const GREEN_GRAPE_SYMBOL_SPRITE_SCALE = GRAPE_SYMBOL_SPRITE_SCALE * 0.96;
 
 export const SYMBOL_SPRITE_SCALE_BY_NAME: Record<string, number> = {
@@ -310,16 +310,16 @@ export const TUMBLE_OPTIONS = {
 };
 
 export const SYMBOL_COLORS: Record<string, number> = {
-	H1: 0xd62828, // Odin's ruby      – deep red
-	H2: 0x06aed5, // Thor's sapphire  – electric blue
-	H3: 0x2ec27e, // Freya's emerald  – emerald green
-	H4: 0x9b51e0, // Loki's amethyst  – royal purple
-	L1: 0xf2c14e, // citrine          – warm gold
-	L2: 0x4cc9f0, // aquamarine       – ice blue
-	L3: 0xff7d3b, // garnet           – orange-red
-	L4: 0xd0d6df, // moonstone        – pale silver
-	S:  0xffb703, // Scatter (Viking warrior) – royal gold
-	M:  0xfff3b0, // Multiplier (mead horn)   – pale gold
+	H1: 0xd62828, // Red Wine Bottle – deep red
+	H2: 0x06aed5, // Pecorino Cheese – warm blue
+	H3: 0x2ec27e, // Black Grapes – emerald green
+	H4: 0x9b51e0, // Red Grapes – royal purple
+	L1: 0xf2c14e, // White Grapes – warm gold
+	L2: 0x4cc9f0, // Olives – ice blue
+	L3: 0xff7d3b, // Sunflower – orange
+	L4: 0xd0d6df, // legacy L4 – pale silver
+	S:  0xffb703, // Vinar scatter – royal gold
+	M:  0xfff3b0, // Multiplier UI – pale gold
 };
 
 

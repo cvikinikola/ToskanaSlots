@@ -1,10 +1,12 @@
 /**
- * Game configuration for the Olympus-style slot.
+ * Game configuration for Toskany Harvest.
  *
  * 7×7 grid, connected cluster wins (5+ touching horizontally/vertically),
  * tumble/cascade mechanic. Grid symbols: H1–H4, L1–L3, S (7 paying + scatter).
- * VINAR (S) scatter pays on any position. Free spins: 3→10, 4→12, 5→15, 6→20, 7+→30.
+ * Vinar (S) scatter — free spins: 3→10, 4→12, 5→15, 6→20, 7+→30.
  */
+import { SYMBOL_LABELS } from './symbolLabels';
+
 const config = {
 	providerName: 'sample_provider',
 	gameName: 'sample_olympus',
@@ -47,7 +49,7 @@ const config = {
 	 */
 	symbols: {
 		H1: {
-			label: 'Red Wine Bottle',
+			label: SYMBOL_LABELS.H1.en,
 			paytable: [
 				{ '5': 2 },
 				{ '6': 3 },
@@ -63,7 +65,7 @@ const config = {
 			],
 		},
 		H2: {
-			label: 'Pecorino Cheese',
+			label: SYMBOL_LABELS.H2.en,
 			paytable: [
 				{ '5': 1.5 },
 				{ '6': 2 },
@@ -79,7 +81,7 @@ const config = {
 			],
 		},
 		H3: {
-			label: 'Black Grapes',
+			label: SYMBOL_LABELS.H3.en,
 			paytable: [
 				{ '5': 1 },
 				{ '6': 1.5 },
@@ -95,7 +97,7 @@ const config = {
 			],
 		},
 		H4: {
-			label: 'White Grapes',
+			label: SYMBOL_LABELS.H4.en,
 			paytable: [
 				{ '5': 0.8 },
 				{ '6': 1 },
@@ -111,7 +113,7 @@ const config = {
 			],
 		},
 		L1: {
-			label: 'Olives in Bowl',
+			label: SYMBOL_LABELS.L1.en,
 			paytable: [
 				{ '5': 0.6 },
 				{ '6': 0.8 },
@@ -127,7 +129,7 @@ const config = {
 			],
 		},
 		L2: {
-			label: 'Sunflower',
+			label: SYMBOL_LABELS.L2.en,
 			paytable: [
 				{ '5': 0.5 },
 				{ '6': 0.6 },
@@ -143,7 +145,7 @@ const config = {
 			],
 		},
 		L3: {
-			label: 'Purple Grapes',
+			label: SYMBOL_LABELS.L3.en,
 			paytable: [
 				{ '5': 0.4 },
 				{ '6': 0.5 },
@@ -159,7 +161,7 @@ const config = {
 			],
 		},
 		S: {
-			label: 'Vinar',
+			label: SYMBOL_LABELS.S.en,
 			paytable: [],
 		},
 	},

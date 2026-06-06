@@ -2,7 +2,7 @@
  * Pay table for the connected-cluster slot.
  *
  * Server-side source of truth for win calculation. Keep symbol set in sync
- * with the client visuals in `apps/olympus/src/game/config.ts`.
+ * with `apps/olympus/src/game/symbolLabels.ts` and `config.ts`.
  *
  * Wins require ≥ MIN_CLUSTER_SIZE orthogonally connected matching symbols.
  * Values are × bet — NEVER scaled; RTP tuning lives in board generation (tuning.js).

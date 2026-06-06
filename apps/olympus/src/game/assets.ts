@@ -1,10 +1,6 @@
 /**
- * Asset registry for Hammer of Thor.
- * Placeholder Viking-themed SVGs are registered as `sprite` textures.
- * `preload: true` keeps the loading screen visible until they're ready.
- *
- * Files are served by SvelteKit from `apps/olympus/static/assets/sprites/thor/`
- * at root URL `/assets/sprites/thor/...`.
+ * Asset registry for Toskany Harvest.
+ * Symbol sprites are served from `apps/olympus/static/assets/sprites/thor/`.
  */
 const sprite = (path: string, preload = true) =>
 	({ type: 'sprite' as const, src: path, preload });
@@ -17,8 +13,8 @@ const assets = {
 	sym_h1: sprite(`${BASE}/sym_h1.webp`),
 	sym_h2: sprite(`${BASE}/sym_h2.webp`),
 	sym_h3: sprite(`${BASE}/sym_h3.webp`),
-	sym_h4: sprite(`${BASE}/sym_h4.png`),
-	sym_l1: sprite(`${BASE}/sym_l1.png`),
+	sym_h4: sprite(`${BASE}/sym_h4.webp`),
+	sym_l1: sprite(`${BASE}/sym_l1.webp`),
 	sym_l2: sprite(`${BASE}/sym_l2.webp`),
 	sym_l3: sprite(`${BASE}/sym_l3.webp`),
 	sym_l4: sprite(`${BASE}/sym_l4.webp`),

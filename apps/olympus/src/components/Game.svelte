@@ -42,7 +42,7 @@
 
 	// Shrink the painted-text titles on stacked (portrait/tablet) layouts so
 	// they don't crowd the centred reels.
-	// QA 03.06.2026: the HAMMER OF THOR logo overlapped the MULTIPLIER panel
+	// QA 03.06.2026: the Toskany Harvest title overlapped the MULTIPLIER panel
 	// in the top-right corner on the SQUARE / "kockasti" screen, which is the
 	// `tablet` layout type (NOT covered by isStacked(), which only matches
 	// portrait). Scale it down there specifically, while keeping the existing
@@ -111,7 +111,7 @@
 
 		<UI>
 			{#snippet gameName()}
-				<!-- Single title used (logo snippet renders 'HAMMER OF THOR' top-right) -->
+				<!-- Single title used (logo snippet renders 'Toskany Harvest' top-right) -->
 			{/snippet}
 			{#snippet logo()}
 				<BitmapText

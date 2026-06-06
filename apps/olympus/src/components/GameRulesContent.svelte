@@ -1,5 +1,5 @@
 <script lang="ts">
-	// Game rules content for Hammer of Thor.
+	// Game rules content for Toskany Harvest.
 </script>
 
 <div class="game-rules">
@@ -8,9 +8,10 @@
 	<section>
 		<h3>The Grid</h3>
 		<p>
-			Hammer of Thor is played on a <strong>7 reels × 7 rows</strong> grid with a
-			<strong>cluster pays</strong> mechanic. Wins are awarded when 8 or more identical symbols
-			form a connected cluster horizontally and/or vertically — paylines are not used.
+			Toskany Harvest is played on a <strong>7 reels × 7 rows</strong> grid with a
+			<strong>cluster pays</strong> mechanic. Wins are awarded when <strong>5 or more</strong>
+			identical symbols form a connected cluster horizontally and/or vertically — paylines are
+			not used.
 		</p>
 	</section>
 
@@ -26,18 +27,19 @@
 	<section>
 		<h3>Free Spins (Bonus Round)</h3>
 		<p>
-			Land <strong>4 or more Scatter</strong> symbols anywhere on the grid to enter the Free
-			Spins round:
+			Land <strong>3 or more Vinar (S) scatter</strong> symbols anywhere on the grid to enter the
+			Free Spins round:
 		</p>
 		<ul>
-			<li>4 Scatters award <strong>15 Free Spins</strong></li>
-			<li>5 Scatters award <strong>20 Free Spins</strong></li>
-			<li>6 Scatters award <strong>25 Free Spins</strong></li>
+			<li>3 Scatters → <strong>10 Free Spins</strong></li>
+			<li>4 Scatters → <strong>12 Free Spins</strong></li>
+			<li>5 Scatters → <strong>15 Free Spins</strong></li>
+			<li>6 Scatters → <strong>20 Free Spins</strong></li>
+			<li>7+ Scatters → <strong>30 Free Spins</strong></li>
 		</ul>
 		<p>
-			During Free Spins, every <strong>Multiplier</strong> symbol that lands while a winning
-			cluster is paid contributes its value (×2 to ×500) to a Global Multiplier that persists
-			for the entire Free Spins round and is applied to the total round win.
+			During Free Spins, <strong>spot multipliers</strong> on winning grid cells grow when symbols
+			explode and apply to wins on those cells. Spots persist for the entire bonus round.
 		</p>
 		<p>Landing 3+ additional Scatters during Free Spins retriggers extra spins.</p>
 	</section>
