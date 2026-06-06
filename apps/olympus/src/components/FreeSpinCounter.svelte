@@ -16,11 +16,10 @@
 
 	const context = getContext();
 
-	// QA 03.06.2026: use the SAME compact square frame as GlobalMultiplier
-	// (mirrored on the left side of the board) so the FREE SPINS counter
-	// can no longer overlap TumbleHistory and is symmetric with MULTIPLIER.
-	const PANEL_W = SYMBOL_SIZE * 1.85;
-	const PANEL_H = SYMBOL_SIZE * 1.18;
+	// Buy Bonus plaque (638×391) — isti vizuelni stil kao BUY BONUS dugme.
+	const BUY_BONUS_ASPECT = 391 / 638;
+	const PANEL_W = SYMBOL_SIZE * 2.35;
+	const PANEL_H = PANEL_W * BUY_BONUS_ASPECT;
 	const GOLD = 0xffd147;
 
 	const panelWidth = PANEL_W;
@@ -91,8 +90,8 @@
 	<BoardContainer>
 		<Container {...position}>
 			<UiAssetSprite
-				key="menu_frame_free_spins"
-				assetKey="menu_frame_free_spins"
+				key="menu_buy_bonus"
+				assetKey="menu_buy_bonus"
 				anchor={{ x: 0, y: 0 }}
 				width={panelWidth}
 				height={panelHeight}
@@ -100,13 +99,13 @@
 			/>
 
 			<BitmapText
-				anchor={{ x: 0.5, y: 0 }}
+				anchor={{ x: 0.5, y: 0.5 }}
 				x={panelWidth * 0.5}
-				y={panelHeight * 0.25}
+				y={panelHeight * 0.38}
 				text="FREE SPINS"
 				style={{
 					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.12,
+					fontSize: SYMBOL_SIZE * 0.11,
 					fill: GOLD,
 					fontWeight: '900',
 				}}

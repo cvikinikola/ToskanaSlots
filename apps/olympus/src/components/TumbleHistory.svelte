@@ -1,15 +1,11 @@
 <script lang="ts" module>
-	import type { SymbolName } from '../game/types';
+	export type { TumbleBreakdownLine as TumbleHistoryLine } from '../game/tumbleBreakdown';
 
-	export type TumbleHistoryLine = {
-		count: number;
-		symbol: SymbolName;
-		amount: number;
-	};
+	import type { TumbleBreakdownLine } from '../game/tumbleBreakdown';
 
 	export type EmitterEventTumbleHistory =
 		| { type: 'tumbleHistoryReset' }
-		| { type: 'tumbleHistoryAdd'; lines: TumbleHistoryLine[] };
+		| { type: 'tumbleHistoryAdd'; lines: TumbleBreakdownLine[] };
 </script>
 
 <script lang="ts">
@@ -24,42 +20,63 @@
 
 	const context = getContext();
 
-	const MAX_LINES = 5;
+	const MAX_ENTRIES = 6;
+	/** Tall panel — landscape / desktop (slika 2). */
 	const PANEL_W = SYMBOL_SIZE * 2.95;
-	const PANEL_H = SYMBOL_SIZE * 2.50;
+	const PANEL_H = SYMBOL_SIZE * 2.5;
+	/** Wide strip — portrait / tablet (slika 1). */
 	const PANEL_W_STACKED = SYMBOL_SIZE * 3.95;
 	const PANEL_H_STACKED = SYMBOL_SIZE * 1.48;
-	/** Razmak desne ivice panela od levog ruba reel okvira (wide layout). */
 	const PANEL_FRAME_GAP = SYMBOL_SIZE * 0.12;
-	const ROW_GAP = SYMBOL_SIZE * 0.25;
-	const ROW_GAP_STACKED = SYMBOL_SIZE * 0.31;
-	const ICON_SIZE = SYMBOL_SIZE * 0.28;
 	const DESKTOP_Y_BASE = SYMBOL_SIZE * 2.1;
 	const DESKTOP_Y_FREE_SPINS = SYMBOL_SIZE * 2.12;
 
-	let lines: TumbleHistoryLine[] = $state([]);
+	/**
+	 * Portrait 2×3 FIFO slot order (1 = bottom-left … 6 = top-right).
+	 * `lines[i]` maps to slot i after rolling slice(-6).
+	 */
+	const PORTRAIT_SLOTS = [
+		{ col: 0, row: 2 },
+		{ col: 1, row: 2 },
+		{ col: 0, row: 1 },
+		{ col: 1, row: 1 },
+		{ col: 0, row: 0 },
+		{ col: 1, row: 0 },
+	] as const;
+
+	let lines: TumbleBreakdownLine[] = $state([]);
+
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	/** Slika 1 — wide portal iznad reela. */
+	const isPortraitGrid = $derived(layoutType === 'portrait' || layoutType === 'tablet');
 	const isFreeSpins = $derived(context.stateGame.gameType === 'freeSpins');
-	const isCompact = $derived(
-		['portrait', 'tablet'].includes(context.stateLayoutDerived.layoutType()),
-	);
-	const visibleLines = $derived(isCompact ? lines.slice(-3) : lines);
-	const show = $derived(visibleLines.length > 0);
+	const show = $derived(lines.length > 0);
+
+	/** Blago veći tekst/ikone na većim ekranima — oba layouta. */
+	const textScale = $derived.by(() => {
+		switch (layoutType) {
+			case 'portrait':
+				return 1.14;
+			case 'tablet':
+				return 1.12;
+			case 'landscape':
+				return 1.13;
+			case 'desktop':
+				return 1.18;
+			default:
+				return 1.1;
+		}
+	});
 
 	const frameBounds = $derived({
 		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
-		right: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
-		top: BOARD_SIZES.height / 2.2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
 		centerX: BOARD_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
+		top: BOARD_SIZES.height / 2.2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
 	});
 
 	const position = $derived.by(() => {
-		if (isCompact) {
-			const layoutType = context.stateLayoutDerived.layoutType();
+		if (isPortraitGrid) {
 			if (layoutType === 'portrait') {
-				// QA 04.06.2026: na portretu TumbleWinAmount panel sedi između
-				// TumbleHistory strip-a i reel okvira — TumbleHistory mora gore
-				// da ne ulazi u njega. Sidri donju ivicu na fiksnom offsetu
-				// iznad reel okvira, ostavljajući prostor za WIN panel + gap.
 				const WIN_PANEL_H = SYMBOL_SIZE * 1.08;
 				const GAP = SYMBOL_SIZE * 0.18;
 				const bottomY = frameBounds.top - WIN_PANEL_H - GAP;
@@ -75,11 +92,93 @@
 			};
 		}
 
-		const y = frameBounds.top + (isFreeSpins ? DESKTOP_Y_FREE_SPINS : DESKTOP_Y_BASE);
+		const y =
+			frameBounds.top +
+			(isFreeSpins ? DESKTOP_Y_FREE_SPINS : DESKTOP_Y_BASE) -
+			SYMBOL_SIZE * 0.14;
 		return {
 			x: frameBounds.left - PANEL_W - PANEL_FRAME_GAP,
 			y,
 		};
+	});
+
+	const panelW = $derived(isPortraitGrid ? PANEL_W_STACKED : PANEL_W);
+	const panelH = $derived(isPortraitGrid ? PANEL_H_STACKED : PANEL_H);
+
+	type EntryLayout = {
+		line: TumbleBreakdownLine;
+		countX: number;
+		iconX: number;
+		multX: number;
+		amountX: number;
+		y: number;
+		iconSize: number;
+		fontSize: number;
+		amountAnchor: { x: number; y: number };
+	};
+
+	const entryLayouts = $derived.by((): EntryLayout[] => {
+		if (isPortraitGrid) {
+			const gridTop = panelH * 0.34;
+			const gridBottom = panelH * 0.77;
+			const gridLeft = panelW * 0.05;
+			const gridRight = panelW * 0.95;
+			const cellW = (gridRight - gridLeft) / 2;
+			const cellH = (gridBottom - gridTop) / 3;
+			const iconSize = SYMBOL_SIZE * 0.29 * textScale;
+			const fontSize = SYMBOL_SIZE * 0.138 * textScale;
+
+			return lines.map((line, index) => {
+				const slot = PORTRAIT_SLOTS[index];
+				const cellLeft = gridLeft + cellW * slot.col;
+				const cellY = gridTop + cellH * slot.row + cellH * 0.5;
+
+				// Levo: 5x + ikona (+ xN uz ikonu). Desno u ćeliji: = iznos (veći razmak kad nema mult).
+				const clusterLeft = cellLeft + cellW * 0.04;
+				const countEnd = clusterLeft + fontSize * 1.55;
+				const amountX = cellLeft + cellW * 0.74;
+
+				return {
+					line,
+					countX: clusterLeft,
+					iconX: countEnd,
+					multX: countEnd + iconSize * 0.95,
+					amountX,
+					y: cellY,
+					iconSize,
+					fontSize,
+					amountAnchor: { x: 0.5, y: 0.5 },
+				};
+			});
+		}
+
+		const contentTop = panelH * 0.17;
+		const contentBottom = panelH * 0.8;
+		const rowH = (contentBottom - contentTop) / MAX_ENTRIES;
+		const rowLeft = panelW * 0.08;
+		const amountX = panelW * 0.74;
+		const iconSize = SYMBOL_SIZE * 0.29 * textScale;
+		const fontSize = SYMBOL_SIZE * 0.168 * textScale;
+		const lineCount = lines.length;
+
+		return lines.map((line, index) => {
+			const clusterLeft = rowLeft;
+			const countEnd = clusterLeft + fontSize * 1.55;
+			// Prva stavka dole; svaka nova ulazi odozdo, starije idu nagore (FIFO).
+			const rowIndex = MAX_ENTRIES - lineCount + index;
+
+			return {
+				line,
+				countX: clusterLeft,
+				iconX: countEnd,
+				multX: countEnd + iconSize * 0.95,
+				amountX,
+				y: contentTop + rowH * rowIndex + rowH * 0.5,
+				iconSize,
+				fontSize,
+				amountAnchor: { x: 0.5, y: 0.5 },
+			};
+		});
 	});
 
 	context.eventEmitter.subscribeOnMount({
@@ -87,7 +186,7 @@
 			lines = [];
 		},
 		tumbleHistoryAdd: (event) => {
-			lines = [...lines, ...event.lines].slice(-MAX_LINES);
+			lines = [...lines, ...event.lines].slice(-MAX_ENTRIES);
 		},
 	});
 </script>
@@ -99,63 +198,77 @@
 				key="menu_history_tumble"
 				assetKey="menu_history_tumble"
 				anchor={{ x: 0, y: 0 }}
-				width={isCompact ? PANEL_W_STACKED : PANEL_W}
-				height={isCompact ? PANEL_H_STACKED : PANEL_H}
+				width={panelW}
+				height={panelH}
 			/>
 
-		 <BitmapText
-			anchor={{ x: 0.5, y: 0.5 }}
-			x={(isCompact ? PANEL_W_STACKED : PANEL_W) / 2}
-			y={(isCompact ? PANEL_H_STACKED : PANEL_H) * (isCompact ? 0.24 : 0.2)}
-			text="TUMBLE HISTORY"
-			style={{
-				fontFamily: 'proxima-nova',
-				fontSize: SYMBOL_SIZE * (isCompact ? 0.145 : 0.15),
-				fill: 0xffd147,
-				fontWeight: '900',
-			}}
-		/> 
-
-			{#each visibleLines as line, index (`${line.symbol}-${line.count}-${line.amount}-${index}`)}
-				{@const panelH = isCompact ? PANEL_H_STACKED : PANEL_H}
-				{@const rowGap = isCompact ? ROW_GAP_STACKED : ROW_GAP}
-				{@const rowY = panelH * 0.78 - (visibleLines.length - 1 - index) * rowGap}
-
 			<BitmapText
-				anchor={{ x: 1, y: 0.5 }}
-				x={SYMBOL_SIZE * (isCompact ? 0.72 : 0.64)}
-				y={rowY}
+				anchor={{ x: 0.5, y: 0.5 }}
+				x={panelW / 2}
+				y={panelH * (isPortraitGrid ? 0.22 : 0.12)}
+				text="TUMBLE HISTORY"
+				style={{
+					fontFamily: 'proxima-nova',
+					fontSize: SYMBOL_SIZE * (isPortraitGrid ? 0.158 : 0.162) * textScale,
+					fill: 0xffd147,
+					fontWeight: '900',
+				}}
+			/>
+
+			{#each entryLayouts as entry (`${entry.line.symbol}-${entry.line.count}-${entry.line.amount}-${entry.y}-${entry.countX}`)}
+				{@const { line, countX, iconX, multX, amountX, y, iconSize, fontSize, amountAnchor } = entry}
+				{@const totalStr = bookEventAmountToCurrencyString(line.amount)}
+
+				<BitmapText
+					anchor={{ x: 0, y: 0.5 }}
+					x={countX}
+					{y}
 					text={`${line.count}x`}
 					style={{
 						fontFamily: 'proxima-nova',
-						fontSize: SYMBOL_SIZE * (isCompact ? 0.155 : 0.18),
+						fontSize,
 						fill: 0xffffff,
 						fontWeight: '900',
 					}}
-			/>
+				/>
 
-			<UiAssetSprite
-				key={`history_${line.symbol.toLowerCase()}_${index}`}
-				assetKey={`sym_${line.symbol.toLowerCase()}`}
-				anchor={0.5}
-				x={SYMBOL_SIZE * (isCompact ? 0.92 : 0.88)}
-				y={rowY}
-				width={ICON_SIZE * (isCompact ? 0.86 : 1)}
-				height={ICON_SIZE * (isCompact ? 0.86 : 1)}
-			/>
+				<UiAssetSprite
+					key={`history_${line.symbol.toLowerCase()}_${countX}_${y}`}
+					assetKey={`sym_${line.symbol.toLowerCase()}`}
+					anchor={{ x: 0, y: 0.5 }}
+					x={iconX}
+					{y}
+					width={iconSize}
+					height={iconSize}
+				/>
 
-			<BitmapText
-				anchor={{ x: 0, y: 0.5 }}
-				x={SYMBOL_SIZE * (isCompact ? 1.08 : 1.08)}
-				y={rowY}
-					text={`= ${bookEventAmountToCurrencyString(line.amount)}`}
+				{#if line.spotMult > 1}
+					<BitmapText
+						anchor={{ x: 0, y: 0.5 }}
+						x={multX}
+						{y}
+						text={`x${line.spotMult}`}
+						style={{
+							fontFamily: 'proxima-nova',
+							fontSize,
+							fill: 0xffffff,
+							fontWeight: '900',
+						}}
+					/>
+				{/if}
+
+				<BitmapText
+					anchor={amountAnchor}
+					x={amountX}
+					{y}
+					text={`= ${totalStr}`}
 					style={{
 						fontFamily: 'proxima-nova',
-						fontSize: SYMBOL_SIZE * (isCompact ? 0.155 : 0.17),
+						fontSize,
 						fill: 0xfff0b8,
 						fontWeight: '900',
 					}}
-			/>
+				/>
 			{/each}
 		</Container>
 	</BoardContainer>

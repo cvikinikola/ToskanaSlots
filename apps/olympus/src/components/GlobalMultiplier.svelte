@@ -33,6 +33,8 @@
 		['portrait', 'tablet'].includes(context.stateLayoutDerived.layoutType()),
 	);
 	const isFreeSpins = $derived(context.stateGame.gameType === 'freeSpins');
+	/** Global multiplier panel — samo base game; tokom free spins se ne prikazuje. */
+	const visible = $derived(show && !isFreeSpins);
 	const frameBounds = $derived({
 		left: BOARD_SIZES.width / 2 - REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
 		right: BOARD_SIZES.width / 2 + REEL_FRAME_SIZES.width / 2 + REEL_FRAME_OFFSET.x,
@@ -98,7 +100,7 @@
 	});
 </script>
 
-<FadeContainer {show}>
+<FadeContainer show={visible}>
 	<BoardContainer>
 		<Container {...position}>
 			<UiAssetSprite
