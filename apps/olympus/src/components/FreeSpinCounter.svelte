@@ -28,10 +28,8 @@
 
 	// TumbleHistory geometry mirrored from TumbleHistory.svelte so the
 	// counter can align exactly with it on every viewport.
-	const TH_PANEL_W = SYMBOL_SIZE * 2.95;
-	const TH_PANEL_W_STACKED = SYMBOL_SIZE * 3.95;
 	const TH_PANEL_H_STACKED = SYMBOL_SIZE * 1.48;
-	const TH_FRAME_PULL_IN = SYMBOL_SIZE * 1.2;
+	const TH_FRAME_GAP = SYMBOL_SIZE * 0.12;
 	const TH_DESKTOP_Y_BASE = SYMBOL_SIZE * 2.1;
 	const TH_DESKTOP_Y_FREE_SPINS = SYMBOL_SIZE * 2.12;
 
@@ -65,10 +63,8 @@
 			};
 		}
 
-		// Big / landscape screens: align the FREE SPINS panel's RIGHT edge
-		// with the RIGHT edge of the TumbleHistory panel and sit just above
-		// it. TumbleHistory right edge = thLeft + PULL_IN.
-		const thRightEdge = frameBounds.left + TH_FRAME_PULL_IN;
+		// Wide screens: desna ivica poravnata sa TumbleHistory panelom.
+		const thRightEdge = frameBounds.left - TH_FRAME_GAP;
 		const thTopY = frameBounds.thTop + (isFreeSpins ? TH_DESKTOP_Y_FREE_SPINS : TH_DESKTOP_Y_BASE);
 		const gap = SYMBOL_SIZE * 0.3;
 		return {

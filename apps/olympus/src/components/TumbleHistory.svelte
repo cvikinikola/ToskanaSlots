@@ -29,7 +29,8 @@
 	const PANEL_H = SYMBOL_SIZE * 2.50;
 	const PANEL_W_STACKED = SYMBOL_SIZE * 3.95;
 	const PANEL_H_STACKED = SYMBOL_SIZE * 1.48;
-	const PANEL_FRAME_PULL_IN = SYMBOL_SIZE * 1.2;
+	/** Razmak desne ivice panela od levog ruba reel okvira (wide layout). */
+	const PANEL_FRAME_GAP = SYMBOL_SIZE * 0.12;
 	const ROW_GAP = SYMBOL_SIZE * 0.25;
 	const ROW_GAP_STACKED = SYMBOL_SIZE * 0.31;
 	const ICON_SIZE = SYMBOL_SIZE * 0.28;
@@ -74,9 +75,10 @@
 			};
 		}
 
+		const y = frameBounds.top + (isFreeSpins ? DESKTOP_Y_FREE_SPINS : DESKTOP_Y_BASE);
 		return {
-			x: frameBounds.left - PANEL_W + PANEL_FRAME_PULL_IN,
-			y: frameBounds.top + (isFreeSpins ? DESKTOP_Y_FREE_SPINS : DESKTOP_Y_BASE),
+			x: frameBounds.left - PANEL_W - PANEL_FRAME_GAP,
+			y,
 		};
 	});
 
@@ -94,12 +96,11 @@
 	<BoardContainer>
 		<Container {...position}>
 			<UiAssetSprite
-				key="menu_frame_free_spins"
-				assetKey="menu_frame_free_spins"
+				key="menu_history_tumble"
+				assetKey="menu_history_tumble"
 				anchor={{ x: 0, y: 0 }}
 				width={isCompact ? PANEL_W_STACKED : PANEL_W}
 				height={isCompact ? PANEL_H_STACKED : PANEL_H}
-				alpha={0.94}
 			/>
 
 		 <BitmapText
