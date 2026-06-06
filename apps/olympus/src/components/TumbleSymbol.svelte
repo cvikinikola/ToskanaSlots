@@ -26,6 +26,11 @@
 	<Symbol
 		state={props.tumbleSymbol.symbolState}
 		rawSymbol={props.tumbleSymbol.rawSymbol}
-		oncomplete={props.tumbleSymbol.oncomplete}
+		oncomplete={() => {
+			if (props.tumbleSymbol.symbolState === 'land') {
+				props.tumbleSymbol.symbolState = 'static';
+			}
+			props.tumbleSymbol.oncomplete();
+		}}
 	/>
 </SymbolWrap>

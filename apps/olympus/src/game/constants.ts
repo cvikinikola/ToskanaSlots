@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import type { RawSymbol, SymbolState } from './types';
+import { getDestroyAnimDurationMs } from './destroyAnim';
 
 
 export const SYMBOL_SIZE = 100;
@@ -292,8 +293,17 @@ export const TUMBLE_OPTIONS = {
 	fallSpeedPxPerMs: 0.6,
 	/** Floor so a 1-row drop still reads as a deliberate move. */
 	fallMinDurationMs: 150,
-	explosionDurationMs: 650,
-	explosionDurationTurboMs: 500,
+	/**
+	 * Stagger (ms) between consecutive new-refill fruits in the same column so
+	 * they land bottom→top IN ORDER (never "istumbano"). They still fall
+	 * continuously (no freezing) — only their start is offset by this amount.
+	 */
+	refillStaggerMs: 90,
+	/** Pause after win flash so the tumble-win panel is readable before destroy. */
+	winSettleHoldMs: 650,
+	winSettleHoldTurboMs: 280,
+	explosionDurationMs: getDestroyAnimDurationMs(false),
+	explosionDurationTurboMs: getDestroyAnimDurationMs(true),
 	winDurationMs: 650,
 	winDurationTurboMs: 500,
 	landDurationMs: 200,

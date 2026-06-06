@@ -1,9 +1,12 @@
 <script lang="ts">
+	import { Tween } from 'svelte/motion';
 	import { Container, BitmapText, Sprite } from 'pixi-svelte';
-	import { stateBet } from 'state-shared';
 	import type { SymbolState, RawSymbol } from '../game/types';
 	import { SYMBOL_SIZE, TUMBLE_OPTIONS } from '../game/constants';
 	import { getSymbolAssetKey, getSymbolSpriteSize } from '../game/utils';
+	import { landBounce } from '../game/landBounce';
+	import { destroySquashExplode } from '../game/destroyAnim';
+	import { stateGameDerived } from '../game/stateGame.svelte';
 
 	type Props = {
 		x?: number;
@@ -18,13 +21,6 @@
 
 	const spriteKey = $derived(getSymbolAssetKey(props.rawSymbol.name));
 
-	/**
-	 * Visual feedback per state:
-	 *  - win:           bright tint + slight scale-up
-	 *  - postWinStatic: full colour fallback after win animation
-	 *  - explosion:     red flash, fires oncomplete after TUMBLE_OPTIONS.explosionDurationMs
-	 *  - default:       full colour
-	 */
 	const tint = $derived(
 		props.state === 'win'
 			? 0xffffff
@@ -35,49 +31,68 @@
 					: 0xffffff,
 	);
 
-	const scale = $derived(props.state === 'win' ? 1.05 : 1);
+	const winScale = $derived(props.state === 'win' ? 1.05 : 1);
 	const symbolSpriteSize = $derived(getSymbolSpriteSize(props.rawSymbol.name));
+	const spriteYOffset = $derived(symbolSpriteSize / 2);
 
-	// Trigger oncomplete for animation states that have no real spine track yet.
-	// Turbo mode (QA 02.06.2026): shorten the win/explosion glow so the
-	// multiplier animation (which now plays one M-symbol at a time, see
-	// boardMultiplierInfo) finishes well before the next round starts —
-	// otherwise the gold animation leaked into the next spin's symbols.
-	// QA 03.06.2026: dodatno produženo turbo trajanje uništenja jer je 140ms
-	// bilo prekratko — animacija se "razlivala" na sledeći cascade.
+	const scaleX = new Tween(1);
+	const scaleY = new Tween(1);
+	const alpha = new Tween(1);
+	const jumpY = new Tween(0);
+
 	$effect(() => {
 		if (props.state === 'win') {
-			const duration = stateBet.isTurbo
+			const duration = stateGameDerived.useTurboPacing()
 				? TUMBLE_OPTIONS.winDurationTurboMs
 				: TUMBLE_OPTIONS.winDurationMs;
 			const t = setTimeout(() => props.oncomplete?.(), duration);
 			return () => clearTimeout(t);
 		}
 		if (props.state === 'explosion') {
-			const duration = stateBet.isTurbo
-				? TUMBLE_OPTIONS.explosionDurationTurboMs
-				: TUMBLE_OPTIONS.explosionDurationMs;
-			const t = setTimeout(() => props.oncomplete?.(), duration);
-			return () => clearTimeout(t);
+			let cancelled = false;
+			scaleX.set(1, { duration: 0 });
+			scaleY.set(1, { duration: 0 });
+			alpha.set(1, { duration: 0 });
+			jumpY.set(0, { duration: 0 });
+			destroySquashExplode(
+				scaleX,
+				scaleY,
+				alpha,
+				jumpY,
+				stateGameDerived.useTurboPacing(),
+			).then(() => {
+				if (!cancelled) props.oncomplete?.();
+			});
+			return () => {
+				cancelled = true;
+			};
 		}
 		if (props.state === 'land') {
-			const t = setTimeout(() => props.oncomplete?.(), TUMBLE_OPTIONS.landDurationMs);
-			return () => clearTimeout(t);
+			scaleX.set(1, { duration: 0 });
+			scaleY.set(1, { duration: 0 });
+			alpha.set(1, { duration: 0 });
+			jumpY.set(0, { duration: 0 });
+			landBounce(scaleX, scaleY);
+			queueMicrotask(() => props.oncomplete?.());
 		}
 	});
 </script>
 
-<Container x={props.x ?? 0} y={props.y ?? 0} {scale}>
-	<Sprite
-		key={spriteKey}
-		anchor={0.5}
-		width={symbolSpriteSize}
-		height={symbolSpriteSize}
-		roundPixels
-		tint={tint}
-	/>
+<Container x={props.x ?? 0} y={props.y ?? 0} alpha={alpha.current}>
+	<Container
+		y={spriteYOffset + jumpY.current}
+		scale={{ x: scaleX.current * winScale, y: scaleY.current * winScale }}
+	>
+		<Sprite
+			key={spriteKey}
+			anchor={{ x: 0.5, y: 1 }}
+			width={symbolSpriteSize}
+			height={symbolSpriteSize}
+			roundPixels
+			{tint}
+		/>
+	</Container>
 
-	<!-- Multiplier badge – shown on M symbols -->
 	{#if props.rawSymbol.multiplier}
 		<BitmapText
 			anchor={{ x: 0.5, y: 1 }}

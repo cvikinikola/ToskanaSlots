@@ -17,12 +17,12 @@
 
 	import { stateBet } from 'state-shared';
 	import { BoardContext } from 'components-shared';
-	import { waitForResolve } from 'utils-shared/wait';
+	import { waitForResolve, waitForTimeout } from 'utils-shared/wait';
 
 	import TumbleBoardBase from './TumbleBoardBase.svelte';
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
-	import { TUMBLE_OPTIONS } from '../game/constants';
+	import { TUMBLE_OPTIONS, BOARD_DIMENSIONS } from '../game/constants';
 	import { getSymbolY } from '../game/utils';
 	import { getContext } from '../game/context';
 	import type { RawSymbol } from '../game/types';
@@ -40,7 +40,15 @@
 	// treated as padding (the symbols-vanish bug).
 	let pendingAddingBoard: RawSymbol[][] = [];
 
-	const createTumbleSymbol = ({ initY, rawSymbol }: { initY: number; rawSymbol: RawSymbol }) => {
+	const createTumbleSymbol = ({
+		initY,
+		rawSymbol,
+		isNewRefill = false,
+	}: {
+		initY: number;
+		rawSymbol: RawSymbol;
+		isNewRefill?: boolean;
+	}) => {
 		const symbolY = new Tween(initY);
 		const oncomplete = () => {};
 		const tumbleSymbol = $state({
@@ -48,6 +56,7 @@
 			rawSymbol,
 			symbolState: 'static' as const,
 			oncomplete,
+			isNewRefill,
 		});
 		return tumbleSymbol;
 	};
@@ -57,7 +66,7 @@
 			const addingReel = addingBoard[reelIndex] ?? [];
 			const tumbleReelAdding = addingReel.map((rawSymbol, symbolIndex) => {
 				const initY = getSymbolY(symbolIndex - 1 - addingReel.length);
-				return createTumbleSymbol({ initY, rawSymbol });
+				return createTumbleSymbol({ initY, rawSymbol, isNewRefill: true });
 			});
 			return tumbleReelAdding;
 		});
@@ -133,6 +142,18 @@
 			// Constant velocity (like a regular spin): each symbol's fall duration is
 			// proportional to how far it drops, so refill symbols coming from the top
 			// move at the SAME speed as short-dropping kept symbols.
+			const fallTo = async (
+				tumbleSymbol: { symbolY: Tween<number> },
+				targetY: number,
+			) => {
+				const distance = Math.abs(targetY - tumbleSymbol.symbolY.current);
+				const duration = Math.max(
+					TUMBLE_OPTIONS.fallMinDurationMs,
+					distance / TUMBLE_OPTIONS.fallSpeedPxPerMs,
+				);
+				await tumbleSymbol.symbolY.set(targetY, { duration, easing: backOut });
+			};
+
 			const getPromises = () =>
 				context.stateGameDerived.tumbleBoardCombined().map(async (tumbleReel, reelIndex) => {
 					const reelMoved = tumbleReel.some((tumbleSymbol, symbolIndex) => {
@@ -140,42 +161,67 @@
 						return targetY !== tumbleSymbol.symbolY.current;
 					});
 
-					await Promise.all(
-						tumbleReel.map(async (tumbleSymbol, symbolIndex) => {
-							const targetY = getSymbolY(symbolIndex - 1);
-							if (targetY !== tumbleSymbol.symbolY.current) {
-								const distance = Math.abs(targetY - tumbleSymbol.symbolY.current);
-								const duration = Math.max(
-									TUMBLE_OPTIONS.fallMinDurationMs,
-									distance / TUMBLE_OPTIONS.fallSpeedPxPerMs,
-								);
-								await tumbleSymbol.symbolY.set(targetY, {
-									duration,
-									easing: backOut,
-								});
-								if (symbolIndex > 0 && symbolIndex < tumbleReel.length - 1) {
-									tumbleSymbol.symbolState = 'land';
-									context.stateGameDerived.onSymbolLand({
-										rawSymbol: tumbleSymbol.rawSymbol,
-									});
-									await waitForResolve((resolve) => {
-										tumbleSymbol.oncomplete = () => {
-											tumbleSymbol.symbolState = 'static';
-											resolve();
-										};
-									});
-								}
-							}
-						}),
-					);
-
-					if (reelMoved) {
-						context.eventEmitter.broadcast({
-							type: 'soundReelStop',
-							forcePlay: true,
-							playbackRate: 1.2 + reelIndex * 0.015,
+					// Column unchanged — snap in place, no fall / land animation.
+					if (!reelMoved) {
+						tumbleReel.forEach((tumbleSymbol, symbolIndex) => {
+							tumbleSymbol.symbolY.set(getSymbolY(symbolIndex - 1), { duration: 0 });
 						});
+						return;
 					}
+
+					// Existing symbols sliding down to fill gaps: just fall, no land
+					// bounce — they're not "replaced" fruits, so they only reposition.
+					const slidePromises = tumbleReel.map(async (tumbleSymbol, symbolIndex) => {
+						if (tumbleSymbol.isNewRefill) return;
+						const targetY = getSymbolY(symbolIndex - 1);
+						if (targetY === tumbleSymbol.symbolY.current) return;
+						await fallTo(tumbleSymbol, targetY);
+					});
+
+					// ONLY the replaced (new refill) fruits bounce, IN ORDER from the
+					// bottom-most up. The bottom new one starts immediately (no delay)
+					// so it lands & bounces FIRST; each one above is offset by
+					// `refillStaggerMs` so bounces run strictly bottom→top, never
+					// overlapping ("samo one koje su se zamenile, po redu").
+					const refills = tumbleReel
+						.map((tumbleSymbol, symbolIndex) => ({ tumbleSymbol, symbolIndex }))
+						.filter(({ tumbleSymbol, symbolIndex }) => {
+							if (!tumbleSymbol.isNewRefill) return false;
+							const targetY = getSymbolY(symbolIndex - 1);
+							return targetY !== tumbleSymbol.symbolY.current;
+						})
+						.sort((a, b) => b.symbolIndex - a.symbolIndex);
+
+					const refillPromises = refills.map(async ({ tumbleSymbol, symbolIndex }, rank) => {
+						const targetY = getSymbolY(symbolIndex - 1);
+
+						if (rank > 0) await waitForTimeout(rank * TUMBLE_OPTIONS.refillStaggerMs);
+
+						await fallTo(tumbleSymbol, targetY);
+
+						const row = symbolIndex - 1;
+						const isVisibleRow = row >= 0 && row < BOARD_DIMENSIONS.y;
+						if (!isVisibleRow) return;
+
+						tumbleSymbol.symbolState = 'land';
+						context.stateGameDerived.onSymbolLand({
+							rawSymbol: tumbleSymbol.rawSymbol,
+						});
+						await waitForResolve((resolve) => {
+							tumbleSymbol.oncomplete = () => {
+								tumbleSymbol.symbolState = 'static';
+								resolve();
+							};
+						});
+					});
+
+					await Promise.all([...slidePromises, ...refillPromises]);
+
+					context.eventEmitter.broadcast({
+						type: 'soundReelStop',
+						forcePlay: true,
+						playbackRate: 1.2 + reelIndex * 0.015,
+					});
 				});
 			await Promise.all(getPromises());
 		},

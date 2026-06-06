@@ -11,6 +11,8 @@ import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
+import { TUMBLE_OPTIONS } from './constants';
+import config from './config';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 
@@ -188,10 +190,29 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'soundReelSpin' });
 		}
 
-		await stateGameDerived.enhancedBoard.spin({
-			revealEvent: bookEvent,
-			// paddingBoard not used by cascading boards, kept for API compatibility
-		});
+		// Free spins live inside one long `playGame` call — `onNewGameStart`
+		// preSpin never runs between them, so without this every column fallOut /
+		// fallIn starts at once (fast, no stagger). Mirror a normal manual spin:
+		// staggered preSpin fallOut per reel, then fallIn in the same order.
+		const isFreeSpinReveal = bookEvent.gameType === 'freeSpins';
+		const savedTurbo = stateBet.isTurbo;
+		if (isFreeSpinReveal) stateBet.isTurbo = false;
+
+		try {
+			if (isFreeSpinReveal) {
+				await stateGameDerived.enhancedBoard.preSpin({
+					paddingBoard: config.paddingReels.freeSpins,
+				});
+			}
+
+			await stateGameDerived.enhancedBoard.spin({
+				revealEvent: bookEvent,
+				// paddingBoard not used by cascading boards, kept for API compatibility
+			});
+		} finally {
+			if (isFreeSpinReveal) stateBet.isTurbo = savedTurbo;
+		}
+
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
 	},
 
@@ -248,7 +269,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// QA 02.06.2026: on turbo, animating each cluster sequentially felt
 		// laggy compared to a normal spin. Collapse all winning clusters into
 		// a single parallel animation so the whole win flashes at once.
-		if (stateBet.isTurbo) {
+		if (stateGameDerived.useTurboPacing()) {
 			await animateSymbols({
 				positions: bookEvent.wins.flatMap((win) => win.positions),
 			});
@@ -257,6 +278,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				await animateSymbols({ positions: win.positions });
 			});
 		}
+
+		// Let the player read the tumble-win amount before cascade destroy starts.
+		await waitForTimeout(
+			stateGameDerived.useTurboPacing()
+				? TUMBLE_OPTIONS.winSettleHoldTurboMs
+				: TUMBLE_OPTIONS.winSettleHoldMs,
+		);
 	},
 
 	// ── boardMultiplierInfo ───────────────────────────────────────────────────
@@ -295,7 +323,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Turbo (QA 02.06.2026): glow all M symbols in parallel and snap the
 		// running multiplier to the final value — otherwise the per-symbol
 		// sequence spilled into the next spin and left a gold glow behind.
-		if (stateBet.isTurbo) {
+		if (stateGameDerived.useTurboPacing()) {
 			await animateSymbols({ positions: bookEvent.multInfo.positions });
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_update' });
 			eventEmitter.broadcast({
