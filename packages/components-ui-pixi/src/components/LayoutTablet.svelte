@@ -10,6 +10,11 @@
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
+
+	const MENU_X = 20;
+	const AUTO_SPIN_X = -10 + 180 * 4;
+	/** Tablet (square): center buy bonus between settings (menu) and auto-spin. */
+	const buyBonusX = (MENU_X + AUTO_SPIN_X) / 2;
 </script>
 
 <Container x={20}>
@@ -44,15 +49,15 @@
 			{@render props.amountBet({ stacked: true })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={MENU_X}>
 			{@render props.buttonMenu({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 180}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={buyBonusX}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 4}>
+		<Container y={DESKTOP_BASE_SIZE * 0.5} x={AUTO_SPIN_X}>
 			{@render props.buttonAutoSpin({ anchor: 0.5 })}
 		</Container>
 
