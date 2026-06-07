@@ -37,6 +37,7 @@ export type SoundEffectName =
 	// Free spins
 	| 'sfx_scatter_win_v2'
 	| 'sfx_superfreespin'
+	| 'sfx_rooster_crow'
 	| 'jng_intro_fs'
 	// Reels
 	| 'sfx_reel_spin'

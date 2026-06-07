@@ -7,6 +7,7 @@ const sprite = (path: string, preload = true) =>
 
 const BASE = '/assets/sprites/thor';
 const MENU_BAR = '/assets/sprites/menuBar';
+const COIN = '/assets/sprites/coin';
 
 const assets = {
 	// Symbols (webp — faster loading than PNG, same quality at game sizes)
@@ -52,6 +53,26 @@ const assets = {
 	menu_sound: sprite(`${MENU_BAR}/btn_sound.webp`),
 	menu_mute: sprite(`${MENU_BAR}/btn_mute.webp`),
 	menu_exit_btn: sprite(`${MENU_BAR}/exit_btn.png`),
+
+	// Free-spin intro (rooster + sunrise — local glow, night bg stays behind)
+	intro_rooster_calm: sprite(`${MENU_BAR}/petao.png`),
+	intro_rooster_crow: sprite(`${MENU_BAR}/petao_peva.png`),
+	intro_sun: sprite(`${MENU_BAR}/sunce_bez_pozadine.png`),
+	intro_sun_rays: sprite(`${MENU_BAR}/zraci_cunca.png`),
+
+	// Free-spin outro panel (Toskany wood + gold frame)
+	outro_frame: sprite(`${MENU_BAR}/outro_frame.png`),
+
+	// Free-spin outro coin shower
+	coin_00: sprite(`${COIN}/coin_00.png`),
+	coin_01: sprite(`${COIN}/coin_01.png`),
+	coin_02: sprite(`${COIN}/coin_02.png`),
+	coin_03: sprite(`${COIN}/coin_03.png`),
+	coin_04: sprite(`${COIN}/coin_04.png`),
+	coin_05: sprite(`${COIN}/coin_05.png`),
+	coin_06: sprite(`${COIN}/coin_06.png`),
+	coin_07: sprite(`${COIN}/coin_07.png`),
+	coin_08: sprite(`${COIN}/coin_08.png`),
 };
 
 export default assets;

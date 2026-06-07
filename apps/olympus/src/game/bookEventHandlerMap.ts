@@ -35,7 +35,7 @@ const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) =>
 const winLevelSoundsStop = () => {
 	eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_bigwin_coinloop' });
 	if (stateGame.gameType === 'freeSpins') {
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 	} else {
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 	}
@@ -493,14 +493,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await eventEmitter.broadcastAsync({ type: 'transition' });
 
-		// Show free spins intro
+		// Intro sting (free_spin_intro.mp3); Nova returns when animation ends
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinIntroUpdate',
 			totalFreeSpins: bookEvent.totalFs,
 		});
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 
 		// Switch game mode
 		stateGame.gameType = 'freeSpins';
@@ -536,7 +536,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' }), 350);
 		await animateSymbols({ positions: bookEvent.positions });
 
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		eventEmitter.broadcast({ type: 'freeSpinRetriggerShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinRetriggerUpdate',
@@ -595,8 +594,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		stateGame.freeSpinOutroActive = true;
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
-		// The thunder boom now lands when the money count-up FINISHES (fired from
-		// FreeSpinOutro), so the finale strike coincides with the final total.
 		winLevelSoundsPlay({ winLevelData });
 
 		await eventEmitter.broadcastAsync({
@@ -609,6 +606,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		winLevelSoundsStop();
 		stateGame.freeSpinOutroActive = false;
 		stateGame.gameType = 'basegame';
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 		stateGame.globalMultiplier = 0;
 		// Restore STOP button so base-game spins can be interrupted again.
 		eventEmitter.broadcast({ type: 'stopButtonEnable' });

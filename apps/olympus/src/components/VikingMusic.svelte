@@ -5,7 +5,14 @@
 	import { getContext } from '../game/context';
 	import type { MusicName } from '../game/sound';
 
-	const TRACK = '/assets/audio/Nova_pozadinska_Muzika.wav';
+	const TRACKS = {
+		bgm_main: '/assets/audio/Nova_pozadinska_Muzika.wav',
+	} as const;
+
+	const FREE_SPIN_INTRO_TRACK = '/assets/audio/free_spin_intro.mp3';
+
+	type GameMusicName = keyof typeof TRACKS;
+
 	const FADE_MS = 400;
 
 	const context = getContext();
@@ -14,9 +21,39 @@
 	let armed = $state(false);
 	let pageActive = $state(true);
 	let fadeRun = 0;
+	let activeTrack = $state<GameMusicName>('bgm_main');
+	let introAudio: HTMLAudioElement | undefined;
 
 	const musicVolume = $derived(stateSoundDerived.volumeMusic());
 	const targetVolume = $derived(pageActive ? Math.max(0, Math.min(1, musicVolume)) : 0);
+
+	const isGameMusic = (name: MusicName): name is GameMusicName => name === 'bgm_main';
+
+	const stopIntroMusic = () => {
+		if (!introAudio) return;
+		introAudio.pause();
+		introAudio.currentTime = 0;
+		introAudio = undefined;
+	};
+
+	/** One-shot intro sting; main loop stays ducked until `bgm_main` restore. */
+	const playFreeSpinIntroMusic = () => {
+		stopIntroMusic();
+		fadeTo(0);
+		if (!pageActive || targetVolume <= 0) return;
+
+		introAudio = new Audio(FREE_SPIN_INTRO_TRACK);
+		introAudio.volume = targetVolume;
+		introAudio.play().catch(() => {
+			stopIntroMusic();
+		});
+	};
+
+	const restoreMainMusic = () => {
+		stopIntroMusic();
+		if (activeTrack !== 'bgm_main') switchTrack('bgm_main');
+		else fadeTo(targetVolume);
+	};
 
 	function fadeTo(target: number) {
 		if (!audio) return;
@@ -39,6 +76,24 @@
 		};
 		requestAnimationFrame(step);
 	}
+
+	const switchTrack = (name: GameMusicName) => {
+		if (!audio) return;
+		if (name === activeTrack) {
+			if (armed && targetVolume > 0 && audio.paused) audio.play().catch(() => {});
+			return;
+		}
+
+		activeTrack = name;
+		fadeRun++;
+		audio.pause();
+		audio.src = TRACKS[name];
+		audio.load();
+		audio.volume = 0;
+		if (armed && targetVolume > 0) {
+			audio.play().then(() => fadeTo(targetVolume)).catch(() => {});
+		}
+	};
 
 	$effect(() => {
 		if (!armed || !audio) return;
@@ -72,6 +127,7 @@
 		window.addEventListener('pagehide', pauseImmediately);
 
 		return () => {
+			stopIntroMusic();
 			events.forEach((e) => window.removeEventListener(e, handler));
 			document.removeEventListener('visibilitychange', updatePageActive);
 			window.removeEventListener('pageshow', updatePageActive);
@@ -79,12 +135,22 @@
 		};
 	});
 
-	// Ista muzika u celoj igri — ignorišemo soundMusic switch evente.
 	context.eventEmitter.subscribeOnMount({
-		soundMusic: (_event: { name: MusicName }) => {
-			if (armed && targetVolume > 0 && audio?.paused) audio.play().catch(() => {});
+		soundMusic: ({ name }) => {
+			if (name === 'bgm_freespin') {
+				playFreeSpinIntroMusic();
+				return;
+			}
+			if (isGameMusic(name)) restoreMainMusic();
+			else if (armed && targetVolume > 0 && audio?.paused) audio.play().catch(() => {});
 		},
 	});
 </script>
 
-<audio bind:this={audio} src={TRACK} loop preload="auto" style="display:none"></audio>
+<audio
+	bind:this={audio}
+	src={TRACKS.bgm_main}
+	loop
+	preload="auto"
+	style="display:none"
+></audio>

@@ -167,7 +167,12 @@
 				playAudio('/assets/audio/thunder_clap.mp3', 0.5);
 				return;
 			}
-			// Free spin start jingle (freeSpinTrigger / freeSpinRetrigger)
+			// Rooster crow — free-spin intro panel (FreeSpinIntro.svelte)
+			if (name === 'sfx_rooster_crow') {
+				playAudio('/assets/audio/kukuriku.mp3', 0.95);
+				return;
+			}
+			// Legacy free-spin jingle (unused by intro; kept for compatibility)
 			if (name === 'jng_intro_fs') {
 				playAudio('/assets/audio/Massive_Thor_hammer__2-1779125404081.mp3', 0.9);
 				return;

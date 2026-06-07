@@ -159,3 +159,53 @@
 .pop-up-wrap a {
 	color: var(--th-gold-light);
 }
+
+/* Modal confirm / buy-bonus action buttons — wood + gold (replaces default black BaseIcon) */
+.pop-up-wrap .ui-modal-button-wrap .rectangle,
+.pop-up-wrap .bonus-card-wrap .rectangle {
+	background: linear-gradient(180deg, var(--th-wood-mid) 0%, var(--th-wood) 100%) !important;
+	border: 2px solid var(--th-gold) !important;
+	border-radius: 10px;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 231, 154, 0.18),
+		0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.pop-up-wrap .ui-modal-button-wrap .button:not(.disabled):hover .rectangle,
+.pop-up-wrap .bonus-card-wrap .button:not(.disabled):hover .rectangle {
+	border-color: var(--th-gold-light) !important;
+	filter: brightness(1.06);
+}
+
+.pop-up-wrap .ui-modal-button-wrap .base-button-content,
+.pop-up-wrap .bonus-card-wrap .base-button-content {
+	color: var(--th-cream);
+}
+
+.pop-up-wrap .ui-modal-button-wrap .base-button-content span,
+.pop-up-wrap .bonus-card-wrap .base-button-content span {
+	color: var(--th-cream);
+	font-weight: 800;
+	letter-spacing: 0.08em;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.pop-up-wrap .ui-modal-button-wrap .base-button-content span {
+	text-transform: uppercase;
+}
+
+.pop-up-wrap .bonus-card-wrap {
+	background:
+		linear-gradient(180deg, rgba(255, 231, 154, 0.04) 0%, transparent 40%),
+		rgba(46, 24, 15, 0.72);
+	border: 1px solid var(--th-border);
+}
+
+.pop-up-wrap .bonus-card-wrap .title,
+.pop-up-wrap .bonus-card-wrap .price {
+	color: var(--th-gold-heading);
+}
+
+.pop-up-wrap .bonus-card-wrap .description {
+	color: var(--th-cream-muted);
+}

@@ -32,6 +32,7 @@
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
+	import FreeSpinOutroCoins from './FreeSpinOutroCoins.svelte';
 	import Transition from './Transition.svelte';
 	import PayTableContent from './PayTableContent.svelte';
 	import GameRulesContent from './GameRulesContent.svelte';
@@ -134,6 +135,7 @@
 		<Win />
 		<FreeSpinIntro />
 
+		<FreeSpinOutroCoins />
 		<FreeSpinOutro />
 		<Transition />
 	{/if}
