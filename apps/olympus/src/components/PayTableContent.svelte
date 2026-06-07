@@ -1,10 +1,20 @@
 <script lang="ts">
 	import config from '../game/config';
+	import {
+		baseRtpLabel,
+		bonusRtpLabel,
+		buyBonusCostMultiplier,
+		formatUsd,
+		gameDisplayName,
+		maxWinMultiplier,
+	} from '../game/gameInfoFormat';
 	import { SYMBOL_LABELS, UI_SYMBOL_LABELS, formatSymbolLabel, symbolAssetPath } from '../game/symbolLabels';
 	import type { SymbolName } from '../game/types';
 	import { stateUrlDerived } from 'state-shared';
 
 	const social = $derived(stateUrlDerived.social());
+	const buyFeatureLabel = $derived(social ? 'Play Free Spins' : 'Buy Free Spins');
+	const amountLabel = $derived(social ? 'play amount' : 'bet amount');
 
 	const PAYING_SYMBOLS: SymbolName[] = ['H1', 'H2', 'H3', 'H4', 'L1', 'L2', 'L3'];
 
@@ -108,6 +118,11 @@
 					</div>
 				{/each}
 			</div>
+			<p class="special-note">
+				Hitting 3, 4, 5, 6 or 7 Scatter during free spins awards the same number of
+				<strong>additional</strong> free spins shown above. Retriggers use the same award table as the
+				initial trigger.
+			</p>
 		</article>
 
 		<article class="special-card">
@@ -126,6 +141,30 @@
 			</p>
 		</article>
 	</div>
+
+	<section class="game-info">
+		<h3>GAME INFORMATION</h3>
+		<table class="info-table">
+			<tbody>
+				<tr><td>Game</td><td>{gameDisplayName}</td></tr>
+				<tr><td>Grid</td><td>{config.gameInfo.gridLabel}</td></tr>
+				<tr><td>Win type</td><td>Cluster pays — minimum {config.gameInfo.minClusterSize} connected symbols</td></tr>
+				<tr><td>Features</td><td>Tumble cascades, spot multipliers (×2–×{config.spotMultipliers.maxMultiplier}), Vendemmia Free Spins</td></tr>
+				<tr><td>Base game cost</td><td>1× {amountLabel}</td></tr>
+				<tr><td>{buyFeatureLabel}</td><td>{buyBonusCostMultiplier}× {amountLabel} — instant free spins entry</td></tr>
+				<tr><td>Theoretical RTP (base)</td><td>{baseRtpLabel}</td></tr>
+				<tr><td>Theoretical RTP ({buyFeatureLabel})</td><td>{bonusRtpLabel}</td></tr>
+				<tr><td>Volatility</td><td>{config.gameInfo.volatility}</td></tr>
+				<tr><td>Minimum {social ? 'play' : 'bet'}</td><td>{formatUsd(config.gameInfo.betLimitsUsd.min)}</td></tr>
+				<tr><td>Maximum {social ? 'play' : 'bet'}</td><td>{formatUsd(config.gameInfo.betLimitsUsd.max)}</td></tr>
+				<tr><td>Maximum win</td><td>{maxWinMultiplier.toLocaleString()}× total {amountLabel} per round</td></tr>
+			</tbody>
+		</table>
+		<p class="info-footer">
+			All paytable values are multiples of the base {amountLabel}. Wins from multiple clusters in the same
+			tumble are added together. Malfunction voids all pays and plays.
+		</p>
+	</section>
 </div>
 
 <style lang="scss">
@@ -267,6 +306,41 @@
 
 		strong {
 			color: var(--th-gold-text, #ffefb0);
+		}
+
+		.game-info {
+			margin-top: 1.25rem;
+		}
+
+		.info-table {
+			width: 100%;
+			border-collapse: collapse;
+			margin: 0.5rem 0 0.75rem;
+			font-size: 0.86rem;
+
+			td {
+				border: 1px solid var(--th-border, rgba(212, 175, 55, 0.35));
+				padding: 0.35rem 0.5rem;
+				vertical-align: top;
+			}
+
+			td:first-child {
+				width: 44%;
+				color: var(--th-cream, #f5e7c0);
+				font-weight: 600;
+				background: var(--th-card-bg, rgba(0, 0, 0, 0.28));
+			}
+
+			td:last-child {
+				color: var(--th-cream-muted, #e8d9a8);
+			}
+		}
+
+		.info-footer {
+			margin: 0;
+			color: var(--th-brown, #8b5a2b);
+			font-size: 0.82rem;
+			line-height: 1.45;
 		}
 
 		@media (max-width: 640px) {

@@ -1,12 +1,24 @@
 <script lang="ts">
 	import config from '../game/config';
+	import {
+		baseRtpLabel,
+		bonusRtpLabel,
+		buyBonusCostMultiplier,
+		formatUsd,
+		gameDisplayName,
+		maxWinMultiplier,
+	} from '../game/gameInfoFormat';
 	import { stateUrlDerived } from 'state-shared';
 
 	const social = $derived(stateUrlDerived.social());
+	const buyFeatureLabel = $derived(social ? 'Play Free Spins' : 'Buy Free Spins');
+	const amountLabel = $derived(social ? 'play amount' : 'bet');
+	const minBetLabel = $derived(formatUsd(config.gameInfo.betLimitsUsd.min));
+	const maxBetLabel = $derived(formatUsd(config.gameInfo.betLimitsUsd.max));
 </script>
 
 <div class="game-rules">
-	<h2>TOSCANA HARVEST — GAME RULES</h2>
+	<h2>{gameDisplayName.toUpperCase()} — GAME RULES</h2>
 
 	<p class="lead">
 		All symbols pay in blocks of minimum <strong>5 symbols</strong> connected horizontally or
@@ -82,18 +94,18 @@
 	<section>
 		<h3>Max Win</h3>
 		<p>
-			The maximum win is limited to <strong>25,000× {social ? 'play amount' : 'bet'}</strong> in both the base game and free
-			spins. If the total win of a free spins round reaches 25,000× {social ? 'play amount' : 'bet'}, the round immediately
+			The maximum win is limited to <strong>{maxWinMultiplier.toLocaleString()}× {amountLabel}</strong> in both the base game and free
+			spins. If the total win of a free spins round reaches {maxWinMultiplier.toLocaleString()}× {amountLabel}, the round immediately
 			ends, the win is awarded and all remaining free spins are forfeited.
 		</p>
 	</section>
 
 	<section>
-		<h3>{social ? 'Play Free Spins' : 'Buy Free Spins'}</h3>
+		<h3>{buyFeatureLabel}</h3>
 		<p>
-			Where permitted by jurisdiction, {social ? 'use' : 'pay'} <strong>100× total {social ? 'play amount' : 'bet'}</strong> to trigger the
+			Where permitted by jurisdiction, {social ? 'use' : 'pay'} <strong>{buyBonusCostMultiplier}× total {amountLabel}</strong> to trigger the
 			Vendemmia Free Spins feature. On the triggering spin, 3, 4, 5, 6 or 7 Scatter symbols can
-			land randomly.
+			land randomly. Theoretical RTP for this entry mode is <strong>{bonusRtpLabel}</strong>.
 		</p>
 	</section>
 
@@ -111,15 +123,18 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr><td>Grid size</td><td>7×7 (49 symbol positions)</td></tr>
-				<tr><td>Minimum cluster for win</td><td>5 or more connected same symbols</td></tr>
+				<tr><td>Game</td><td>{gameDisplayName}</td></tr>
+				<tr><td>Grid size</td><td>{config.gameInfo.gridLabel}</td></tr>
+				<tr><td>Minimum cluster for win</td><td>{config.gameInfo.minClusterSize} or more connected same symbols</td></tr>
 				<tr><td>Connection</td><td>Horizontal or vertical</td></tr>
-				<tr><td>Volatility</td><td>High</td></tr>
-				<tr><td>Theoretical RTP</td><td>97.20%</td></tr>
-				<tr><td>RTP with {social ? 'Play Free Spins' : 'Buy Free Spins'}</td><td>96.72%</td></tr>
-				<tr><td>Minimum {social ? 'play' : 'bet'}</td><td>$0.20</td></tr>
-				<tr><td>Maximum {social ? 'play' : 'bet'}</td><td>$240.00</td></tr>
-				<tr><td>Maximum win</td><td>25,000× total {social ? 'play amount' : 'bet'}</td></tr>
+				<tr><td>Base game {amountLabel} cost</td><td>1× {amountLabel}</td></tr>
+				<tr><td>{buyFeatureLabel} cost</td><td>{buyBonusCostMultiplier}× {amountLabel}</td></tr>
+				<tr><td>Volatility</td><td>{config.gameInfo.volatility}</td></tr>
+				<tr><td>Theoretical RTP (base game)</td><td>{baseRtpLabel}</td></tr>
+				<tr><td>Theoretical RTP ({buyFeatureLabel})</td><td>{bonusRtpLabel}</td></tr>
+				<tr><td>Minimum {social ? 'play' : 'bet'}</td><td>{minBetLabel}</td></tr>
+				<tr><td>Maximum {social ? 'play' : 'bet'}</td><td>{maxBetLabel}</td></tr>
+				<tr><td>Maximum win</td><td>{maxWinMultiplier.toLocaleString()}× total {amountLabel}</td></tr>
 				<tr><td>Malfunction</td><td>Voids all pays and plays</td></tr>
 			</tbody>
 		</table>
@@ -151,7 +166,7 @@
 				<tr><td>{social ? 'PLAY display' : 'BET display'}</td><td>Current {social ? 'play amount' : 'bet'} — click to switch coins/cash</td></tr>
 				<tr><td>{social ? 'COINS display' : 'CREDIT display'}</td><td>Current balance — click to switch coins/cash</td></tr>
 				<tr><td>WIN display</td><td>Win from current spin</td></tr>
-				<tr><td>{social ? 'PLAY FREE SPINS' : 'BUY FREE SPINS'}</td><td>100× {social ? 'play amount' : 'bet'} — instant Vendemmia Free Spins</td></tr>
+				<tr><td>{social ? 'PLAY FREE SPINS' : 'BUY FREE SPINS'}</td><td>{buyBonusCostMultiplier}× {amountLabel} — instant Vendemmia Free Spins (RTP {bonusRtpLabel})</td></tr>
 				<tr><td>AUTOPLAY</td><td>Opens auto play menu</td></tr>
 				<tr><td>Turbo icon</td><td>Normal / Quick / Turbo spin speed</td></tr>
 				<tr><td>Sound icon</td><td>Toggle sound on/off</td></tr>
@@ -180,7 +195,7 @@
 
 	<p class="footer-tag">
 		La dolce vita — Play responsibly.{#if !social} Gambling can be addictive.{/if}<br />
-		Toscana Harvest | RTP 97.20% | High Volatility | Max Win 25,000×
+		{gameDisplayName} | Base RTP {baseRtpLabel} | {buyFeatureLabel} RTP {bonusRtpLabel} | {config.gameInfo.volatility} Volatility | Max Win {maxWinMultiplier.toLocaleString()}×
 	</p>
 </div>
 

@@ -188,6 +188,15 @@ const config = {
 		triggerCount: 3,
 		awarded: { 3: 10, 4: 12, 5: 15, 6: 20, 7: 30 },
 	},
+
+	/** Display values for Game Rules / Paytable (keep in sync with math + RGS bet limits). */
+	gameInfo: {
+		displayName: 'Toskany Harvest',
+		volatility: 'High',
+		gridLabel: '7×7 (49 symbol positions)',
+		minClusterSize: 5,
+		betLimitsUsd: { min: 0.2, max: 240 },
+	},
 } as const;
 
 export default config;
