@@ -44,27 +44,36 @@
 <BoardContainer>
 	{#each spots as spot (spot.reel + ',' + spot.row)}
 		{#if spot.explosionCount > 0}
+			{@const hasValue = spot.multiplier >= 2}
 			<Container x={getSymbolX(spot.reel)} y={getSymbolY(spot.row)}>
 				<Graphics
 					draw={(g) => {
 						g.clear();
+						// Level 1 (GOLD, no number): soft gold-filled tile.
+						// Level 2+ (×N): brighter amber fill + bold gold frame.
+						g.roundRect(-cellW / 2, -cellH / 2, cellW, cellH, 10);
+						g.fill({
+							color: hasValue ? 0xffb300 : 0xffd147,
+							alpha: hasValue ? 0.42 : 0.26,
+						});
 						g.roundRect(-cellW / 2, -cellH / 2, cellW, cellH, 10);
 						g.stroke({
-							color: 0xffd147,
-							width: 3,
-							alpha: spot.multiplier >= 2 ? 1 : 0.75,
+							color: hasValue ? 0xffe066 : 0xffd147,
+							width: hasValue ? 4 : 3,
+							alpha: hasValue ? 1 : 0.8,
 						});
 					}}
 				/>
-				{#if spot.multiplier >= 2}
+				{#if hasValue}
 					<BitmapText
 						anchor={{ x: 0.5, y: 0.5 }}
 						text={`×${spot.multiplier}`}
 						style={{
 							fontFamily: 'proxima-nova',
-							fontSize: REEL_STEP_Y * 0.36,
-							fill: 0xffd147,
+							fontSize: REEL_STEP_Y * 0.4,
+							fill: 0xfff14d,
 							fontWeight: '900',
+							stroke: { color: 0xb1370a, width: 5 },
 						}}
 					/>
 				{/if}

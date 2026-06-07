@@ -28,12 +28,20 @@ export const getSpotMultiplier = (state, reel, row) =>
 
 /**
  * Multiplier applied when this cell explodes in the current cascade.
- * Uses the tier for this hit (prev + 1), not the stored value from the last hit —
- * wins are evaluated before recordExplosions, so stored mult lags by one cascade.
+ *
+ * Rule: "you multiply by whatever is ALREADY on the spot, THEN raise it for the
+ * next tumble" (read-then-increment). Wins are evaluated BEFORE recordExplosions
+ * (see tumble.js), so reading the stored explosionCount here gives the value that
+ * was on the spot before this explosion — exactly what should multiply this win.
+ *
+ *   1st explosion: empty  → ×1 (nothing) → becomes GOLD (count 1)
+ *   2nd explosion: GOLD   → ×1 (nothing) → becomes ×2  (count 2)
+ *   3rd explosion: ×2     → ×2           → becomes ×4  (count 3)
+ *   4th explosion: ×4     → ×4           → becomes ×8  (count 4)
  */
 export const spotMultiplierForWin = (state, reel, row) => {
   const prev = state.spots.get(spotKey(reel, row))?.explosionCount ?? 0;
-  return multiplierFromExplosionCount(prev + 1);
+  return multiplierFromExplosionCount(prev);
 };
 
 /** Sum spot multipliers for all positions in a winning cluster (current cascade). */
