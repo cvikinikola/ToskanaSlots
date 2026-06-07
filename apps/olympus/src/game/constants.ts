@@ -126,7 +126,7 @@ export const BOARD_LAYOUT_BY_TYPE: Record<
 	// (safe vs right column inner edge ≈ 1778).
 	landscape: { center: { x: 0.500, y: 0.40 }, fit: { w: 0.84, h: 0.68 } },
 	tablet:    { center: { x: 0.5, y: 0.44 }, fit: { w: 0.97, h: 0.68 } },
-	portrait:  { center: { x: 0.5, y: 0.48 }, fit: { w: 1.2, h: 1.0 } },
+	portrait:  { center: { x: 0.5, y: 0.43 }, fit: { w: 1.2, h: 1.0 } },
 };
 
 export const getBoardCenterFraction = (layoutType: LayoutType) =>

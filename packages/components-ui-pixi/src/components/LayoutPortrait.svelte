@@ -122,7 +122,7 @@
 	<Container y={Math.min(drawerTween.current, 350)}>
 		<Container
 			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 670}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 600}
 		>
 			{@render props.amountWin({ stacked: true })}
 		</Container>
