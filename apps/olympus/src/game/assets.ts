@@ -24,7 +24,7 @@ const assets = {
 
 	// Background: looping MP4 via `BackgroundVideo.svelte` (not loaded here).
 	frame:        sprite(`${BASE}/frame.svg`),
-	logo:         sprite(`${BASE}/logo.webp`),
+	logo:         sprite(`${BASE}/logo_tuscany_harvest.png`),
 
 	// Menu bar panels (PNG)
 	menu_panel_lg: sprite(`${MENU_BAR}/panel_lg.png`),

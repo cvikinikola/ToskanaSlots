@@ -23,7 +23,7 @@
 			function patchFetch(fn) {
 				return function devFetch(input, init) {
 					var url = input instanceof Request ? input.url : String(input);
-					if (url.indexOf('/wallet/') !== -1 || url.indexOf('/bet/event') !== -1) {
+					if (url.indexOf('/wallet/') !== -1 || url.indexOf('/bet/event') !== -1 || url.indexOf('/bet/replay') !== -1) {
 						var path = url.replace(/^https?:\/\/[^/]*/, '');
 						if (!path.startsWith('/')) path = '/' + path.replace(/^\/+/, '');
 						var local = LOCAL + path;

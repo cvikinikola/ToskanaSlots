@@ -10,7 +10,7 @@
  * Payouts come from paytable.js + tuning.js scales (target ~96% RTP).
  */
 
-import { runBaseSpin, runBonusBuy } from './math/index.js';
+import { runBaseSpin, runBonusBuy, createSeededRng } from './math/index.js';
 import { BONUS_BUY_COST_MULTIPLIER } from './math/tuning.js';
 
 // ─── Tuning ──────────────────────────────────────────────────────────────────
@@ -36,6 +36,28 @@ export const playMockRound = ({ mode = 'BASE' } = {}) => {
     : runBaseSpin({ betAmount: 1 });
 };
 
+/** Deterministic round for replay QA — event id maps to seeded rng. */
+export const playMockReplayRound = ({ mode = 'BASE', event = '1', amount = 1_000_000 } = {}) => {
+  const normalizedMode = String(mode).toUpperCase();
+  const mathMode = BONUS_ROUND_MODES.has(normalizedMode) ? 'BONUS' : 'BASE';
+  const seed = Number(event) || 1;
+  const rng = createSeededRng(seed);
+  const { bookEvents, totalWin } = mathMode === 'BONUS'
+    ? runBonusBuy({ betAmount: 1, rng })
+    : runBaseSpin({ betAmount: 1, rng });
+
+  return {
+    betID: seed,
+    amount,
+    payout: Math.round(totalWin * amount),
+    payoutMultiplier: totalWin,
+    active: false,
+    mode: normalizedMode,
+    event: '0',
+    state: bookEvents,
+  };
+};
+
 // ─── Vite plugin ─────────────────────────────────────────────────────────────
 
 export const mockRgsPlugin = () => ({
@@ -46,7 +68,7 @@ export const mockRgsPlugin = () => ({
     const sendJson = (res, data) => {
       res.setHeader('Content-Type', 'application/json');
       res.setHeader('Access-Control-Allow-Origin', '*');
-      res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
       res.end(JSON.stringify(data));
     };
@@ -148,6 +170,19 @@ export const mockRgsPlugin = () => ({
     server.middlewares.use('/bet/event', (req, res) => {
       if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
       sendJson(res, { ok: true });
+    });
+
+    server.middlewares.use((req, res, next) => {
+      const replayMatch = req.url?.match(/^\/bet\/replay\/([^/]+)\/([^/]+)\/([^/]+)\/([^/?]+)/);
+      if (!replayMatch) return next();
+      if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
+      if (req.method !== 'GET') { res.statusCode = 405; res.end(); return; }
+
+      const [, game, version, mode, event] = replayMatch;
+      const round = playMockReplayRound({ mode, event });
+      console.log('[mock-rgs] GET /bet/replay/%s/%s/%s/%s → payout=%sx events=%d',
+        game, version, mode, event, round.payoutMultiplier.toFixed(2), round.state.length);
+      sendJson(res, round);
     });
   },
 });

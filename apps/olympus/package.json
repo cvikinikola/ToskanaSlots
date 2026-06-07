@@ -17,7 +17,8 @@
 		"simulate:quick": "node scripts/run-simulation.mjs --spins=100000",
 		"math:verify": "node scripts/compare-paytable.mjs && node scripts/verify-paytable.mjs",
 		"math:calibrate": "node scripts/calibrate-rtp.mjs",
-		"math:calibrate-modes": "node scripts/calibrate-modes.mjs"
+		"math:calibrate-modes": "node scripts/calibrate-modes.mjs",
+		"math:sample-wins": "node scripts/sample-wins-qa.mjs"
 	},
 	"type": "module",
 	"devDependencies": {

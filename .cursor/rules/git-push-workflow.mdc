@@ -1,0 +1,24 @@
+---
+description: When user says "push", commit pending changes first then push
+alwaysApply: true
+---
+
+# Git push workflow
+
+When the user says **push** (or "pushuj", "git push", similar):
+
+1. **Commit first** if there are uncommitted changes:
+   - Run `git status`, `git diff`, `git log -1` (parallel)
+   - Stage relevant files (never secrets like `.env`)
+   - Create a commit with a concise message (HEREDOC on Windows/PowerShell as in project git rules)
+   - Do **not** commit unless the user asked to push (push implies commit when needed)
+
+2. **Then push**:
+   - `git push -u origin HEAD` if branch has no upstream, else `git push`
+   - Never force-push to main/master unless explicitly requested
+
+If there is nothing to commit, push only.
+
+If commit hooks fail, fix and create a **new** commit (do not amend unless amend rules allow).
+
+Do not push without committing pending work when the user said push.

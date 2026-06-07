@@ -152,7 +152,7 @@
 	</section>
 
 	<section>
-		<h3>How To Play</h3>
+		<h3>How To Play — Controls</h3>
 		<table class="rules-table">
 			<thead>
 				<tr>
@@ -161,16 +161,23 @@
 				</tr>
 			</thead>
 			<tbody>
-				<tr><td>SPIN</td><td>Starts the spin</td></tr>
-				<tr><td>+ and −</td><td>Change {social ? 'play amount' : 'bet value'}, open {social ? 'play amount' : 'bet'} menu</td></tr>
-				<tr><td>{social ? 'PLAY display' : 'BET display'}</td><td>Current {social ? 'play amount' : 'bet'} — click to switch coins/cash</td></tr>
-				<tr><td>{social ? 'COINS display' : 'CREDIT display'}</td><td>Current balance — click to switch coins/cash</td></tr>
-				<tr><td>WIN display</td><td>Win from current spin</td></tr>
-				<tr><td>{social ? 'PLAY FREE SPINS' : 'BUY FREE SPINS'}</td><td>{buyBonusCostMultiplier}× {amountLabel} — instant Vendemmia Free Spins (RTP {bonusRtpLabel})</td></tr>
-				<tr><td>AUTOPLAY</td><td>Opens auto play menu</td></tr>
-				<tr><td>Turbo icon</td><td>Normal / Quick / Turbo spin speed</td></tr>
-				<tr><td>Sound icon</td><td>Toggle sound on/off</td></tr>
-				<tr><td>SPACE / ENTER</td><td>Start or stop spin from keyboard</td></tr>
+				<tr><td>SPIN / STOP</td><td>Starts a spin when idle. During a spin, changes to STOP to end animations early (where allowed).</td></tr>
+				<tr><td>+ and −</td><td>Increase or decrease {social ? 'play amount' : 'bet'} to the next available level.</td></tr>
+				<tr><td>{social ? 'PLAY display' : 'BET display'}</td><td>Current {social ? 'play amount' : 'bet'} and total cost — click to open the {social ? 'play amount' : 'bet'} menu and pick a level; click again to switch coins/cash display.</td></tr>
+				<tr><td>{social ? 'COINS display' : 'CREDIT display'}</td><td>Current balance — click to switch coins/cash display.</td></tr>
+				<tr><td>WIN display</td><td>Win from the current spin or feature round.</td></tr>
+				<tr><td>{social ? 'PLAY FREE SPINS' : 'BUY FREE SPINS'}</td><td>Opens a confirmation screen for {buyBonusCostMultiplier}× {amountLabel} Vendemmia Free Spins (RTP {bonusRtpLabel}). Confirm before the feature starts.</td></tr>
+				<tr><td>CONFIRM</td><td>In the buy-feature dialog, accepts the shown cost and starts the purchase.</td></tr>
+				<tr><td>AUTOPLAY</td><td>Opens the autoplay menu — choose number of rounds, optional loss/win limits, then Start Autoplay.</td></tr>
+				<tr><td>MENU</td><td>Opens the side menu with paytable, settings, game rules, and sound controls.</td></tr>
+				<tr><td>PAYTABLE</td><td>Opens symbol payouts, scatter awards, and game information (from the menu).</td></tr>
+				<tr><td>SETTINGS</td><td>Opens master, music, and sound-effect volume controls (from the menu).</td></tr>
+				<tr><td>GAME RULES / INFO</td><td>Opens this rules and feature guide (from the menu).</td></tr>
+				<tr><td>SOUND</td><td>Toggles game sound on or off (from the menu).</td></tr>
+				<tr><td>CLOSE MENU</td><td>Closes the menu and returns to the game.</td></tr>
+				<tr><td>DRAWER (portrait)</td><td>On portrait layouts, expands or hides the bottom bar with spin, menu, turbo, and balance controls.</td></tr>
+				<tr><td>TURBO</td><td>Cycles spin speed: Normal, Quick, or Turbo.</td></tr>
+				<tr><td>SPACE / ENTER</td><td>Start or stop a spin from the keyboard (when enabled).</td></tr>
 			</tbody>
 		</table>
 	</section>

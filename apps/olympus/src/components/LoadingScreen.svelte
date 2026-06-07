@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Container, BitmapText } from 'pixi-svelte';
+	import { Container, Sprite, BitmapText } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
 	import { OnHotkey } from 'components-shared';
@@ -7,6 +7,7 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE, getLoadingCenterFraction } from '../game/constants';
+
 	type Props = { onloaded: () => void };
 	const props: Props = $props();
 	const context = getContext();
@@ -14,9 +15,17 @@
 	const loaded = $derived(context.stateApp.loaded);
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const centerFraction = $derived(getLoadingCenterFraction(layoutType));
-	// Tighter logo + spacing on portrait/tablet so it doesn't overflow.
 	const stacked = $derived(layoutType === 'portrait' || layoutType === 'tablet');
-	const logoScale = $derived(stacked ? 0.75 : 1);
+	const logoScale = $derived(stacked ? 0.88 : 1);
+
+	/** logo_tuscany_harvest.png aspect (height / width). */
+	const LOGO_ASPECT = 0.74;
+	const logoWidth = $derived(
+		context.stateLayoutDerived.mainLayout().width * (stacked ? 0.9 : 0.5) * logoScale,
+	);
+	const logoHeight = $derived(logoWidth * LOGO_ASPECT);
+	const taglineY = $derived(logoHeight * 0.5 + SYMBOL_SIZE * 0.35);
+	const actionY = $derived(taglineY + SYMBOL_SIZE * 0.85);
 </script>
 
 <FadeContainer show={true}>
@@ -25,26 +34,20 @@
 			x={context.stateLayoutDerived.mainLayout().width * centerFraction.x}
 			y={context.stateLayoutDerived.mainLayout().height * centerFraction.y}
 		>
-			<BitmapText
+			<Sprite
+				key="logo"
 				anchor={0.5}
-				y={-SYMBOL_SIZE * 2.0 * logoScale}
-				text="Toskany Harvest"
-				style={{
-					fontFamily: 'proxima-nova',
-					fontSize: SYMBOL_SIZE * 0.55 * logoScale,
-					fill: 0xf5d78e,
-					fontWeight: '700',
-					stroke: { color: 0x3d2817, width: 5 },
-					letterSpacing: 1,
-				}}
+				y={0}
+				width={logoWidth}
+				height={logoHeight}
 			/>
 
 			<BitmapText
 				anchor={0.5}
-				y={SYMBOL_SIZE * 0.6 * logoScale}
-				text="WIN UP TO 15,000 X BET"
+				y={taglineY}
+				text="WIN UP TO 25,000× BET"
 				style={{
-					fontFamily: 'proxima-nova',
+					fontFamily: 'system-ui',
 					fontSize: SYMBOL_SIZE * 0.3 * logoScale,
 					fill: 0xffd700,
 					fontWeight: '700',
@@ -55,10 +58,10 @@
 			{#if !loaded}
 				<BitmapText
 					anchor={0.5}
-					y={SYMBOL_SIZE * 1.25 * logoScale}
+					y={actionY}
 					text="Loading..."
 					style={{
-						fontFamily: 'proxima-nova',
+						fontFamily: 'system-ui',
 						fontSize: SYMBOL_SIZE * 0.3 * logoScale,
 						fill: 0xaaaaaa,
 					}}
@@ -68,10 +71,10 @@
 			{#if loaded}
 				<BitmapText
 					anchor={0.5}
-					y={SYMBOL_SIZE * 1.25 * logoScale}
+					y={actionY}
 					text="PRESS ANYWHERE TO START"
 					style={{
-						fontFamily: 'proxima-nova',
+						fontFamily: 'system-ui',
 						fontSize: SYMBOL_SIZE * 0.32 * logoScale,
 						fill: 0xffd700,
 						fontWeight: '700',
