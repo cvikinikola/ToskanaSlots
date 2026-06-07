@@ -12,6 +12,8 @@ import {
 	GRAPE_SYMBOL_NAMES,
 	GRAPE_SYMBOL_SPRITE_SCALE,
 	SYMBOL_SPRITE_SCALE_BY_NAME,
+	SCATTER_SPRITE_ASPECT,
+	SCATTER_SPRITE_SCALE,
 	SYMBOL_DRAW_HALF,
 	BOARD_DIMENSIONS,
 } from './constants';
@@ -80,6 +82,17 @@ export const getSymbolSpriteScale = (name: string) => {
 
 export const getSymbolSpriteSize = (name: string) =>
 	SYMBOL_SPRITE_BASE * getSymbolSpriteScale(name);
+
+/** Draw size — scatter keeps portrait aspect; all other symbols stay square. */
+export const getSymbolSpriteDimensions = (name: string) => {
+	const id = normalizeSymbolName(name);
+	if (id === 'S') {
+		const height = SYMBOL_SPRITE_BASE * SCATTER_SPRITE_SCALE;
+		return { width: height * SCATTER_SPRITE_ASPECT, height };
+	}
+	const size = getSymbolSpriteSize(name);
+	return { width: size, height: size };
+};
 
 /** Pixi asset key — L4 nije u mreži 7×7; zeleno grožđe je L1 (sym_l1). */
 export const getSymbolAssetKey = (name: string) =>

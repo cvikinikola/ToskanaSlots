@@ -46,6 +46,12 @@ const assets = {
 	menu_win: sprite(`${MENU_BAR}/icon_win.webp`),
 	menu_menu: sprite(`${MENU_BAR}/menu.png`),
 	menu_bet: sprite(`${MENU_BAR}/icon_bet.webp`),
+	menu_paytable_btn: sprite(`${MENU_BAR}/paytuble_btn.png`),
+	menu_settings_btn: sprite(`${MENU_BAR}/setings_music_btn.png`),
+	menu_info_btn: sprite(`${MENU_BAR}/info_btn.png`),
+	menu_sound: sprite(`${MENU_BAR}/btn_sound.webp`),
+	menu_mute: sprite(`${MENU_BAR}/btn_mute.webp`),
+	menu_exit_btn: sprite(`${MENU_BAR}/exit_btn.png`),
 };
 
 export default assets;

@@ -31,6 +31,12 @@
 		menu: 'menu_menu',
 		turbo: 'menu_turbo',
 		autoSpin: 'menu_auto_spin',
+		payTable: 'menu_paytable_btn',
+		settings: 'menu_settings_btn',
+		info: 'menu_info_btn',
+		soundOn: 'menu_sound',
+		soundOff: 'menu_mute',
+		menuExit: 'menu_exit_btn',
 	};
 
 	const defaultImageKey = $derived(iconAssetMap[icon]);

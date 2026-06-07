@@ -104,38 +104,41 @@
 
 <style lang="scss">
 	.game-rules {
-		color: #f5e7c0;
-		font-family: 'proxima-nova', serif;
+		color: var(--th-cream, #f5e7c0);
+		font-family: 'proxima-nova', Georgia, serif;
 		max-width: 760px;
-		padding: 0.5rem 1rem 1.5rem;
+		padding: 0.25rem 0.5rem 1rem;
 		line-height: 1.5;
 
 		h2 {
 			text-align: center;
 			margin: 0 0 0.75rem;
 			letter-spacing: 0.15em;
-			color: #ffefb0;
+			color: var(--th-gold-text, #ffefb0);
+			text-transform: uppercase;
 		}
 
 		h3 {
 			margin: 1rem 0 0.4rem;
 			letter-spacing: 0.08em;
-			color: #ffd86b;
-			border-bottom: 1px solid rgba(255, 216, 107, 0.35);
+			color: var(--th-gold-heading, #ffd86b);
+			border-bottom: 1px solid var(--th-border-strong, rgba(212, 175, 55, 0.55));
 			padding-bottom: 0.2rem;
 		}
 
 		p {
 			margin: 0 0 0.5rem;
+			color: var(--th-cream-muted, #e8d9a8);
 		}
 
 		ul {
 			margin: 0 0 0.5rem;
 			padding-left: 1.2rem;
+			color: var(--th-cream-muted, #e8d9a8);
 		}
 
 		strong {
-			color: #ffefb0;
+			color: var(--th-gold-text, #ffefb0);
 		}
 
 		section {
@@ -143,10 +146,19 @@
 		}
 
 		.disclaimer {
-			border: 1px solid rgba(255, 100, 100, 0.45);
-			background: rgba(120, 0, 0, 0.18);
+			border: 1px solid rgba(180, 80, 60, 0.55);
+			background: rgba(60, 12, 8, 0.35);
 			padding: 0.5rem 0.75rem;
 			border-radius: 8px;
+
+			h3 {
+				color: #ffb4a0;
+				border-bottom-color: rgba(255, 140, 120, 0.35);
+			}
+
+			p {
+				color: #f5d0c8;
+			}
 		}
 	}
 </style>

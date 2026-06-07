@@ -7,6 +7,7 @@
 	import { setContext } from '../game/context';
 
 	import messagesMap from '../i18n/messagesMap';
+	import '../styles/modal-theme.scss';
 
 	type Props = { children: Snippet };
 

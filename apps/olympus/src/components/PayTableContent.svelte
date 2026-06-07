@@ -81,7 +81,7 @@
 		<article class="special-card">
 			<header class="symbol-head">
 				<img
-					class="symbol-img"
+					class="symbol-img scatter-img"
 					src={symbolAssetPath('S')}
 					alt={formatSymbolLabel('S', false)}
 				/>
@@ -127,30 +127,31 @@
 
 <style lang="scss">
 	.pay-table {
-		color: #ffe27a;
-		font-family: 'proxima-nova', serif;
+		color: var(--th-cream, #f5e7c0);
+		font-family: 'proxima-nova', Georgia, serif;
 		max-width: 720px;
-		padding: 0.5rem 1rem 1.5rem;
+		padding: 0.25rem 0.5rem 1rem;
 
 		h2 {
 			text-align: center;
 			margin: 0 0 0.75rem;
 			letter-spacing: 0.12em;
-			color: #ffefb0;
+			color: var(--th-gold-text, #ffefb0);
 			font-size: 1.15rem;
+			text-transform: uppercase;
 		}
 
 		h3 {
 			margin: 1.5rem 0 0.65rem;
 			letter-spacing: 0.1em;
-			color: #ffd86b;
-			border-bottom: 1px solid rgba(255, 216, 107, 0.35);
+			color: var(--th-gold-heading, #ffd86b);
+			border-bottom: 1px solid var(--th-border-strong, rgba(212, 175, 55, 0.55));
 			padding-bottom: 0.25rem;
 			font-size: 0.95rem;
 		}
 
 		.intro {
-			color: #f5e7c0;
+			color: var(--th-cream-muted, #e8d9a8);
 			line-height: 1.45;
 			margin: 0 0 1rem;
 			font-size: 0.92rem;
@@ -169,10 +170,11 @@
 
 		.symbol-card,
 		.special-card {
-			background: rgba(255, 255, 255, 0.04);
-			border: 1px solid rgba(255, 216, 107, 0.22);
+			background: var(--th-card-bg, rgba(0, 0, 0, 0.28));
+			border: 1px solid var(--th-border, rgba(212, 175, 55, 0.35));
 			border-radius: 10px;
 			padding: 0.65rem 0.75rem;
+			box-shadow: inset 0 1px 0 rgba(255, 231, 154, 0.08);
 		}
 
 		.symbol-head {
@@ -190,6 +192,12 @@
 			filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.45));
 		}
 
+		.scatter-img {
+			width: auto;
+			height: 96px;
+			max-width: 76px;
+		}
+
 		.symbol-meta {
 			display: flex;
 			flex-direction: column;
@@ -199,24 +207,24 @@
 
 		.symbol-code {
 			font-size: 1rem;
-			color: #ffefb0;
+			color: var(--th-gold-text, #ffefb0);
 			letter-spacing: 0.08em;
 		}
 
 		.symbol-name {
 			font-size: 0.95rem;
 			font-weight: 700;
-			color: #fff5d4;
+			color: var(--th-cream, #f5e7c0);
 		}
 
 		.symbol-name-sr {
 			font-size: 0.85rem;
-			color: #e8d9a8;
+			color: var(--th-cream-muted, #e8d9a8);
 		}
 
 		.asset-key {
 			font-size: 0.72rem;
-			color: #a89460;
+			color: var(--th-brown, #8b5a2b);
 			font-family: monospace;
 		}
 
@@ -235,8 +243,8 @@
 			flex-direction: column;
 			align-items: center;
 			justify-content: center;
-			background: rgba(0, 0, 0, 0.38);
-			border: 1px solid rgba(255, 216, 107, 0.12);
+			background: rgba(0, 0, 0, 0.35);
+			border: 1px solid var(--th-border, rgba(212, 175, 55, 0.35));
 			border-radius: 6px;
 			padding: 0.28rem 0.15rem;
 			min-height: 2.6rem;
@@ -244,22 +252,26 @@
 
 		.tier-size {
 			font-size: 0.72rem;
-			color: #c9b27c;
+			color: var(--th-cream-muted, #e8d9a8);
 			line-height: 1.2;
 		}
 
 		.tier-value {
 			font-size: 0.82rem;
 			font-weight: 800;
-			color: #ffefb0;
+			color: var(--th-gold-text, #ffefb0);
 			line-height: 1.2;
 		}
 
 		.special-note {
 			margin: 0 0 0.55rem;
-			color: #f5e7c0;
+			color: var(--th-cream-muted, #e8d9a8);
 			font-size: 0.86rem;
 			line-height: 1.4;
+		}
+
+		strong {
+			color: var(--th-gold-text, #ffefb0);
 		}
 
 		@media (max-width: 640px) {

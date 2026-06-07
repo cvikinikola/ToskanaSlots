@@ -23,6 +23,12 @@ export const SYMBOL_SPRITE_SCALE_BY_NAME: Record<string, number> = {
 	H4: SYMBOL_SPRITE_SCALE * 0.90, // sym_h4 — samo ovo voće −3%
 };
 
+/** sym_s.png native aspect (433×577) — portrait SCATTER badge. */
+export const SCATTER_SPRITE_ASPECT = 433 / 577;
+
+/** Scatter drawn taller than standard symbols; width follows aspect (not squashed). */
+export const SCATTER_SPRITE_SCALE = SYMBOL_SPRITE_SCALE * 1.22;
+
 export const SYMBOL_DRAW_MAX_SCALE = SYMBOL_SPRITE_SCALE;
 
 /** Largest half-height/width of any symbol sprite (px). */
