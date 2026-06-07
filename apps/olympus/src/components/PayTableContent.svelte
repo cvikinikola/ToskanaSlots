@@ -1,27 +1,35 @@
 <script lang="ts">
 	import config from '../game/config';
-	import {
-		SYMBOL_LABELS,
-		UI_SYMBOL_LABELS,
-		formatSymbolLabel,
-		symbolAssetPath,
-	} from '../game/symbolLabels';
+	import { SYMBOL_LABELS, UI_SYMBOL_LABELS, formatSymbolLabel, symbolAssetPath } from '../game/symbolLabels';
 	import type { SymbolName } from '../game/types';
 
 	const PAYING_SYMBOLS: SymbolName[] = ['H1', 'H2', 'H3', 'H4', 'L1', 'L2', 'L3'];
 
+	const SYMBOL_TIERS: Record<SymbolName, string> = {
+		H1: 'HIGHEST',
+		H2: 'HIGH',
+		H3: 'HIGH',
+		H4: 'MEDIUM',
+		L1: 'MEDIUM',
+		L2: 'LOW',
+		L3: 'LOWEST',
+		S: 'SCATTER',
+	};
+
 	type PaytableTier = { size: number; sizeLabel: string; multiplier: number };
 
 	const parsePaytable = (symbolKey: SymbolName): PaytableTier[] =>
-		config.symbols[symbolKey].paytable.map((entry) => {
-			const size = Number(Object.keys(entry)[0]);
-			const multiplier = Number(Object.values(entry)[0]);
-			return {
-				size,
-				sizeLabel: size === 15 ? '15+' : String(size),
-				multiplier,
-			};
-		});
+		config.symbols[symbolKey].paytable
+			.map((entry) => {
+				const size = Number(Object.keys(entry)[0]);
+				const multiplier = Number(Object.values(entry)[0]);
+				return {
+					size,
+					sizeLabel: size === 15 ? '15+' : String(size),
+					multiplier,
+				};
+			})
+			.reverse();
 
 	const formatMultiplier = (value: number) =>
 		Number.isInteger(value) ? String(value) : value.toFixed(1).replace(/\.0$/, '');
@@ -29,21 +37,18 @@
 	const freeSpinRows = Object.entries(config.freeSpins.awarded).map(([count, spins]) => ({
 		count: Number(count),
 		spins,
-		label: Number(count) >= 7 ? `${count}+` : count,
+		label: String(count),
 	}));
+
+	const MULTIPLIER_ICON = '/assets/sprites/menuBar/multi_icon.png';
 </script>
 
 <div class="pay-table">
-	<h2>PAYTABLE / ISPLATNA TABELA</h2>
+	<h2>SYMBOLS &amp; PAYTABLE</h2>
 	<p class="intro">
-		Dobitak za klaster od <strong>5 ili više</strong> istih simbola povezanih horizontalno ili
-		vertikalno na mreži 7×7. Vrednosti su množilac ukupnog uloga (<strong>× bet</strong>).
+		All symbols pay in blocks of <strong>minimum 5 symbols</strong> connected horizontally or
+		vertically on a <strong>7×7</strong> grid. All wins are multiplied by the current bet amount.
 	</p>
-
-	<div class="legend">
-		<span>Klastar</span>
-		<span>Isplata</span>
-	</div>
 
 	<div class="symbol-list">
 		{#each PAYING_SYMBOLS as symbolKey (symbolKey)}
@@ -56,10 +61,8 @@
 						alt={formatSymbolLabel(symbolKey, false)}
 					/>
 					<div class="symbol-meta">
-						<strong class="symbol-code">{symbolKey}</strong>
-						<span class="symbol-name">{SYMBOL_LABELS[symbolKey].en}</span>
-						<span class="symbol-name-sr">{SYMBOL_LABELS[symbolKey].sr}</span>
-						<span class="asset-key">{SYMBOL_LABELS[symbolKey].assetKey}</span>
+						<span class="symbol-tier">{SYMBOL_TIERS[symbolKey]}</span>
+						<strong class="symbol-name">{SYMBOL_LABELS[symbolKey].en}</strong>
 					</div>
 				</header>
 
@@ -67,7 +70,7 @@
 					{#each tiers as tier (`${symbolKey}-${tier.size}`)}
 						<div class="tier">
 							<span class="tier-size">{tier.sizeLabel}</span>
-							<span class="tier-value">×{formatMultiplier(tier.multiplier)}</span>
+							<span class="tier-value">{formatMultiplier(tier.multiplier)}x</span>
 						</div>
 					{/each}
 				</div>
@@ -75,7 +78,7 @@
 		{/each}
 	</div>
 
-	<h3>Specijalni simboli</h3>
+	<h3>VINAR (SCATTER)</h3>
 
 	<div class="special-list">
 		<article class="special-card">
@@ -86,18 +89,19 @@
 					alt={formatSymbolLabel('S', false)}
 				/>
 				<div class="symbol-meta">
-					<strong class="symbol-code">S</strong>
-					<span class="symbol-name">{SYMBOL_LABELS.S.en}</span>
-					<span class="symbol-name-sr">{SYMBOL_LABELS.S.sr} (scatter)</span>
-					<span class="asset-key">{SYMBOL_LABELS.S.assetKey}</span>
+					<span class="symbol-tier">SCATTER</span>
+					<strong class="symbol-name">{SYMBOL_LABELS.S.en}</strong>
 				</div>
 			</header>
-			<p class="special-note">Nema cluster isplate — pokreće free spinove kad padne bilo gde na gridu.</p>
+			<p class="special-note">
+				This is the <strong>SCATTER</strong> symbol. The SCATTER symbol appears on all reels.
+				<strong>SCATTER pays on any position</strong> and does not form cluster wins.
+			</p>
 			<div class="tier-grid scatter-grid">
 				{#each freeSpinRows as row (`scatter-${row.count}`)}
 					<div class="tier">
-						<span class="tier-size">{row.label}×</span>
-						<span class="tier-value">{row.spins} FS</span>
+						<span class="tier-size">{row.label} Scatter</span>
+						<span class="tier-value">{row.spins} Free Spins</span>
 					</div>
 				{/each}
 			</div>
@@ -105,21 +109,17 @@
 
 		<article class="special-card">
 			<header class="symbol-head">
-				<img
-					class="symbol-img"
-					src={`/assets/sprites/thor/${UI_SYMBOL_LABELS.M.assetFile}`}
-					alt={UI_SYMBOL_LABELS.M.en}
-				/>
+				<img class="symbol-img multiplier-img" src={MULTIPLIER_ICON} alt="Spot multiplier" />
 				<div class="symbol-meta">
-					<strong class="symbol-code">M</strong>
-					<span class="symbol-name">{UI_SYMBOL_LABELS.M.en}</span>
-					<span class="symbol-name-sr">{UI_SYMBOL_LABELS.M.sr} (samo UI)</span>
-					<span class="asset-key">{UI_SYMBOL_LABELS.M.assetKey}</span>
+					<span class="symbol-tier">MULTIPLIER SPOT</span>
+					<strong class="symbol-name">{UI_SYMBOL_LABELS.M.en}</strong>
 				</div>
 			</header>
 			<p class="special-note">
-				Ne pada na grid. Spot množitelji na poljima (×{config.spotMultipliers.startMultiplier} do
-				×{config.spotMultipliers.maxMultiplier}) množe dobitak klastera na toj ćeliji.
+				Not a grid symbol. Marked spots can carry multipliers from
+				<strong>×{config.spotMultipliers.startMultiplier}</strong> up to
+				<strong>×{config.spotMultipliers.maxMultiplier}</strong>, doubling each time a winning
+				symbol explodes on the same cell again.
 			</p>
 		</article>
 	</div>
@@ -148,6 +148,7 @@
 			border-bottom: 1px solid var(--th-border-strong, rgba(212, 175, 55, 0.55));
 			padding-bottom: 0.25rem;
 			font-size: 0.95rem;
+			text-transform: uppercase;
 		}
 
 		.intro {
@@ -155,10 +156,6 @@
 			line-height: 1.45;
 			margin: 0 0 1rem;
 			font-size: 0.92rem;
-		}
-
-		.legend {
-			display: none;
 		}
 
 		.symbol-list,
@@ -198,34 +195,29 @@
 			max-width: 76px;
 		}
 
+		.multiplier-img {
+			width: 72px;
+			height: 72px;
+		}
+
 		.symbol-meta {
 			display: flex;
 			flex-direction: column;
-			gap: 0.12rem;
+			gap: 0.2rem;
 			min-width: 0;
 		}
 
-		.symbol-code {
-			font-size: 1rem;
-			color: var(--th-gold-text, #ffefb0);
-			letter-spacing: 0.08em;
+		.symbol-tier {
+			font-size: 0.72rem;
+			font-weight: 800;
+			letter-spacing: 0.1em;
+			color: var(--th-gold-heading, #ffd86b);
 		}
 
 		.symbol-name {
 			font-size: 0.95rem;
 			font-weight: 700;
 			color: var(--th-cream, #f5e7c0);
-		}
-
-		.symbol-name-sr {
-			font-size: 0.85rem;
-			color: var(--th-cream-muted, #e8d9a8);
-		}
-
-		.asset-key {
-			font-size: 0.72rem;
-			color: var(--th-brown, #8b5a2b);
-			font-family: monospace;
 		}
 
 		.tier-grid {
