@@ -13,6 +13,8 @@
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
+	import ReplayControls from './ReplayControls.svelte';
+	import ReplayPhaseTracker from './ReplayPhaseTracker.svelte';
 	import Sound from './Sound.svelte';
 	import BackgroundVideo from './BackgroundVideo.svelte';
 	import BottomUiBackdrop from './BottomUiBackdrop.svelte';
@@ -79,6 +81,8 @@
 		<LoadingScreen onloaded={() => (context.stateLayout.showLoadingScreen = false)} />
 	{:else}
 		<ResumeBet />
+		<ReplayControls />
+		<ReplayPhaseTracker />
 		<Sound />
 
 		<BottomUiBackdrop />

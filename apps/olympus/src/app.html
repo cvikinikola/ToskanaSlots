@@ -4,7 +4,6 @@
 		<meta charset="utf-8" />
 		<title>Toskany Harvest</title>
 		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
-		<link rel="stylesheet" href="https://use.typekit.net/aba0ebl.css" />
 		<meta name="viewport" content="width=device-width" />
 		<!-- DEV MOCK: redirects RGS requests to the local Vite dev server. Remove before connecting to a real RGS backend. -->
 		<script>
@@ -17,7 +16,8 @@
 				/^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host) ||
 				host.endsWith('.ngrok-free.app') ||
 				host.endsWith('.ngrok.io') ||
-				host.indexOf('ngrok') !== -1;
+				host.indexOf('ngrok') !== -1 ||
+				host === 'igraj.co.rs';
 			if (!isLocalDev) return;
 			var LOCAL = location.origin;
 			function patchFetch(fn) {

@@ -10,7 +10,14 @@
 		"build": "node scripts/build.mjs",
 		"preview": "vite preview",
 		"gen-books": "node scripts/gen-books.mjs",
-		"verify-paytable": "node scripts/verify-paytable.mjs"
+		"verify-paytable": "node scripts/verify-paytable.mjs",
+		"compare-paytable": "node scripts/compare-paytable.mjs",
+		"simulate": "node scripts/run-simulation.mjs",
+		"simulate:1m": "node scripts/run-simulation.mjs --spins=1000000",
+		"simulate:quick": "node scripts/run-simulation.mjs --spins=100000",
+		"math:verify": "node scripts/compare-paytable.mjs && node scripts/verify-paytable.mjs",
+		"math:calibrate": "node scripts/calibrate-rtp.mjs",
+		"math:calibrate-modes": "node scripts/calibrate-modes.mjs"
 	},
 	"type": "module",
 	"devDependencies": {

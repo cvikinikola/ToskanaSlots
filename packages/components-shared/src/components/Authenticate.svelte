@@ -113,6 +113,9 @@
 
 	const handleReplay = async () => {
 		try {
+			const currencyParam = stateUrlDerived.currency();
+			if (currencyParam) stateBet.currency = currencyParam;
+
 			stateBet.betAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
 			stateBet.wageredBetAmount = (stateUrlDerived.amount() / API_AMOUNT_MULTIPLIER) || 0;
 			stateBet.activeBetModeKey = stateUrlDerived.mode();
@@ -129,13 +132,8 @@
 			if ((data as any)?.error) throw data;
 
 			if (data) {
-				// @ts-ignore
-				stateBet.betToResume = {
-					...data,
-					event: '0',
-					active: true,
-					mode: stateUrlDerived.mode(),
-				};
+				stateUi.replay.snapshot = data as Record<string, unknown>;
+				stateUi.replay.phase = 'ready';
 			} else {
 				throw new Error('Replay data could not be loaded.');
 			}

@@ -1,62 +1,92 @@
+/**
+ * Verify every paytable tier pays correctly on the real 7×7 padded board.
+ * Uses mock-rgs math (same as RGS / gen-books).
+ */
+import { BOARD_CONFIG, visibleToBoardRow } from '../mock-rgs/math/board.js';
 import { PAYOUT_TABLE } from '../mock-rgs/math/paytable.js';
-import { runTumbleSequence } from '../mock-rgs/math/tumble.js';
+import { PAYING_SYMBOL_NAMES } from '../mock-rgs/math/symbols.js';
+import { runTumbleSequence, toBookAmount } from '../mock-rgs/math/tumble.js';
+import { createSeededRng } from '../mock-rgs/math/rng.js';
 
-const FILLERS = ['H1', 'H2', 'H3', 'H4', 'L1', 'L2', 'L3', 'L4'];
-const VISIBLE_ROWS = 5;
-const REELS = 6;
+const { numReels, numRows, paddingTop, paddingBottom } = BOARD_CONFIG;
+const COLUMN_HEIGHT = numRows + paddingTop + paddingBottom;
+const rng = createSeededRng(42);
 
-const buildBoard = (symbol, count) => {
-  const visible = [];
-  let placed = 0;
-  let fillerIndex = 0;
+/** Build a 7×7 padded board with exactly `count` connected `symbol` cells (row-major fill). */
+const buildClusterBoard = (symbol, count) => {
+	const fillerCycle = PAYING_SYMBOL_NAMES.filter((name) => name !== symbol);
+	let fillerIndex = 0;
+	const nextFiller = () => fillerCycle[fillerIndex++ % fillerCycle.length];
 
-  for (let i = 0; i < REELS * VISIBLE_ROWS; i++) {
-    if (placed < count) {
-      visible.push({ name: symbol });
-      placed++;
-      continue;
-    }
+	const board = [];
+	for (let reel = 0; reel < numReels; reel++) {
+		const column = [];
+		for (let i = 0; i < COLUMN_HEIGHT; i++) {
+			column.push({ name: nextFiller() });
+		}
+		board.push(column);
+	}
 
-    let filler = FILLERS[fillerIndex % FILLERS.length];
-    if (filler === symbol) {
-      fillerIndex++;
-      filler = FILLERS[fillerIndex % FILLERS.length];
-    }
-    fillerIndex++;
-    visible.push({ name: filler });
-  }
+	let placed = 0;
+	for (let row = 0; row < numRows && placed < count; row++) {
+		for (let reel = 0; reel < numReels && placed < count; reel++) {
+			board[reel][visibleToBoardRow(row)] = { name: symbol };
+			placed++;
+		}
+	}
 
-  const board = [];
-  for (let reel = 0; reel < REELS; reel++) {
-    const column = [{ name: 'S', scatter: true }];
-    for (let row = 0; row < VISIBLE_ROWS; row++) {
-      column.push(visible[reel * VISIBLE_ROWS + row]);
-    }
-    column.push({ name: 'S', scatter: true });
-    board.push(column);
-  }
-  return board;
+	if (placed !== count) {
+		throw new Error(`Could not place ${count} symbols on ${numReels}×${numRows} grid`);
+	}
+
+	return board;
 };
 
-for (const [symbol, tiers] of Object.entries(PAYOUT_TABLE)) {
-  for (const [count, multiplier] of tiers) {
-    const result = runTumbleSequence({
-      initialBoard: buildBoard(symbol, count),
-      betAmount: 1,
-      freeSpinMode: true,
-      globalMultRef: { value: 1 },
-      indexRef: { value: 0 },
-    });
-    const firstWin = result.events.find((event) => event.type === 'winInfo')
-      ?.wins.find((win) => win.symbol === symbol);
-    const expected = Math.round(multiplier * 100);
+let passed = 0;
+const failures = [];
 
-    if (!firstWin || firstWin.win !== expected || firstWin.meta.winWithoutMult !== expected) {
-      throw new Error(
-        `${symbol} ${count}x expected ${expected}, got ${JSON.stringify(firstWin)}`,
-      );
-    }
-  }
+for (const [symbol, tiers] of Object.entries(PAYOUT_TABLE)) {
+	for (const [count, multiplier] of tiers) {
+		const indexRef = { value: 0 };
+		const result = runTumbleSequence({
+			initialBoard: buildClusterBoard(symbol, count),
+			betAmount: 1,
+			freeSpinMode: false,
+			rng,
+			indexRef,
+		});
+
+		const winEvent = result.events.find((event) => event.type === 'winInfo');
+		const firstWin = winEvent?.wins.find((win) => win.symbol === symbol);
+		const expectedBook = toBookAmount(multiplier);
+
+		if (
+			!firstWin ||
+			firstWin.win !== expectedBook ||
+			firstWin.meta.winWithoutMult !== expectedBook
+		) {
+			failures.push({
+				symbol,
+				count,
+				multiplier,
+				expectedBook,
+				got: firstWin ?? null,
+			});
+			continue;
+		}
+
+		passed++;
+	}
 }
 
-console.log('[verify-paytable] free-spin payouts match paytable');
+console.log(`[verify-paytable] grid ${numReels}×${numRows} — ${passed} tiers OK`);
+
+if (failures.length > 0) {
+	console.error(`[verify-paytable] ${failures.length} FAILURES:`);
+	for (const f of failures) {
+		console.error(`  ${f.symbol} ×${f.count} (${f.multiplier}x bet) expected book ${f.expectedBook}`, f.got);
+	}
+	process.exit(1);
+}
+
+console.log('[verify-paytable] all payouts match paytable.js on 7×7 board');

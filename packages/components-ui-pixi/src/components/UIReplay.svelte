@@ -3,11 +3,10 @@
 
 	import UiFadeContainer from './UiFadeContainer.svelte';
 	import LabelWin from './LabelWin.svelte';
-	import LabelBet from './LabelBet.svelte';
+	import LabelReplayBet from './LabelReplayBet.svelte';
 	import ButtonPayTable from './ButtonPayTable.svelte';
 	import ButtonGameRules from './ButtonGameRules.svelte';
 	import ButtonSettings from './ButtonSettings.svelte';
-	import ButtonTurbo from './ButtonTurbo.svelte';
 	import ButtonMenu from './ButtonMenu.svelte';
 	import ButtonMenuClose from './ButtonMenuClose.svelte';
 	import ButtonSoundSwitch from './ButtonSoundSwitch.svelte';
@@ -59,7 +58,7 @@
 			y={context.stateLayoutDerived.mainLayoutStandard().height - 150}
 			scale={0.8}
 		>
-			<LabelBet stacked />
+			<LabelReplayBet stacked />
 		</Container>
 
 		<Container
@@ -68,14 +67,6 @@
 			scale={0.7}
 		>
 			<ButtonMenu />
-		</Container>
-
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 350}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 150 - 15}
-			scale={0.7}
-		>
-			<ButtonTurbo />
 		</Container>
 	</MainContainer>
 

@@ -1,5 +1,8 @@
 <script lang="ts">
 	import config from '../game/config';
+	import { stateUrlDerived } from 'state-shared';
+
+	const social = $derived(stateUrlDerived.social());
 </script>
 
 <div class="game-rules">
@@ -19,7 +22,7 @@
 		</p>
 		<p>
 			Tumbling continues until no more winning combinations appear. There is no limit to the number
-			of possible tumbles. All wins are added to the player balance after all tumbles from a base
+			of possible tumbles. All wins are added to the player {social ? 'coin balance' : 'balance'} after all tumbles from a base
 			spin have been completed.
 		</p>
 	</section>
@@ -79,16 +82,16 @@
 	<section>
 		<h3>Max Win</h3>
 		<p>
-			The maximum win is limited to <strong>25,000× bet</strong> in both the base game and free
-			spins. If the total win of a free spins round reaches 25,000× bet, the round immediately
+			The maximum win is limited to <strong>25,000× {social ? 'play amount' : 'bet'}</strong> in both the base game and free
+			spins. If the total win of a free spins round reaches 25,000× {social ? 'play amount' : 'bet'}, the round immediately
 			ends, the win is awarded and all remaining free spins are forfeited.
 		</p>
 	</section>
 
 	<section>
-		<h3>Buy Free Spins</h3>
+		<h3>{social ? 'Play Free Spins' : 'Buy Free Spins'}</h3>
 		<p>
-			Where permitted by jurisdiction, pay <strong>100× total bet</strong> to trigger the
+			Where permitted by jurisdiction, {social ? 'use' : 'pay'} <strong>100× total {social ? 'play amount' : 'bet'}</strong> to trigger the
 			Vendemmia Free Spins feature. On the triggering spin, 3, 4, 5, 6 or 7 Scatter symbols can
 			land randomly.
 		</p>
@@ -112,11 +115,11 @@
 				<tr><td>Minimum cluster for win</td><td>5 or more connected same symbols</td></tr>
 				<tr><td>Connection</td><td>Horizontal or vertical</td></tr>
 				<tr><td>Volatility</td><td>High</td></tr>
-				<tr><td>Theoretical RTP</td><td>96.53%</td></tr>
-				<tr><td>RTP with Buy Free Spins</td><td>96.52%</td></tr>
-				<tr><td>Minimum bet</td><td>$0.20</td></tr>
-				<tr><td>Maximum bet</td><td>$240.00</td></tr>
-				<tr><td>Maximum win</td><td>25,000× total bet</td></tr>
+				<tr><td>Theoretical RTP</td><td>97.20%</td></tr>
+				<tr><td>RTP with {social ? 'Play Free Spins' : 'Buy Free Spins'}</td><td>96.72%</td></tr>
+				<tr><td>Minimum {social ? 'play' : 'bet'}</td><td>$0.20</td></tr>
+				<tr><td>Maximum {social ? 'play' : 'bet'}</td><td>$240.00</td></tr>
+				<tr><td>Maximum win</td><td>25,000× total {social ? 'play amount' : 'bet'}</td></tr>
 				<tr><td>Malfunction</td><td>Voids all pays and plays</td></tr>
 			</tbody>
 		</table>
@@ -124,7 +127,7 @@
 			<li>Only the highest win is paid per winning combination.</li>
 			<li>When winning with multiple blocks, all wins are added to the total win.</li>
 			<li>Free spins and bonus wins are added to the payline win.</li>
-			<li>All wins are multiplied by base bet.</li>
+			<li>All wins are multiplied by base {social ? 'play amount' : 'bet'}.</li>
 			<li>Free spins total win in the history contains the whole win of the cycle.</li>
 			<li>
 				<strong>SPACE</strong> and <strong>ENTER</strong> on the keyboard can be used to start and
@@ -144,11 +147,11 @@
 			</thead>
 			<tbody>
 				<tr><td>SPIN</td><td>Starts the spin</td></tr>
-				<tr><td>+ and −</td><td>Change bet value, open bet menu</td></tr>
-				<tr><td>BET display</td><td>Current bet — click to switch coins/cash</td></tr>
-				<tr><td>CREDIT display</td><td>Current balance — click to switch coins/cash</td></tr>
+				<tr><td>+ and −</td><td>Change {social ? 'play amount' : 'bet value'}, open {social ? 'play amount' : 'bet'} menu</td></tr>
+				<tr><td>{social ? 'PLAY display' : 'BET display'}</td><td>Current {social ? 'play amount' : 'bet'} — click to switch coins/cash</td></tr>
+				<tr><td>{social ? 'COINS display' : 'CREDIT display'}</td><td>Current balance — click to switch coins/cash</td></tr>
 				<tr><td>WIN display</td><td>Win from current spin</td></tr>
-				<tr><td>BUY FREE SPINS</td><td>100× bet — instant Vendemmia Free Spins</td></tr>
+				<tr><td>{social ? 'PLAY FREE SPINS' : 'BUY FREE SPINS'}</td><td>100× {social ? 'play amount' : 'bet'} — instant Vendemmia Free Spins</td></tr>
 				<tr><td>AUTOPLAY</td><td>Opens auto play menu</td></tr>
 				<tr><td>Turbo icon</td><td>Normal / Quick / Turbo spin speed</td></tr>
 				<tr><td>Sound icon</td><td>Toggle sound on/off</td></tr>
@@ -176,15 +179,15 @@
 	</section>
 
 	<p class="footer-tag">
-		La dolce vita — Play responsibly. Gambling can be addictive.<br />
-		Toscana Harvest | RTP 96.53% | High Volatility | Max Win 25,000×
+		La dolce vita — Play responsibly.{#if !social} Gambling can be addictive.{/if}<br />
+		Toscana Harvest | RTP 97.20% | High Volatility | Max Win 25,000×
 	</p>
 </div>
 
 <style lang="scss">
 	.game-rules {
 		color: var(--th-cream, #f5e7c0);
-		font-family: 'proxima-nova', Georgia, serif;
+		font-family: system-ui, -apple-system, 'Segoe UI', Georgia, serif;
 		max-width: 760px;
 		padding: 0.25rem 0.5rem 1rem;
 		line-height: 1.5;

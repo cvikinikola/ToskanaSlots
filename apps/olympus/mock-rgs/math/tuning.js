@@ -17,22 +17,29 @@ export const BASE_SYMBOL_WEIGHTS = [
   ['H1', 8],
 ];
 
-export const SCATTER_RATE = 0.0042;
+const envNum = (key, fallback) => {
+  const raw = process.env[key];
+  if (raw === undefined || raw === '') return fallback;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : fallback;
+};
+
+export const SCATTER_RATE = envNum('SCATTER_RATE', 0.0042);
 
 export const HOT_SYMBOL_COUNT = 3;
 export const FS_HOT_SYMBOL_COUNT = 4;
 
-/** Base-game cluster density (recalibrated after spot-mult win fix). */
-export const HOT_SYMBOL_BOOST = 1.66;
-export const NEIGHBOR_REFILL_BIAS = 1.31;
+/** Base-game cluster density — calibrated 2026-06-07 (80k×13 sim sweep, 7×7 grid). */
+export const HOT_SYMBOL_BOOST = envNum('HOT_SYMBOL_BOOST', 2.128);
+export const NEIGHBOR_REFILL_BIAS = envNum('NEIGHBOR_REFILL_BIAS', 1.355);
 
 /** Free spins — natural retriggers / base trigger. */
-export const FS_HOT_SYMBOL_BOOST = 2.5;
-export const FS_NEIGHBOR_REFILL_BIAS = 1.72;
+export const FS_HOT_SYMBOL_BOOST = envNum('FS_HOT_SYMBOL_BOOST', 2.59);
+export const FS_NEIGHBOR_REFILL_BIAS = envNum('FS_NEIGHBOR_REFILL_BIAS', 1.72);
 
-/** Bonus-buy FS — slightly hotter than natural FS to hit ~96% at 100× cost. */
-export const BUY_FS_HOT_SYMBOL_BOOST = 2.38;
-export const BUY_FS_NEIGHBOR_REFILL_BIAS = 1.64;
+/** Bonus-buy FS — calibrated to match BASE RTP within 0.5%. */
+export const BUY_FS_HOT_SYMBOL_BOOST = envNum('BUY_FS_HOT_SYMBOL_BOOST', 3.1);
+export const BUY_FS_NEIGHBOR_REFILL_BIAS = envNum('BUY_FS_NEIGHBOR_REFILL_BIAS', 1.775);
 
 export const MAX_WIN_MULTIPLIER = 25000;
 export const BONUS_BUY_COST_MULTIPLIER = 100;

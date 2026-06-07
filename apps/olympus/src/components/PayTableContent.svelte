@@ -2,6 +2,9 @@
 	import config from '../game/config';
 	import { SYMBOL_LABELS, UI_SYMBOL_LABELS, formatSymbolLabel, symbolAssetPath } from '../game/symbolLabels';
 	import type { SymbolName } from '../game/types';
+	import { stateUrlDerived } from 'state-shared';
+
+	const social = $derived(stateUrlDerived.social());
 
 	const PAYING_SYMBOLS: SymbolName[] = ['H1', 'H2', 'H3', 'H4', 'L1', 'L2', 'L3'];
 
@@ -47,7 +50,7 @@
 	<h2>SYMBOLS &amp; PAYTABLE</h2>
 	<p class="intro">
 		All symbols pay in blocks of <strong>minimum 5 symbols</strong> connected horizontally or
-		vertically on a <strong>7×7</strong> grid. All wins are multiplied by the current bet amount.
+		vertically on a <strong>7×7</strong> grid. All wins are multiplied by the current {social ? 'play amount' : 'bet amount'}.
 	</p>
 
 	<div class="symbol-list">
@@ -128,7 +131,7 @@
 <style lang="scss">
 	.pay-table {
 		color: var(--th-cream, #f5e7c0);
-		font-family: 'proxima-nova', Georgia, serif;
+		font-family: system-ui, -apple-system, 'Segoe UI', Georgia, serif;
 		max-width: 720px;
 		padding: 0.25rem 0.5rem 1rem;
 

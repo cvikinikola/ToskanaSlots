@@ -18,8 +18,8 @@ export default defineConfig(async () =>
 		},
 		server: {
 			port: 3005,
-			// Allow ngrok tunnels (subdomain changes each session on free plan).
-			allowedHosts: ['.ngrok-free.dev', '.ngrok-free.app', '.ngrok.io'],
+			// Allow ngrok tunnels and custom dev domain.
+			allowedHosts: ['.ngrok-free.dev', '.ngrok-free.app', '.ngrok.io', 'igraj.co.rs'],
 		},
 	}),
 );
