@@ -1,3 +1,6 @@
+# legacy app folder (delete manually when Cursor releases the lock)
+apps/olympus/
+
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies

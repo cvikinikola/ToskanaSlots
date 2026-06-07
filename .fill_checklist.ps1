@@ -16,7 +16,7 @@ if (Test-Path $dst) { Remove-Item -Recurse -Force $dst }
 Expand-Archive -Path $zip -DestinationPath $dst -Force
 
 # Mapa: br -> @(Status, Komentar)
-# Simulacija (100k, seed 20260607, posle kalibracije tuning.js): vidi apps/olympus/scripts/.last-simulation.json
+# Simulacija (100k, seed 20260607, posle kalibracije tuning.js): vidi apps/toskany/scripts/.last-simulation.json
 $M = @{}
 function S($n, $s, $c) { $script:M[$n] = @($s, $c) }
 

@@ -1,0 +1,74 @@
+{
+  "seed": 20260607,
+  "spins": 100000,
+  "grid": "7×7",
+  "targetRtp": 0.96,
+  "base": {
+    "mode": "BASE",
+    "spins": 100000,
+    "cost": 1,
+    "rtp": 0.9720330000001256,
+    "totalWagered": 100000,
+    "totalReturned": 97203.30000001256,
+    "nonZero": 48265,
+    "nonZeroRate": 0.48265,
+    "hitRateNonZero": 2.0718947477468146,
+    "maxWinSeen": 543.2,
+    "maxWinHits": 0,
+    "stdDev": 4.222112924460511,
+    "risk": {
+      "cvar99Return": 23.279399999999942,
+      "etl99House": 1,
+      "pWinGe5000": 0,
+      "pWinGe10000": 0
+    },
+    "winBuckets": {
+      "0": 51735,
+      "0-1x": 19122,
+      "1-5x": 26644,
+      "5-20x": 2131,
+      "20-100x": 345,
+      "100-500x": 22,
+      "500-5000x": 1,
+      "5000x+": 0
+    }
+  },
+  "bonus": {
+    "mode": "BONUS",
+    "spins": 100000,
+    "cost": 100,
+    "rtp": 0.9671705399999805,
+    "totalWagered": 10000000,
+    "totalReturned": 9671705.399999805,
+    "nonZero": 99986,
+    "nonZeroRate": 0.99986,
+    "hitRateNonZero": 1.0001400196027443,
+    "maxWinSeen": 25000,
+    "maxWinHits": 7,
+    "stdDev": 3.9765042740798906,
+    "risk": {
+      "cvar99Return": 25.248743999999995,
+      "etl99House": 0.9840479999999967,
+      "pWinGe5000": 0.00086,
+      "pWinGe10000": 0.00026
+    },
+    "winBuckets": {
+      "0": 14,
+      "0-1x": 111,
+      "1-5x": 5918,
+      "5-20x": 30002,
+      "20-100x": 43824,
+      "100-500x": 17352,
+      "500-5000x": 2693,
+      "5000x+": 86
+    }
+  },
+  "checks": {
+    "rtpDelta": 0.004862460000145119,
+    "baseInRange": true,
+    "bonusInRange": true,
+    "modesWithinHalfPercent": true,
+    "maxWinReachable": true
+  },
+  "generatedAt": "2026-06-07T20:22:39.704Z"
+}

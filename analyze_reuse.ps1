@@ -1,4 +1,4 @@
-$targetPaths = @("apps\olympus", "packages\components-ui-pixi")
+$targetPaths = @("apps\toskany", "packages\components-ui-pixi")
 $extensions = @(".ts",".js",".svelte",".json",".html",".css",".scss",".md",".yml",".yaml")
 
 $allTargetFiles = Get-ChildItem -Path $targetPaths -Recurse -File
@@ -37,9 +37,9 @@ $results = foreach ($f in $devTargetFiles) {
     
     $relPath = ""
     $pattern = ""
-    if ($f.FullName -match "apps\\olympus\\(.*)") {
+    if ($f.FullName -match "apps\\toskany\\(.*)") {
         $relPath = $matches[1]
-        $pattern = "apps\\(?!olympus\\).+\\" + [regex]::Escape($relPath)
+        $pattern = "apps\\(?!toskany\\).+\\" + [regex]::Escape($relPath)
     } elseif ($f.FullName -match "packages\\components-ui-pixi\\(.*)") {
         $relPath = $matches[1]
         $pattern = "packages\\(?!components-ui-pixi\\).+\\" + [regex]::Escape($relPath)

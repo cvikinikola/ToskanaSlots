@@ -79,7 +79,7 @@
 	{:else if initError}
 		<div class="renderer-error">
 			<div class="renderer-error__panel">
-				<p class="renderer-error__eyebrow">Hammer of Thor 1000</p>
+				<p class="renderer-error__eyebrow">Toskany Harvest</p>
 				<h1>WebGL is disabled</h1>
 				<p>
 					The game renderer cannot start in this browser session. Enable browser hardware
