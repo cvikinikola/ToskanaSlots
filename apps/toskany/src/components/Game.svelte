@@ -17,7 +17,7 @@
 	import ReplayPhaseTracker from './ReplayPhaseTracker.svelte';
 	import Sound from './Sound.svelte';
 	import BackgroundVideo from './BackgroundVideo.svelte';
-	import BottomUiBackdrop from './BottomUiBackdrop.svelte';
+	import BackgroundCharacter from './BackgroundCharacter.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import MipmapEnabler from './MipmapEnabler.svelte';
 	import Board from './Board.svelte';
@@ -85,7 +85,7 @@
 		<ReplayPhaseTracker />
 		<Sound />
 
-		<BottomUiBackdrop />
+		<BackgroundCharacter />
 
 		<MainContainer>
 			<ReelFramePanel />

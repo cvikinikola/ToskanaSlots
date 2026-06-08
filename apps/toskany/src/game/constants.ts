@@ -92,15 +92,14 @@ export const REEL_FRAME_OFFSET = {
 };
 
 export type BgConfig = {
-	key: 'bg' | 'bg_landscape' | 'bg_portrait' | 'bg_freespins';
+	key: 'deka_v2_bg' | 'deka_v2_bg_day';
 	native: { w: number; h: number };
 };
 
 export const BG_CONFIGS: Record<'landscape' | 'portrait' | 'freespins', BgConfig> = {
-	// Vineyard background (same asset; native matches PNG aspect for cover-fit).
-	landscape: { key: 'bg_landscape', native: { w: 320, h: 178 } },
-	portrait: { key: 'bg_portrait', native: { w: 320, h: 178 } },
-	freespins: { key: 'bg_freespins', native: { w: 320, h: 178 } },
+	landscape: { key: 'deka_v2_bg', native: { w: 1536, h: 1024 } },
+	portrait: { key: 'deka_v2_bg', native: { w: 1536, h: 1024 } },
+	freespins: { key: 'deka_v2_bg_day', native: { w: 1228, h: 819 } },
 };
 
 

@@ -22,7 +22,14 @@ const assets = {
 	sym_l3: sprite(`${BASE}/sym_l3.webp`),
 	sym_s:  sprite(`${BASE}/sym_s.png`),	sym_m:  sprite(`${MENU_BAR}/multi_icon.png`),
 
-	// Background: looping MP4 via `BackgroundVideo.svelte` (not loaded here).
+	// In-game Pixi background + animated deka v2 (1536×1024, shared canvas).
+	deka_v2_bg: sprite('/assets/deka_v2_bg.jpg'),
+	deka_v2_bg_day: sprite('/assets/deka_v2_bg_day.jpg'),
+	deka_v2_idle: sprite('/assets/deka_v2_idle.png'),
+	deka_v2_blink: sprite('/assets/deka2.png'),
+	deka_v2_toast: sprite('/assets/deka_v2_toast.png'),
+
+	// Free-spin / legacy: looping MP4 via `BackgroundVideo.svelte` for freeSpins only.
 	logo:         sprite(`${BASE}/logo_tuscany_harvest_night.png`),	logo_day:     sprite(`${BASE}/logo_tuscany_harvest.png`, false),
 
 	// Menu bar panels (PNG)
