@@ -149,6 +149,36 @@
 	overflow: hidden;
 }
 
+.pop-up-wrap .wrap .col .button-wrap.is-on {
+	border-color: var(--th-gold);
+	background: transparent;
+}
+
+.pop-up-wrap .wrap .col .button-wrap.is-on .rectangle {
+	background: linear-gradient(180deg, var(--th-wood-mid) 0%, var(--th-wood) 100%) !important;
+	border: 2px solid var(--th-gold) !important;
+	border-radius: 6px;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 231, 154, 0.18),
+		0 1px 4px rgba(0, 0, 0, 0.35);
+}
+
+.pop-up-wrap .wrap .col .button-wrap.is-on .base-button-content span {
+	color: var(--th-cream);
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+.pop-up-wrap .wrap .col .button-wrap:not(.is-on) .rectangle {
+	background: #1a1008 !important;
+	border: 1px solid var(--th-border) !important;
+	border-radius: 6px;
+}
+
+.pop-up-wrap .wrap .col .button-wrap:not(.is-on) .base-button-content span {
+	color: var(--th-cream-muted);
+	opacity: 0.8;
+}
+
 .pop-up-wrap .wrap .col .button-wrap .button:hover {
 	filter: brightness(1.08);
 }
@@ -216,4 +246,56 @@
 
 .pop-up-wrap .bonus-card-wrap .description {
 	color: var(--th-cream-muted);
+}
+
+/* Auto spin / bet option grids — wood + gold (replaces default black tiles) */
+.pop-up-wrap .grid .rectangle {
+	background: linear-gradient(180deg, var(--th-wood-mid) 0%, var(--th-wood) 100%) !important;
+	border: 2px solid var(--th-border-strong) !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 231, 154, 0.12),
+		0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.pop-up-wrap .grid .button:hover .rectangle {
+	border-color: var(--th-gold) !important;
+	filter: brightness(1.06);
+}
+
+.pop-up-wrap .grid .rectangle[style*='white'] {
+	border: 2px solid var(--th-gold-light) !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 231, 154, 0.25),
+		0 0 0 1px rgba(212, 175, 55, 0.35);
+}
+
+.pop-up-wrap .grid .base-button-content span {
+	color: var(--th-cream) !important;
+	font-weight: 800;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+}
+
+/* Bet menu +/- toggles */
+.pop-up-wrap .toggle-wrap .rectangle {
+	background: linear-gradient(180deg, var(--th-wood-mid) 0%, var(--th-wood) 100%) !important;
+	border: 2px solid var(--th-gold) !important;
+	box-shadow:
+		inset 0 1px 0 rgba(255, 231, 154, 0.18),
+		0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.pop-up-wrap .toggle-wrap .button:hover .rectangle {
+	border-color: var(--th-gold-light) !important;
+}
+
+.pop-up-wrap .toggle-wrap .base-button-content span {
+	color: var(--th-gold-heading) !important;
+	font-weight: 800;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.pop-up-wrap .toggle-wrap .amount {
+	color: var(--th-gold-text);
+	font-weight: 800;
+	letter-spacing: 0.04em;
 }

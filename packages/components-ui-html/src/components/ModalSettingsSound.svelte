@@ -21,7 +21,7 @@
 	<span>{@render children()}</span>
 	<div class="row">
 		<!-- button -->
-		<div class="button-wrap">
+		<div class="button-wrap" class:is-on={value > 0}>
 			<Button
 				onclick={() => {
 					eventEmitter.broadcast({ type: 'soundPressGeneral' });
