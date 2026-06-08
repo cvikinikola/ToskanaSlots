@@ -23,6 +23,7 @@
 	let fadeRun = 0;
 	let activeTrack = $state<GameMusicName>('bgm_main');
 	let introAudio: HTMLAudioElement | undefined;
+	let musicSuppressed = $state(false);
 
 	const musicVolume = $derived(stateSoundDerived.volumeMusic());
 	const targetVolume = $derived(pageActive ? Math.max(0, Math.min(1, musicVolume)) : 0);
@@ -97,6 +98,10 @@
 
 	$effect(() => {
 		if (!armed || !audio) return;
+		if (musicSuppressed) {
+			fadeTo(0);
+			return;
+		}
 		fadeTo(targetVolume);
 	});
 
@@ -141,8 +146,21 @@
 				playFreeSpinIntroMusic();
 				return;
 			}
-			if (isGameMusic(name)) restoreMainMusic();
-			else if (armed && targetVolume > 0 && audio?.paused) audio.play().catch(() => {});
+			if (isGameMusic(name)) {
+				if (musicSuppressed) return;
+				restoreMainMusic();
+			} else if (armed && targetVolume > 0 && audio?.paused) audio.play().catch(() => {});
+		},
+
+		freeSpinOutroShow: () => {
+			musicSuppressed = true;
+			stopIntroMusic();
+			fadeTo(0);
+		},
+
+		freeSpinOutroHide: () => {
+			musicSuppressed = false;
+			restoreMainMusic();
 		},
 	});
 </script>

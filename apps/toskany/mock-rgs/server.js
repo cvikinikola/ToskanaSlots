@@ -85,28 +85,26 @@ export const mockRgsPlugin = () => ({
       if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }
       console.log('[mock-rgs] /wallet/authenticate');
       sendJson(res, {
-        balance: { amount: 1000000000000, currency: 'USD' },
+        balance: { amount: 100_000_000_000, currency: 'USD' },
         config: {
           gameID: '0_0_toskany',
-          minBet: 200000,
-          maxBet: 240000000,
-          stepBet: 100000,
-          defaultBetLevel: 1000000,
+          minBet: 100_000,
+          maxBet: 100_000_000,
+          stepBet: 100_000,
+          defaultBetLevel: 1_000_000,
           betLevels: [
-            200000,
-            400000,
-            500000,
-            1000000,
-            2000000,
-            5000000,
-            10000000,
-            20000000,
-            40000000,
-            60000000,
-            100000000,
-            120000000,
-            200000000,
-            240000000,
+            100_000,
+            200_000,
+            400_000,
+            500_000,
+            1_000_000,
+            2_000_000,
+            5_000_000,
+            10_000_000,
+            20_000_000,
+            40_000_000,
+            60_000_000,
+            100_000_000,
           ],
           betModes: {
             BASE: { mode: 'BASE', costMultiplier: 1, feature: false },
@@ -127,7 +125,7 @@ export const mockRgsPlugin = () => ({
       });
     });
 
-    let lastBalanceAmount = 1000000000000;
+    let lastBalanceAmount = 100_000_000_000;
 
     server.middlewares.use('/wallet/play', async (req, res) => {
       if (req.method === 'OPTIONS') { res.statusCode = 204; res.end(); return; }

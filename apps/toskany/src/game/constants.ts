@@ -336,10 +336,12 @@ export const SYMBOL_WIN_TINT = 0xffffff;
 export const SYMBOL_STATIC_TINT = 0xdddddd;
 
 
-export const SCATTER_LAND_SOUND_MAP: Record<1 | 2 | 3 | 4 | 5, string> = {
-	1: 'sfx_scatter_1',
-	2: 'sfx_scatter_2',
-	3: 'sfx_scatter_3',
-	4: 'sfx_scatter_4',
-	5: 'sfx_scatter_5',
+export const SCATTER_LAND_SOUND_SRC = '/assets/audio/Bonus_scatter_symbol.mp3';
+
+export const SCATTER_LAND_SOUND_MAP: Record<1 | 2 | 3 | 4 | 5, 'sfx_scatter_land'> = {
+	1: 'sfx_scatter_land',
+	2: 'sfx_scatter_land',
+	3: 'sfx_scatter_land',
+	4: 'sfx_scatter_land',
+	5: 'sfx_scatter_land',
 };

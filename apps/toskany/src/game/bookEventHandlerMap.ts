@@ -192,13 +192,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'tumbleWinSpinRemainingShow', remaining });
 		}
 
-		// Play spin sound only on the first reveal of each round.
-		// Cascade re-reveals share the same bookEvents array but have a higher
-		// index — we detect them by checking for any prior reveal event.
-		const isFirstReveal = !bookEvents.some(
-			(e) => e.type === 'reveal' && e.index < bookEvent.index,
-		);
-		if (isFirstReveal) {
+		// Free spins: each reveal starts a new spin (onNewGameStart does not run between them).
+		if (isFreeSpinReveal) {
 			eventEmitter.broadcast({ type: 'soundReelSpin' });
 		}
 

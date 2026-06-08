@@ -8,15 +8,20 @@
 </script>
 
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { Container, Sprite, BitmapText } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
-	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import {
+		FREE_SPIN_OUTRO_COUNT_FRACTION,
+		getFreeSpinOutroMusicDurationMs,
+		preloadFreeSpinOutroMusicDuration,
+	} from '../game/freeSpinOutroAudio';
 
 	const context = getContext();
 
@@ -36,6 +41,10 @@
 	let winLevelData = $state<WinLevelData>();
 	const countUpAmount = new Tween(0);
 	let countUpComplete = $state(false);
+
+	onMount(() => {
+		preloadFreeSpinOutroMusicDuration();
+	});
 
 	const waitForDismiss = (duration: number) =>
 		new Promise<void>((resolve) => {
@@ -62,6 +71,11 @@
 			timeout = setTimeout(finish, duration);
 		});
 
+	const waitForTimeout = (duration: number) =>
+		new Promise<void>((resolve) => {
+			setTimeout(resolve, duration);
+		});
+
 	context.eventEmitter.subscribeOnMount({
 		freeSpinOutroShow: () => {
 			show = true;
@@ -78,13 +92,15 @@
 		freeSpinOutroCountUp: async (e) => {
 			winLevelData = e.winLevelData;
 
-			const countUpDuration = Math.max(e.winLevelData?.presentDuration || 0, 3 * SECOND);
+			const totalDuration = await getFreeSpinOutroMusicDurationMs();
+			const countUpDuration = Math.round(totalDuration * FREE_SPIN_OUTRO_COUNT_FRACTION);
+			const startedAt = performance.now();
 
-			context.eventEmitter.broadcast({ type: 'soundLoop', name: 'sfx_jackpot_ascension' });
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_jackpot_ascension' });
 
 			const animateCountUp =
 				countUpAmount.target === e.amount
-					? new Promise<void>((resolve) => setTimeout(resolve, countUpDuration))
+					? waitForTimeout(countUpDuration)
 					: countUpAmount.set(e.amount, { duration: countUpDuration });
 
 			await new Promise<void>((resolve) => {
@@ -107,8 +123,9 @@
 
 			countUpComplete = true;
 
-			const holdDuration = Math.max(e.winLevelData?.presentDuration || 0, 3 * SECOND);
-			await waitForDismiss(holdDuration);
+			const elapsed = performance.now() - startedAt;
+			const remainingMs = Math.max(0, totalDuration - elapsed);
+			if (remainingMs > 0) await waitForDismiss(remainingMs);
 
 			context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_jackpot_ascension' });
 		},

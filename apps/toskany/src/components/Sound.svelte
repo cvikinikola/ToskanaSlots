@@ -20,6 +20,8 @@
 
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { FREE_SPIN_OUTRO_MUSIC_SRC } from '../game/freeSpinOutroAudio';
+	import { SCATTER_LAND_SOUND_SRC } from '../game/constants';
 
 	const context = getContext();
 	const activeAudios = new Set<HTMLAudioElement>();
@@ -97,6 +99,21 @@
 		audio.pause();
 		audio.currentTime = 0;
 		loopingAudios.delete(name);
+	};
+
+	// One-shot audio tracked by name so it can be stopped early (e.g. outro skip).
+	const playNamedOnce = (name: string, src: string, volume = 1) => {
+		stopLoopAudio(name);
+		if (!pageActive) return;
+		if (soundEffectVolume <= 0) return;
+
+		const audio = new Audio(src);
+		audio.volume = Math.max(0, Math.min(1, volume * soundEffectVolume));
+		loopingAudios.set(name, audio);
+		const cleanup = () => loopingAudios.delete(name);
+		audio.addEventListener('ended', cleanup, { once: true });
+		audio.addEventListener('pause', cleanup, { once: true });
+		audio.play().catch(cleanup);
 	};
 
 	$effect(() => {
@@ -182,6 +199,11 @@
 				playAudio('/assets/audio/Massive_Thor_hammer__2-1779125404081.mp3', 0.9);
 				return;
 			}
+			// Free-spin outro money count-up — plays once (Vinyl Jackpot).
+			if (name === 'sfx_jackpot_ascension') {
+				playNamedOnce(name, FREE_SPIN_OUTRO_MUSIC_SRC, 0.85);
+				return;
+			}
 			// QA 04.06.2026: ranije su sledeci eventi bili stub-ovani (samo log u
 			// konzolu) pa se cula samo destrukcija. Sada su uvezani na realne
 			// audio fajlove iz /assets/audio.
@@ -214,7 +236,19 @@
 				playAudio('/assets/audio/Small_Viking_slot_ma_3-1779126316047.mp3', 0.4);
 				return;
 			}
-			// Scatter (Vinar) sleti — scatter stinger.
+			// Scatter (Vinar) lands on the grid — same sting every time.
+			if (
+				name === 'sfx_scatter_land' ||
+				name === 'sfx_scatter_1' ||
+				name === 'sfx_scatter_2' ||
+				name === 'sfx_scatter_3' ||
+				name === 'sfx_scatter_4' ||
+				name === 'sfx_scatter_5'
+			) {
+				playAudio(SCATTER_LAND_SOUND_SRC, 0.9);
+				return;
+			}
+			// Scatter trigger / retrigger celebration.
 			if (name === 'sfx_scatter_win_v2') {
 				playAudio('/assets/audio/Thor_lightning_strik_3-1779126268747.mp3', 0.7);
 				return;
@@ -256,13 +290,8 @@
 			playAudio('/assets/audio/destroy.mp3', 0.9);
 		},
 
-		// Looping SFX (e.g. coin shower during big win, or the "Jackpot
-		// Ascension" money count-up music during the free-spin outro).
+		// Looping SFX (e.g. coin shower during big win).
 		soundLoop: ({ name }) => {
-			if (name === 'sfx_jackpot_ascension') {
-				playLoopAudio(name, '/assets/audio/Jackpot Ascension Free.mp3', 0.85);
-				return;
-			}
 			// Big-win coin shower loop — slow-rolling coin clinks dok traje
 			// win-level prezentacija.
 			if (name === 'sfx_bigwin_coinloop') {

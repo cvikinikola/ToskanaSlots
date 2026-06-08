@@ -196,7 +196,7 @@ const config = {
 		volatility: 'High',
 		gridLabel: '7×7 (49 symbol positions)',
 		minClusterSize: 5,
-		betLimitsUsd: { min: 0.2, max: 240 },
+		betLimitsUsd: { min: 0.1, max: 100 },
 		/** Stake dashboard / marketing blurb (English). */
 		blurb:
 			'Toskany Harvest takes you to sunlit Tuscan vineyards on a 7×7 cluster grid. Connect 5 or more matching symbols horizontally or vertically to win. Every win triggers tumbling cascades that can chain again and again. Winning symbols mark multiplier spots on the grid — from ×2 up to ×1024 — that add together on overlapping wins. In Vendemmia Free Spins, land 3–7 Vinar scatter symbols for up to 30 free spins; marked multipliers stay on the board and keep growing until the bonus ends. Where permitted, buy Vendemmia Free Spins for 100× bet. High volatility, 97.20% base RTP, max win 25,000× bet.',

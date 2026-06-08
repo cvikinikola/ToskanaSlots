@@ -9,6 +9,7 @@ import { stateXstateDerived } from './stateXstate';
 import { playBet, convertTorResumableBet } from './utils';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import config from './config';
+import { eventEmitter } from './eventEmitter';
 
 const primaryMachines = createPrimaryMachines<Bet>({
 	onResumeGameActive: (betToResume) => convertTorResumableBet(betToResume),
@@ -23,6 +24,9 @@ const primaryMachines = createPrimaryMachines<Bet>({
 
 	onNewGameStart: async () => {
 		stateBet.winBookEventAmount = 0;
+		// Spin sound on button press — before RGS round-trip and reveal book event.
+		eventEmitter.broadcast({ type: 'soundReelSpin' });
+
 		// Skip pre-spin animation while auto-betting (or when spacebar is held / turbo on).
 		// Using `autoSpinsCounter` as the auto-bet signal is reliable on the very first
 		// spin too — it is set synchronously before the AUTO_BET event is broadcast,

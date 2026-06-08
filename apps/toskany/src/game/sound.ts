@@ -15,6 +15,7 @@ export type MusicName =
 
 export type SoundEffectName =
 	// Scatter
+	| 'sfx_scatter_land'
 	| 'sfx_scatter_1'
 	| 'sfx_scatter_2'
 	| 'sfx_scatter_3'
@@ -50,7 +51,7 @@ export type SoundEffectName =
 	| 'sfx_coin_clink'
 	| 'sfx_thunder'
 	| 'sfx_thunder_clap'
-	// Free-spin outro money count-up ("Jackpot Ascension")
+	// Free-spin outro money count-up (Vinyl Jackpot)
 	| 'sfx_jackpot_ascension';
 
 export type SoundName = MusicName | SoundEffectName;
