@@ -43,6 +43,9 @@
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
+	// Global multiplier for top-right "Toskany Harvest" title (all layouts).
+	const TITLE_FONT_GLOBAL_SCALE = 1.22;
+
 	// Shrink the painted-text titles on stacked (portrait/tablet) layouts so
 	// they don't crowd the centred reels.
 	// QA 03.06.2026: the Toskany Harvest title overlapped the MULTIPLIER panel
@@ -52,7 +55,7 @@
 	// portrait/mobile size.
 	const titleScale = $derived.by(() => {
 		const layoutType = context.stateLayoutDerived.layoutType();
-		if (layoutType === 'tablet') return 0.5; // square / kockasti screen
+		if (layoutType === 'tablet') return 0.68; // square / kockasti screen
 		if (layoutType === 'portrait') return 0.7; // mobile portrait
 		if (layoutType === 'landscape') return 0.6; // mobile landscape
 		return 1;
@@ -85,7 +88,9 @@
 		<ReplayPhaseTracker />
 		<Sound />
 
-		<BackgroundCharacter />
+		<BackgroundCharacter layer="background" />
+		<!-- Portrait deka — iza okvira grida (ispod MainContainer). -->
+		<BackgroundCharacter layer="portrait" />
 
 		<MainContainer>
 			<ReelFramePanel />
@@ -126,11 +131,14 @@
 					y={context.stateLayoutDerived.isStacked() ? REM * 0.5 : 0}
 					style={{
 						fontFamily: 'system-ui',
-						fontSize: REM * 1.05 * titleScale,
+						fontSize: REM * 1.15 * titleScale * TITLE_FONT_GLOBAL_SCALE,
 						fill: 0xf5d78e,
 						fontWeight: '700',
-						stroke: { color: 0x3d2817, width: 5 },
-						letterSpacing: 1,
+						stroke: {
+							color: 0x3d2817,
+							width: 5 * titleScale * TITLE_FONT_GLOBAL_SCALE,
+						},
+						letterSpacing: 1 * titleScale * TITLE_FONT_GLOBAL_SCALE,
 					}}
 				/>
 			{/snippet}

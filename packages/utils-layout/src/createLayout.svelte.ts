@@ -25,6 +25,21 @@ const STANDARD_MAIN_SIZES_MAP = {
 
 type MainSizesMap = typeof STANDARD_MAIN_SIZES_MAP;
 
+/** Avoid aspect-ratio skew when Svelte window reactivity is not ready yet (e.g. height ?? 1). */
+const readWindowSize = (): Sizes | null => {
+	const width = innerWidth.current;
+	const height = innerHeight.current;
+	if (width != null && height != null && width > 0 && height > 0) {
+		return { width, height };
+	}
+	if (typeof window !== 'undefined') {
+		const w = window.innerWidth;
+		const h = window.innerHeight;
+		if (w > 0 && h > 0) return { width: w, height: h };
+	}
+	return null;
+};
+
 export const createLayout = (layoutOptions: {
 	backgroundRatio: {
 		normal: number;
@@ -32,7 +47,12 @@ export const createLayout = (layoutOptions: {
 	};
 	mainSizesMap: MainSizesMap;
 }) => {
-	const canvasSizes = () => ({ width: innerWidth.current ?? 1, height: innerHeight.current ?? 1 }); // because of resizeTo: window
+	let stableCanvasSizes: Sizes = { width: 1920, height: 1080 };
+	const canvasSizes = () => {
+		const sizes = readWindowSize();
+		if (sizes) stableCanvasSizes = sizes;
+		return stableCanvasSizes;
+	}; // because of resizeTo: window
 	const canvasRatio = () => getRatio(canvasSizes());
 	const canvasRatioType = () => {
 		if (canvasRatio() >= CANVAS_RATIO_TYPE_BREAK_POINTS.wideSquare) return 'longWidth' as const;
@@ -54,7 +74,7 @@ export const createLayout = (layoutOptions: {
 			return 'landscape' as const;
 		return 'desktop' as const;
 	};
-	const isStacked = () => ['portrait', 'almostSquare'].includes(layoutType());
+	const isStacked = () => ['portrait', 'tablet'].includes(layoutType());
 
 	const createMainLayout = (mainSizesMap: MainSizesMap) => () => {
 		const x = canvasSizes().width * 0.5;
