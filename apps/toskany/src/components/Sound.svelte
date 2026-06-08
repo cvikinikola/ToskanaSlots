@@ -170,6 +170,11 @@
 				playAudio(src);
 				return;
 			}
+			// Deka toast/salute when the spin has a win.
+			if (name === 'sfx_deka_salute') {
+				playAudio('/assets/audio/Bravo! Jingling.mp3', 1);
+				return;
+			}
 			if (name === 'sfx_thunder') {
 				const now = performance.now();
 				if (now - lastThunderAt < 4500) return;

@@ -13,12 +13,12 @@ import {
 	sineInOut,
 	TOAST_CROSSFADE_MS,
 	TOAST_HOLD_MS,
-	TOAST_INTERVAL_MAX_MS,
-	TOAST_INTERVAL_MIN_MS,
 } from './backgroundCharacter';
 
 export type DekaAnimController = {
 	stop: () => void;
+	/** Play the toast/salute pose (e.g. on spin win). No-op while already saluting. */
+	triggerSalute: () => void;
 };
 
 export type DekaAnimOptions = {
@@ -26,6 +26,7 @@ export type DekaAnimOptions = {
 	setBlinkAlpha: (alpha: number) => void;
 	setToastAlpha: (alpha: number) => void;
 	setBreathScale: (scale: number) => void;
+	setSaluteActive: (active: boolean) => void;
 };
 
 const waitMs = async (ms: number, isActive: () => boolean) => {
@@ -71,6 +72,7 @@ const snapIdle = (controls: DekaAnimOptions) => {
 	controls.setIdleAlpha(1);
 	controls.setBlinkAlpha(0);
 	controls.setToastAlpha(0);
+	controls.setSaluteActive(false);
 };
 
 const runBlink = async (controls: DekaAnimOptions, isActive: () => boolean) => {
@@ -101,11 +103,24 @@ export const startBackgroundCharacterAnim = (
 	let token = 1;
 	let breathRaf = 0;
 	let nextBlinkAt = performance.now() + randomBetween(BLINK_INTERVAL_MIN_MS, BLINK_INTERVAL_MAX_MS);
-	let nextToastAt =
-		performance.now() + randomBetween(TOAST_INTERVAL_MIN_MS, TOAST_INTERVAL_MAX_MS);
 	let toastActive = false;
+	let salutePending = false;
 
 	const isActive = () => token !== 0;
+
+	const runSalute = async () => {
+		if (!isActive() || toastActive) return;
+		toastActive = true;
+		controls.setSaluteActive(true);
+		await runToast(controls, isActive);
+		toastActive = false;
+		if (!isActive()) return;
+		snapIdle(controls);
+		if (salutePending) {
+			salutePending = false;
+			void runSalute();
+		}
+	};
 
 	const startBreathing = () => {
 		const start = performance.now();
@@ -131,19 +146,6 @@ export const startBackgroundCharacterAnim = (
 
 			const now = performance.now();
 
-			if (!toastActive && now >= nextToastAt) {
-				toastActive = true;
-				await runToast(controls, isActive);
-				toastActive = false;
-				if (runToken !== token) return;
-				snapIdle(controls);
-				nextToastAt =
-					performance.now() + randomBetween(TOAST_INTERVAL_MIN_MS, TOAST_INTERVAL_MAX_MS);
-				nextBlinkAt =
-					performance.now() + randomBetween(BLINK_INTERVAL_MIN_MS, BLINK_INTERVAL_MAX_MS);
-				continue;
-			}
-
 			if (!toastActive && now >= nextBlinkAt) {
 				await runBlink(controls, isActive);
 				if (runToken !== token) return;
@@ -161,9 +163,19 @@ export const startBackgroundCharacterAnim = (
 	return {
 		stop: () => {
 			token = 0;
+			salutePending = false;
 			cancelAnimationFrame(breathRaf);
+			controls.setSaluteActive(false);
 			snapIdle(controls);
 			controls.setBreathScale(BREATH_SCALE_MIN);
+		},
+		triggerSalute: () => {
+			if (!isActive()) return;
+			if (toastActive) {
+				salutePending = true;
+				return;
+			}
+			void runSalute();
 		},
 	};
 };

@@ -64,6 +64,10 @@ export const stateUi = $state({
 	freeSpinCounterCurrent: 0,
 	freeSpinCounterTotal: 0,
 	menuOpen: false,
+	/** When true, bet plate is drawn in a foreground layer (above character overlay). */
+	amountBetInForeground: false,
+	/** Hide BET plate and +/- (intro/outro/transition panels). */
+	betControlsHidden: false,
 	drawerFold: false,
 	drawerButtonShow: false,
 	config: {

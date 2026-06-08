@@ -20,9 +20,7 @@ export const BLINK_INTERVAL_MIN_MS = 3000;
 export const BLINK_INTERVAL_MAX_MS = 5000;
 export const BLINK_HOLD_MS = 110;
 
-// ─── Toast (crossfade — full redraw, never hard-cut) ─────────────────────────
-export const TOAST_INTERVAL_MIN_MS = 9000;
-export const TOAST_INTERVAL_MAX_MS = 11000;
+// ─── Toast / salute (crossfade — triggered on spin win, not on a timer) ─────
 export const TOAST_CROSSFADE_MS = 400;
 export const TOAST_HOLD_MS = 1500;
 
@@ -46,7 +44,7 @@ export const DEKA_GLOBAL_SCALE = 0.8;
 export const DEKA_SPRITE_TINT = 0xe0d8d0;
 
 /** ColorMatrix brightness for deka layers (1 = unchanged, lower = darker). */
-export const DEKA_BRIGHTNESS = 0.9;
+export const DEKA_BRIGHTNESS = 0.82;
 
 /** Reference viewport at which deka renders at full designed size (desktop baseline). */
 export const DEKA_REF_CANVAS_WIDTH = 1422;

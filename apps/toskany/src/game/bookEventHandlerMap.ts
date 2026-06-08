@@ -78,8 +78,10 @@ let freeSpinTumbleWinBookEventAmount = 0;
 // pri globalMult=2). Na kraju spina (`finalWin`) animiramo množenje
 // (raw×globalMult) tako da igrač vidi finalni iznos.
 let spinRawWinAmount = 0;
+let dekaSaluteTriggeredThisSpin = false;
 const resetSpinRawWinAmount = () => {
 	spinRawWinAmount = 0;
+	dekaSaluteTriggeredThisSpin = false;
 };
 
 // QA 05.06.2026: množenje se prikazuje na KRAJU SPINA (ne odmah). Tokom spina
@@ -89,6 +91,31 @@ const resetSpinRawWinAmount = () => {
 //  - free spins: zabeleženo u `winInfo`, odigrano u `updateFreeSpin` (sledeći
 //    spin) odnosno `freeSpinEnd` (poslednji spin).
 let spinEndMultiply: { raw: number; multiplied: number; multiplier: number } | null = null;
+
+const triggerDekaSalute = () => {
+	if (stateGame.freeSpinIntroActive || stateGame.freeSpinOutroActive || stateGame.transitionActive) {
+		return;
+	}
+	if (dekaSaluteTriggeredThisSpin) return;
+	dekaSaluteTriggeredThisSpin = true;
+	eventEmitter.broadcast({ type: 'dekaSalute' });
+	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_deka_salute' });
+};
+
+const hasMoreTumbleCascades = (bookEvent: { index: number }, bookEvents: BookEvent[]) => {
+	// Free-spin books contain many spins — only look within the current spin
+	// (events before the next `reveal`), not at winInfo from later spins.
+	const nextRevealIndex =
+		bookEvents.find((event) => event.index > bookEvent.index && event.type === 'reveal')
+			?.index ?? Number.POSITIVE_INFINITY;
+
+	return bookEvents.some(
+		(event) =>
+			event.index > bookEvent.index &&
+			event.index < nextRevealIndex &&
+			event.type === 'winInfo',
+	);
+};
 
 const playSpinEndMultiply = async (): Promise<boolean> => {
 	const data = spinEndMultiply;
@@ -391,7 +418,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	//  4. Slide remaining symbols down to fill gaps
 	//  5. Settle the main board with the resulting symbols
 	//  6. Hide tumble overlay, show main board
-	tumbleBoard: async (bookEvent: BookEventOfType<'tumbleBoard'>) => {
+	tumbleBoard: async (
+		bookEvent: BookEventOfType<'tumbleBoard'>,
+		{ bookEvents }: BookEventContext,
+	) => {
 		// Paint tumble overlay before hiding the main board — boardHide first caused
 		// a blank frame where non-winning symbols (esp. bottom row) vanished in QA.
 		eventEmitter.broadcast({ type: 'tumbleBoardShow' });
@@ -420,6 +450,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'tumbleBoardReset' });
 		eventEmitter.broadcast({ type: 'tumbleBoardHide' });
 		eventEmitter.broadcast({ type: 'boardShow' });
+
+		if (!hasMoreTumbleCascades(bookEvent, bookEvents) && spinRawWinAmount > 0) {
+			triggerDekaSalute();
+		}
 	},
 
 	// ── updateTumbleWin ────────────────────────────────────────────────────────
@@ -599,13 +633,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		stateBet.winBookEventAmount = bookEvent.amount;
 		winLevelSoundsStop();
-		stateGame.freeSpinOutroActive = false;
 		stateGame.gameType = 'basegame';
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 		stateGame.globalMultiplier = 0;
 		// Restore STOP button so base-game spins can be interrupted again.
 		eventEmitter.broadcast({ type: 'stopButtonEnable' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
+		stateGame.freeSpinOutroActive = false;
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
@@ -640,6 +674,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'stopButtonEnable' });
 		if (bookEvent.amount > 0) {
 			playWinToBalanceCoins();
+		}
+		if (spinRawWinAmount > 0 || bookEvent.amount > 0) {
+			triggerDekaSalute();
 		}
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
 		// Base game: tumble sequence finished — reset spot markers for next spin.

@@ -130,26 +130,28 @@
 </MainContainer>
 
 <MainContainer standard alignVertical="bottom">
-	<Container
-		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-		y={context.stateLayoutDerived.mainLayoutStandard().height - 130}
-	>
-		{@render props.amountBet({ stacked: true })}
-	</Container>
+	{#if !stateUi.betControlsHidden}
+		<Container
+			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 130}
+		>
+			{@render props.amountBet({ stacked: true })}
+		</Container>
 
-	<Container
-		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 390}
-		y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
-	>
-		{@render props.buttonDecrease({ anchor: 0.5 })}
-	</Container>
+		<Container
+			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 390}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
+		>
+			{@render props.buttonDecrease({ anchor: 0.5 })}
+		</Container>
 
-	<Container
-		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 390}
-		y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
-	>
-		{@render props.buttonIncrease({ anchor: 0.5 })}
-	</Container>
+		<Container
+			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 390}
+			y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
+		>
+			{@render props.buttonIncrease({ anchor: 0.5 })}
+		</Container>
+	{/if}
 
 	<!-- drawer button -->
 	<FadeContainer

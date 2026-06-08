@@ -1,8 +1,13 @@
+<script lang="ts" module>
+	export type EmitterEventBackgroundCharacter = { type: 'dekaSalute' };
+</script>
+
 <script lang="ts">
 	import * as PIXI from 'pixi.js';
 	import { ColorMatrixFilter } from 'pixi.js';
 	import { Container, Graphics, Sprite } from 'pixi-svelte';
 
+	import { stateUi } from 'state-shared';
 	import { getContext } from '../game/context';
 	import { getBgConfig, getBgLayout } from '../game/constants';
 	import { stateGame } from '../game/stateGame.svelte';
@@ -11,7 +16,9 @@
 		DEKA_SPRITE_TINT,
 		getDekaLayout,
 	} from '../game/backgroundCharacter';
-	import { startBackgroundCharacterAnim } from '../game/backgroundCharacterAnim';
+	import { startBackgroundCharacterAnim, type DekaAnimController } from '../game/backgroundCharacterAnim';
+	import { dekaSaluteVisual } from '../game/dekaSaluteVisual.svelte';
+	import { isBetControlsSuppressed, shouldShowBetControls, shouldShowDekaCharacter } from '../game/betControlsForeground';
 
 	type Props = {
 		/** `background` = bg + beside; `portrait` = header overlay (render after board). */
@@ -72,12 +79,23 @@
 	let idleAlpha = $state(1);
 	let blinkAlpha = $state(0);
 	let toastAlpha = $state(0);
+	let saluteActive = $state(false);
+	let animController: DekaAnimController | null = null;
+
+	const renderDekaAnim = $derived(
+		showDeka &&
+			((layer === 'background' && isBeside) || (layer === 'portrait' && isHeader)),
+	);
+	const dekaCharacterVisible = $derived(shouldShowDekaCharacter(gameType, stateGame));
+	const showDekaInPlace = $derived(
+		renderDekaAnim && !saluteActive && isHeader && dekaCharacterVisible,
+	);
 
 	$effect(() => {
-		const animActive =
-			showDeka &&
-			((layer === 'background' && isBeside) || (layer === 'portrait' && isHeader));
-		if (!animActive) return;
+		if (!renderDekaAnim) {
+			animController = null;
+			return;
+		}
 		const controller = startBackgroundCharacterAnim({
 			setBreathScale: (scale) => {
 				breathScale = scale;
@@ -91,8 +109,58 @@
 			setToastAlpha: (alpha) => {
 				toastAlpha = alpha;
 			},
+			setSaluteActive: (active) => {
+				saluteActive = active;
+			},
 		});
-		return () => controller.stop();
+		animController = controller;
+		return () => {
+			controller.stop();
+			if (animController === controller) animController = null;
+		};
+	});
+
+	$effect(() => {
+		if (layer !== 'background') return;
+		const suppressed = isBetControlsSuppressed(stateGame);
+		stateUi.betControlsHidden = suppressed;
+		stateUi.amountBetInForeground = shouldShowBetControls(
+			canvas,
+			mainLayout,
+			layoutType,
+			gameType,
+			stateGame,
+		);
+		return () => {
+			stateUi.betControlsHidden = false;
+			stateUi.amountBetInForeground = false;
+		};
+	});
+
+	$effect(() => {
+		if (!renderDekaAnim) return;
+		const overlayVisible = dekaCharacterVisible && (isBeside || saluteActive);
+		dekaSaluteVisual.visible = overlayVisible;
+		dekaSaluteVisual.layout = overlayVisible ? dekaLayout : null;
+		dekaSaluteVisual.isHeader = isHeader;
+		dekaSaluteVisual.breathScale = breathScale;
+		dekaSaluteVisual.idleAlpha = idleAlpha;
+		dekaSaluteVisual.blinkAlpha = blinkAlpha;
+		dekaSaluteVisual.toastAlpha = toastAlpha;
+	});
+
+	$effect(() => {
+		if (!renderDekaAnim) return;
+		return () => {
+			dekaSaluteVisual.visible = false;
+			dekaSaluteVisual.layout = null;
+		};
+	});
+
+	context.eventEmitter.subscribeOnMount({
+		dekaSalute: () => {
+			animController?.triggerSalute();
+		},
 	});
 </script>
 
@@ -107,48 +175,10 @@
 			height={bgLayout.height}
 			eventMode="none"
 		/>
-
-		{#if showDeka && isBeside && dekaLayout}
-			<Container
-				x={dekaLayout.x}
-				y={dekaLayout.y}
-				scale={breathScale}
-				filters={dekaFilters}
-				eventMode="none"
-			>
-				<Sprite
-					key="deka_v2_idle"
-					anchor={dekaLayout.anchor}
-					width={dekaLayout.width}
-					height={dekaLayout.height}
-					alpha={idleAlpha}
-					tint={DEKA_SPRITE_TINT}
-					eventMode="none"
-				/>
-				<Sprite
-					key="deka_v2_blink"
-					anchor={dekaLayout.anchor}
-					width={dekaLayout.width}
-					height={dekaLayout.height}
-					alpha={blinkAlpha}
-					tint={DEKA_SPRITE_TINT}
-					eventMode="none"
-				/>
-				<Sprite
-					key="deka_v2_toast"
-					anchor={dekaLayout.anchor}
-					width={dekaLayout.width}
-					height={dekaLayout.height}
-					alpha={toastAlpha}
-					tint={DEKA_SPRITE_TINT}
-					eventMode="none"
-				/>
-			</Container>
-		{/if}
 	</Container>
 {/if}
 
-{#if show && renderPortrait && dekaLayout}
+{#if show && renderPortrait && showDekaInPlace && dekaLayout}
 	<Container
 		zIndex={dekaLayout.zIndex}
 		x={dekaLayout.x}

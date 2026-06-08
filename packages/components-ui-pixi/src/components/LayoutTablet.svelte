@@ -45,9 +45,11 @@
 			{@render props.amountWin({ stacked: true })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={880 + 640}>
-			{@render props.amountBet({ stacked: true })}
-		</Container>
+		{#if !stateUi.amountBetInForeground && !stateUi.betControlsHidden}
+			<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={880 + 640}>
+				{@render props.amountBet({ stacked: true })}
+			</Container>
+		{/if}
 
 		<Container y={DESKTOP_BASE_SIZE * 0.5} x={MENU_X}>
 			{@render props.buttonMenu({ anchor: 0.5 })}
@@ -69,13 +71,15 @@
 			{@render props.buttonTurbo({ anchor: 0.5 })}
 		</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={1560}>
-			{@render props.buttonDecrease({ anchor: 0.5 })}
-		</Container>
+		{#if !stateUi.amountBetInForeground && !stateUi.betControlsHidden}
+			<Container y={DESKTOP_BASE_SIZE * 0.5} x={1560}>
+				{@render props.buttonDecrease({ anchor: 0.5 })}
+			</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={1560 + 180}>
-			{@render props.buttonIncrease({ anchor: 0.5 })}
-		</Container>
+			<Container y={DESKTOP_BASE_SIZE * 0.5} x={1560 + 180}>
+				{@render props.buttonIncrease({ anchor: 0.5 })}
+			</Container>
+		{/if}
 
 	</Container>
 </MainContainer>

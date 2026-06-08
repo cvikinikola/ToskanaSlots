@@ -18,6 +18,8 @@
 	import Sound from './Sound.svelte';
 	import BackgroundVideo from './BackgroundVideo.svelte';
 	import BackgroundCharacter from './BackgroundCharacter.svelte';
+	import DekaSaluteOverlay from './DekaSaluteOverlay.svelte';
+	import BetAmountForeground from './BetAmountForeground.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import MipmapEnabler from './MipmapEnabler.svelte';
 	import Board from './Board.svelte';
@@ -40,6 +42,13 @@
 	import GameRulesContent from './GameRulesContent.svelte';
 
 	const context = getContext();
+
+	$effect(() => {
+		const stage = context.stateApp.pixiApplication?.stage;
+		if (!stage) return;
+		stage.sortableChildren = true;
+		stage.sortChildren();
+	});
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
@@ -116,6 +125,9 @@
 			<SpotMultipliers />
 		</MainContainer>
 
+		<!-- Beside deka always in foreground layer (arm over frame). Portrait salute too. -->
+		<DekaSaluteOverlay />
+
 		<WinSparks />
 		<WinGlow />
 
@@ -149,6 +161,10 @@
 
 		<FreeSpinOutroCoins />
 		<FreeSpinOutro />
+
+		<!-- Last HUD layer: BET + +/- must stay above deka even if overlay mounts later. -->
+		<BetAmountForeground />
+
 		<Transition />
 	{/if}
 </App>

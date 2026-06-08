@@ -49,6 +49,7 @@ export type SoundEffectName =
 	| 'sfx_btn_spin'
 	// Win
 	| 'sfx_coin_clink'
+	| 'sfx_deka_salute'
 	| 'sfx_thunder'
 	| 'sfx_thunder_clap'
 	// Free-spin outro money count-up (Vinyl Jackpot)

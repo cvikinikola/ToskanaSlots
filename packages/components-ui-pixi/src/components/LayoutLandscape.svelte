@@ -77,9 +77,11 @@
 			{@render props.amountWin({ stacked: true })}
 		</Container>
 
-		<Container y={LANDSCAPE_BASE_SIZE * 0.5} x={1400} scale={0.8}>
-			{@render props.amountBet({ stacked: true })}
-		</Container>
+		{#if !stateUi.amountBetInForeground && !stateUi.betControlsHidden}
+			<Container y={LANDSCAPE_BASE_SIZE * 0.5} x={1400} scale={0.8}>
+				{@render props.amountBet({ stacked: true })}
+			</Container>
+		{/if}
 
 		<!--
 			QA 03.06.2026: nudge auto-spin / turbo left and add more spacing
@@ -119,7 +121,9 @@
 		})}
 	>
 		<Container x={LANDSCAPE_BASE_SIZE * 0.5} y={LANDSCAPE_BASE_SIZE * 0.5 - 140} scale={0.8}>
-			{@render props.buttonDecrease({ anchor: 0.5 })}
+			{#if !stateUi.amountBetInForeground && !stateUi.betControlsHidden}
+				{@render props.buttonDecrease({ anchor: 0.5 })}
+			{/if}
 		</Container>
 
 		<Container x={LANDSCAPE_BASE_SIZE * 0.5} y={LANDSCAPE_BASE_SIZE * 0.5} scale={0.8}>
@@ -127,7 +131,9 @@
 		</Container>
 
 		<Container x={LANDSCAPE_BASE_SIZE * 0.5} y={LANDSCAPE_BASE_SIZE * 0.5 + 140} scale={0.8}>
-			{@render props.buttonIncrease({ anchor: 0.5 })}
+			{#if !stateUi.amountBetInForeground && !stateUi.betControlsHidden}
+				{@render props.buttonIncrease({ anchor: 0.5 })}
+			{/if}
 		</Container>
 	</Container>
 </MainContainer>
