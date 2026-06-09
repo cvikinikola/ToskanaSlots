@@ -35,16 +35,24 @@
 		wasBetting = betting;
 	});
 
+	$effect(() => {
+		if (context.stateXstateDerived.isIdle()) {
+			stopClickDisabled = false;
+			stopForceInactive = false;
+			roundPlaybackComplete = false;
+		}
+	});
+
 	const bet = () => {
 		if (stateBetDerived.activeBetMode()?.type === 'buy') stateBet.activeBetModeKey = 'BASE';
 		context.eventEmitter.broadcast({ type: 'bet' });
 	};
 
 	const stop = () => {
-		if (!stopClickDisabled && !stopForceInactive) {
-			if (stateBetDerived.hasAutoBetCounter()) stateBet.autoSpinsCounter = 0;
-			context.eventEmitter.broadcast({ type: 'stopButtonClick' });
-		}
+		if (stopClickDisabled || stopForceInactive) return;
+		stopClickDisabled = true;
+		if (stateBetDerived.hasAutoBetCounter()) stateBet.autoSpinsCounter = 0;
+		context.eventEmitter.broadcast({ type: 'stopButtonClick' });
 	};
 
 	const onpress = () => {
@@ -57,28 +65,25 @@
 		}
 	};
 
-	const getKey = () => {
+	const getKey = (): ButtonBetKey => {
 		if (context.stateXstateDerived.isIdle() || roundPlaybackComplete) {
 			if (!stateBetDerived.isBetCostAvailable()) return 'spin_disabled';
 			return 'spin_default';
 		}
-
+		if (stopClickDisabled || stopForceInactive) return 'stop_disabled';
 		return 'stop_default';
 	};
 
 	const key = $derived.by(getKey);
 	const pressDisabled = $derived.by(() => {
-		if (context.stateXstateDerived.isIdle()) return false;
-		if (roundPlaybackComplete) return true;
+		if (context.stateXstateDerived.isIdle() || roundPlaybackComplete) return false;
 		return stopClickDisabled || stopForceInactive;
 	});
 
 	context.eventEmitter.subscribeOnMount({
-		stopButtonClick: () => (stopClickDisabled = true),
 		stopButtonAllowClick: () => (stopClickDisabled = false),
 		stopButtonEnable: () => {
 			roundPlaybackComplete = true;
-			stopClickDisabled = false;
 			stopForceInactive = false;
 		},
 		stopButtonDisable: () => (stopForceInactive = true),

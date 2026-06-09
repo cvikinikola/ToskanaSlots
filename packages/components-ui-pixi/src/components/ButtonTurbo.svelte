@@ -17,9 +17,21 @@
 		stateBetDerived.updateIsTurbo(!stateBet.isTurbo, { persistent: true });
 	};
 
+	let stopTurboApplied = false;
+
 	context.eventEmitter.subscribeOnMount({
-		stopButtonClick: () => stateBetDerived.updateIsTurbo(true, { persistent: false }),
-		stopButtonEnable: () => stateBetDerived.updateIsTurbo(false, { persistent: false }),
+		stopButtonClick: () => {
+			if (stopTurboApplied) return;
+			stopTurboApplied = true;
+			stateBetDerived.updateIsTurbo(true, { persistent: false });
+		},
+		stopButtonAllowClick: () => {
+			stopTurboApplied = false;
+		},
+		stopButtonEnable: () => {
+			stopTurboApplied = false;
+			stateBetDerived.updateIsTurbo(false, { persistent: false });
+		},
 	});
 </script>
 

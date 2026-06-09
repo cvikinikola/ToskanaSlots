@@ -80,6 +80,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 	let noStop = false;
 	let paddingSize = 0;
 	let spinInProgress = false;
+	let moveAbortResolve: (() => void) | null = null;
 
 	const skipStagger = () => stateBet.isTurbo || reelState.spinType === 'fast';
 
@@ -96,6 +97,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 
 	const finishSpinInstantly = () => {
 		if (reelState.motion === 'stopped') return;
+		moveAbortResolve?.();
 		updateSymbols(targetSymbols);
 		snapSymbolsToBoard();
 		onSpinFinishing();
@@ -117,7 +119,12 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 	};
 
 	const moveAllSymbolsWith = async (moveSymbol: (reelSymbol: ReelSymbol) => Promise<void>) => {
-		await Promise.all(reelState.symbols.map(moveSymbol));
+		const moves = Promise.all(reelState.symbols.map(moveSymbol));
+		const abort = new Promise<void>((resolve) => {
+			moveAbortResolve = resolve;
+		});
+		await Promise.race([moves, abort]);
+		moveAbortResolve = null;
 	};
 
 	const fallOut = async () => {
@@ -140,7 +147,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 			await reelSymbol.symbolY.set(newSymbolY, { duration });
 		});
 
-		reelState.motion = 'hanging';
+		if (reelState.motion !== 'stopped') reelState.motion = 'hanging';
 	};
 
 	const hanging = async () => {
@@ -267,15 +274,19 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 	};
 
 	const setSymbolsWithRawSymbols = (value?: TRawSymbol[]) => {
+		moveAbortResolve?.();
+		interruptible.interrupt();
 		reelState.motion = 'stopped';
-		if (value) {
-			updateSymbols(value);
-		}
+		if (!value?.length) return;
+		targetSymbols = value;
+		updateSymbols(value);
+		snapSymbolsToBoard();
 	};
 
 	const stop = () => {
 		interruptible.interrupt();
-		if (!spinInProgress) return;
+		moveAbortResolve?.();
+		if (reelState.motion === 'stopped') return;
 		finishSpinInstantly();
 	};
 

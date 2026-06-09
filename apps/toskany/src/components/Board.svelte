@@ -31,7 +31,12 @@
 	};
 
 	context.eventEmitter.subscribeOnMount({
-		stopButtonClick: () => context.stateGameDerived.enhancedBoard.stop(),
+		stopButtonClick: () => {
+			// Main board hidden during tumble — TumbleBoard handles STOP there.
+			if (!show) return;
+			context.stateGameDerived.enhancedBoard.stop();
+			resetBoardSymbolStates();
+		},
 
 		boardSettle: ({ board }) => {
 			context.stateGameDerived.enhancedBoard.settle(board);

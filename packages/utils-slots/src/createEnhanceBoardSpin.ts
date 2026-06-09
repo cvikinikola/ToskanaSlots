@@ -29,12 +29,26 @@ export function createEnhanceBoardSpin<TReel extends Reel<any, any>>({
 		if (stateSlots.isPreSpinning) {
 			await Promise.all(
 				board.map(async (reel) => {
+					if (stateSlots.skipStopRequested || stateSlots.spinStopSettled) {
+						reel.reelState.readyToSpin();
+						return;
+					}
+					if (reel.reelState.motion === 'hanging') {
+						reel.reelState.readyToSpin();
+						return;
+					}
+					if (reel.reelState.motion === 'stopped') return;
 					await waitForResolve((resolve) => (reel.reelState.readyToSpin = resolve));
 				}),
 			);
 		}
 
 		stateSlots.isPreSpinning = false;
+
+		if (stateSlots.skipStopRequested || stateSlots.spinStopSettled) {
+			stateSlots.skipStopRequested = false;
+			return;
+		}
 
 		const globalSpinType = stateBet.isTurbo ? 'fast' : 'normal';
 		const globalHasAnticipation = revealEvent.anticipation.some(Boolean);

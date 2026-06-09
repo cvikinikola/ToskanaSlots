@@ -2,6 +2,7 @@ import _ from 'lodash';
 import { tick } from 'svelte';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
+import { stateSlots } from 'utils-slots';
 import { stateBet, stateUi, stateBetDerived } from 'state-shared';
 import { sequence } from 'utils-shared/sequence';
 import { waitForTimeout } from 'utils-shared/wait';
@@ -221,6 +222,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
+		// Do not set activeRevealBoard before preSpin — matches base game where
+		// preSpin runs before reveal. Early board lets STOP settle then spin()
+		// re-runs fallOut and symbols vanish off-screen.
+		stateSlots.skipStopRequested = false;
+		stateSlots.spinStopSettled = false;
+
 		if (isBonusGame) {
 			// STOP turbo from the previous free spin does not carry over.
 			stateBetDerived.updateIsTurbo(false, { persistent: false });
@@ -264,10 +271,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// Turbo: brief pause on dead spins so fruits read before the next spin chains.
 		if (stateBet.isTurbo && !revealSpinHasWin(bookEvents, bookEvent)) {
 			await waitForTimeout(TURBO_NO_WIN_SETTLE_MS);
-		}
-
-		if (isBonusGame) {
-			eventEmitter.broadcast({ type: 'stopButtonAllowClick' });
 		}
 
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
@@ -649,6 +652,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateBet.winBookEventAmount = bookEvent.amount;
 		winLevelSoundsStop();
 		stateGame.gameType = 'basegame';
+		stateSlots.activeRevealBoard = undefined;
+		stateSlots.skipStopRequested = false;
+		stateSlots.spinStopSettled = false;
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 		stateGame.globalMultiplier = 0;
 		// Restore STOP button so base-game spins can be interrupted again.

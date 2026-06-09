@@ -30,6 +30,7 @@
 	const context = getContext();
 
 	let show = $state(false);
+	let tumbleStopHandled = $state(false);
 
 	// Refill symbols are held here at init and only materialised at slideDown.
 	// Keeping `tumbleBoardAdding` EMPTY during the explosion phase means the
@@ -86,7 +87,10 @@
 	};
 
 	context.eventEmitter.subscribeOnMount({
-		tumbleBoardShow: () => (show = true),
+		tumbleBoardShow: () => {
+			show = true;
+			tumbleStopHandled = false;
+		},
 		tumbleBoardHide: () => (show = false),
 		tumbleBoardInit: ({ addingBoard }) => {
 			// Defer refill symbols until slideDown (see pendingAddingBoard above).
@@ -233,6 +237,8 @@
 		// duration:0 and resolve any pending oncomplete awaits so the cascade
 		// chain advances immediately.
 		stopButtonClick: () => {
+			if (!show || tumbleStopHandled) return;
+			tumbleStopHandled = true;
 			const settleReel = (reel: typeof context.stateGame.tumbleBoardBase[number]) =>
 				reel.forEach((tumbleSymbol, symbolIndex) => {
 					const targetY = getSymbolY(symbolIndex - 1);
