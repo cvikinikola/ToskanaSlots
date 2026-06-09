@@ -2,7 +2,7 @@ import _ from 'lodash';
 import { tick } from 'svelte';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
-import { stateBet, stateUi } from 'state-shared';
+import { stateBet, stateUi, stateBetDerived } from 'state-shared';
 import { sequence } from 'utils-shared/sequence';
 import { waitForTimeout } from 'utils-shared/wait';
 import { bookEventAmountToBetAmountMultiplier } from 'utils-shared/amount';
@@ -11,13 +11,35 @@ import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
-import { TUMBLE_OPTIONS } from './constants';
+import { TUMBLE_OPTIONS, TURBO_NO_WIN_SETTLE_MS } from './constants';
 import config from './config';
 import { buildTumbleBreakdownLine } from './tumbleBreakdown';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+const SPIN_BOUNDARY_EVENT_TYPES = new Set([
+	'reveal',
+	'updateFreeSpin',
+	'setTotalWin',
+	'freeSpinEnd',
+]);
+
+/** True when this reveal is followed by at least one winInfo before the next spin ends. */
+const revealSpinHasWin = (
+	bookEvents: BookEvent[],
+	revealEvent: BookEventOfType<'reveal'>,
+) => {
+	const sorted = [...bookEvents].sort((a, b) => a.index - b.index);
+	const start = sorted.findIndex((e) => e.index === revealEvent.index);
+	if (start === -1) return false;
+	for (const e of sorted.slice(start + 1)) {
+		if (SPIN_BOUNDARY_EVENT_TYPES.has(e.type)) break;
+		if (e.type === 'winInfo') return true;
+	}
+	return false;
+};
 
 const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinLevelData }) => {
 	if (winLevelData?.alias === 'max') eventEmitter.broadcastAsync({ type: 'uiHide' });
@@ -200,10 +222,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
 		if (isBonusGame) {
-			// QA: during free spins the STOP button must stay disabled (greyed
-			// out) like +/- — players cannot interrupt the auto-played sequence.
-			eventEmitter.broadcast({ type: 'stopButtonDisable' });
+			// STOP turbo from the previous free spin does not carry over.
+			stateBetDerived.updateIsTurbo(false, { persistent: false });
 			recordBookEvent({ bookEvent });
+			eventEmitter.broadcast({ type: 'stopButtonAllowClick' });
 		}
 
 		stateGame.gameType = bookEvent.gameType;
@@ -225,29 +247,27 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		}
 
 		// Free spins live inside one long `playGame` call — `onNewGameStart`
-		// preSpin never runs between them, so without this every column fallOut /
-		// fallIn starts at once (fast, no stagger). Mirror a normal manual spin:
-		// staggered preSpin fallOut per reel, then fallIn in the same order.
-		const savedTurbo = stateBet.isTurbo;
-		if (isFreeSpinReveal) stateBet.isTurbo = false;
-
-		try {
-			if (isFreeSpinReveal) {
-				await stateGameDerived.enhancedBoard.preSpin({
-					paddingBoard: config.paddingReels.freeSpins,
-				});
-			}
-
-			if (isFreeSpinReveal) {
-				eventEmitter.broadcast({ type: 'tumbleWinSpinRemainingHide' });
-			}
-
-			await stateGameDerived.enhancedBoard.spin({
-				revealEvent: bookEvent,
-				// paddingBoard not used by cascading boards, kept for API compatibility
+		// preSpin never runs between them. Run preSpin here so reel fallOut /
+		// fallIn match a normal spin (staggered unless turbo is on).
+		if (isFreeSpinReveal) {
+			await stateGameDerived.enhancedBoard.preSpin({
+				paddingBoard: config.paddingReels.freeSpins,
 			});
-		} finally {
-			if (isFreeSpinReveal) stateBet.isTurbo = savedTurbo;
+			eventEmitter.broadcast({ type: 'tumbleWinSpinRemainingHide' });
+		}
+
+		await stateGameDerived.enhancedBoard.spin({
+			revealEvent: bookEvent,
+			// paddingBoard not used by cascading boards, kept for API compatibility
+		});
+
+		// Turbo: brief pause on dead spins so fruits read before the next spin chains.
+		if (stateBet.isTurbo && !revealSpinHasWin(bookEvents, bookEvent)) {
+			await waitForTimeout(TURBO_NO_WIN_SETTLE_MS);
+		}
+
+		if (isBonusGame) {
+			eventEmitter.broadcast({ type: 'stopButtonAllowClick' });
 		}
 
 		eventEmitter.broadcast({ type: 'soundScatterCounterClear' });
@@ -508,7 +528,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// This gives the player clear visual feedback for each one landing.
 		await sequence(bookEvent.positions, async (pos) => {
 			eventEmitter.broadcast({ type: 'lightningStrike', durationMs: 280 });
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_mark' });
 			await animateSymbols({ positions: [pos] });
 			await waitForTimeout(110);
 		});

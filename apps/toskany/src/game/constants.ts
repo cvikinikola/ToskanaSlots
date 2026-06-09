@@ -288,6 +288,9 @@ export const SPIN_OPTIONS_FAST = {
 	reelFallOutDelay: 35,
 };
 
+/** Turbo: brief pause after a no-win spin so the board is readable before the next spin. */
+export const TURBO_NO_WIN_SETTLE_MS = 1000;
+
 /** Cascade / tumble animation timings (ms). */
 export const TUMBLE_OPTIONS = {
 	/**

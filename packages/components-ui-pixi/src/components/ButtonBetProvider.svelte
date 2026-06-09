@@ -75,6 +75,7 @@
 
 	context.eventEmitter.subscribeOnMount({
 		stopButtonClick: () => (stopClickDisabled = true),
+		stopButtonAllowClick: () => (stopClickDisabled = false),
 		stopButtonEnable: () => {
 			roundPlaybackComplete = true;
 			stopClickDisabled = false;

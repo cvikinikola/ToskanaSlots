@@ -18,7 +18,7 @@
 	} from '../game/backgroundCharacter';
 	import { startBackgroundCharacterAnim, type DekaAnimController } from '../game/backgroundCharacterAnim';
 	import { dekaSaluteVisual } from '../game/dekaSaluteVisual.svelte';
-	import { isBetControlsSuppressed, shouldShowBetControls, shouldShowDekaCharacter } from '../game/betControlsForeground';
+	import { shouldShowDekaCharacter, shouldSuspendForegroundForMenu } from '../game/betControlsForeground';
 
 	type Props = {
 		/** `background` = bg + beside; `portrait` = header overlay (render after board). */
@@ -82,11 +82,21 @@
 	let saluteActive = $state(false);
 	let animController: DekaAnimController | null = null;
 
+	const menuForegroundSuspended = $derived(shouldSuspendForegroundForMenu(stateUi.menuOpen));
+
 	const renderDekaAnim = $derived(
 		showDeka &&
 			((layer === 'background' && isBeside) || (layer === 'portrait' && isHeader)),
 	);
 	const dekaCharacterVisible = $derived(shouldShowDekaCharacter(gameType, stateGame));
+	const showBesideInBackground = $derived(
+		renderDekaAnim &&
+			dekaCharacterVisible &&
+			isBeside &&
+			menuForegroundSuspended &&
+			layer === 'background' &&
+			dekaLayout,
+	);
 	const showDekaInPlace = $derived(
 		renderDekaAnim && !saluteActive && isHeader && dekaCharacterVisible,
 	);
@@ -121,25 +131,9 @@
 	});
 
 	$effect(() => {
-		if (layer !== 'background') return;
-		const suppressed = isBetControlsSuppressed(stateGame);
-		stateUi.betControlsHidden = suppressed;
-		stateUi.amountBetInForeground = shouldShowBetControls(
-			canvas,
-			mainLayout,
-			layoutType,
-			gameType,
-			stateGame,
-		);
-		return () => {
-			stateUi.betControlsHidden = false;
-			stateUi.amountBetInForeground = false;
-		};
-	});
-
-	$effect(() => {
 		if (!renderDekaAnim) return;
-		const overlayVisible = dekaCharacterVisible && (isBeside || saluteActive);
+		const overlayVisible =
+			dekaCharacterVisible && (isBeside || saluteActive) && !menuForegroundSuspended;
 		dekaSaluteVisual.visible = overlayVisible;
 		dekaSaluteVisual.layout = overlayVisible ? dekaLayout : null;
 		dekaSaluteVisual.isHeader = isHeader;
@@ -173,6 +167,45 @@
 			y={bgLayout.y}
 			width={bgLayout.width}
 			height={bgLayout.height}
+			eventMode="none"
+		/>
+	</Container>
+{/if}
+
+{#if showBesideInBackground && dekaLayout}
+	<Container
+		zIndex={dekaLayout.zIndex}
+		x={dekaLayout.x}
+		y={dekaLayout.y}
+		scale={breathScale * dekaLayout.layoutScale}
+		filters={dekaFilters}
+		eventMode="none"
+	>
+		<Sprite
+			key="deka_v2_idle"
+			anchor={dekaLayout.anchor}
+			width={dekaLayout.width}
+			height={dekaLayout.height}
+			alpha={idleAlpha}
+			tint={DEKA_SPRITE_TINT}
+			eventMode="none"
+		/>
+		<Sprite
+			key="deka_v2_blink"
+			anchor={dekaLayout.anchor}
+			width={dekaLayout.width}
+			height={dekaLayout.height}
+			alpha={blinkAlpha}
+			tint={DEKA_SPRITE_TINT}
+			eventMode="none"
+		/>
+		<Sprite
+			key="deka_v2_toast"
+			anchor={dekaLayout.anchor}
+			width={dekaLayout.width}
+			height={dekaLayout.height}
+			alpha={toastAlpha}
+			tint={DEKA_SPRITE_TINT}
 			eventMode="none"
 		/>
 	</Container>

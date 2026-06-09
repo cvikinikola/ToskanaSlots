@@ -2,10 +2,15 @@
 	import * as PIXI from 'pixi.js';
 	import { ColorMatrixFilter } from 'pixi.js';
 	import { Container, Graphics, Sprite } from 'pixi-svelte';
+	import { stateUi } from 'state-shared';
 
 	import { stateGame } from '../game/stateGame.svelte';
 	import { DEKA_BRIGHTNESS, DEKA_SPRITE_TINT } from '../game/backgroundCharacter';
-	import { DEKA_OVERLAY_Z_INDEX, shouldShowDekaCharacter } from '../game/betControlsForeground';
+	import {
+		DEKA_OVERLAY_Z_INDEX,
+		shouldShowDekaCharacter,
+		shouldSuspendForegroundForMenu,
+	} from '../game/betControlsForeground';
 	import { dekaSaluteVisual } from '../game/dekaSaluteVisual.svelte';
 
 	const visual = dekaSaluteVisual;
@@ -13,7 +18,8 @@
 	const show = $derived(
 		shouldShowDekaCharacter(stateGame.gameType, stateGame) &&
 			visual.visible &&
-			visual.layout,
+			visual.layout &&
+			!shouldSuspendForegroundForMenu(stateUi.menuOpen),
 	);
 
 	const dekaLayout = $derived(visual.layout);

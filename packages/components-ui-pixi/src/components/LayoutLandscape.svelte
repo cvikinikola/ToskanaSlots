@@ -140,6 +140,7 @@
 
 {#if stateUi.menuOpen}
 	<Rectangle
+		zIndex={100}
 		eventMode="static"
 		cursor="pointer"
 		alpha={0.5}
@@ -152,7 +153,7 @@
 		onpointerup={() => (stateUi.menuOpen = false)}
 	/>
 
-	<MainContainer standard alignVertical="bottom">
+	<MainContainer standard alignVertical="bottom" zIndex={101}>
 		<Container
 			x={165}
 			y={context.stateLayoutDerived.mainLayoutStandard().height - LANDSCAPE_BASE_SIZE - 130}

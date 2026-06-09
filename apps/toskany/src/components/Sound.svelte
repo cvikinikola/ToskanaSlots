@@ -241,7 +241,7 @@
 				playAudio('/assets/audio/Small_Viking_slot_ma_3-1779126316047.mp3', 0.4);
 				return;
 			}
-			// Scatter (Vinar) lands on the grid — same sting every time.
+			// Scatter (Vinar) lands on the grid — harmonica sting on each land.
 			if (
 				name === 'sfx_scatter_land' ||
 				name === 'sfx_scatter_1' ||
@@ -253,7 +253,12 @@
 				playAudio(SCATTER_LAND_SOUND_SRC, 0.9);
 				return;
 			}
-			// Scatter trigger / retrigger celebration.
+			// FS trigger — one-by-one scatter highlight ("puf" pop per symbol).
+			if (name === 'sfx_scatter_mark') {
+				playAudio('/assets/audio/destroy.mp3', 0.85);
+				return;
+			}
+			// Scatter retrigger celebration.
 			if (name === 'sfx_scatter_win_v2') {
 				playAudio('/assets/audio/Thor_lightning_strik_3-1779126268747.mp3', 0.7);
 				return;

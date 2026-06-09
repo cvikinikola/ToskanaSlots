@@ -8,6 +8,7 @@ export type EmitterEventUi =
 	| { type: 'stopButtonClick' }
 	| { type: 'stopButtonEnable' }
 	| { type: 'stopButtonDisable' }
+	| { type: 'stopButtonAllowClick' }
 	| { type: 'uiShow' }
 	| { type: 'uiHide' }
 	| { type: 'drawerUnfold' }

@@ -7,6 +7,9 @@ export const DEKA_OVERLAY_Z_INDEX = 25;
 /** BET plate and +/- above beside deka. */
 export const BET_CONTROLS_FOREGROUND_Z_INDEX = 60;
 
+/** Side menu open — drop foreground z-index; controls stay in layout under dim overlay. */
+export const shouldSuspendForegroundForMenu = (menuOpen: boolean) => menuOpen;
+
 export type BetControlsSuppressState = {
 	freeSpinIntroActive: boolean;
 	freeSpinOutroActive: boolean;
@@ -40,4 +43,30 @@ export const shouldShowBetControls = (
 	layoutType: LayoutType,
 	gameType: DekaGameType,
 	suppress: BetControlsSuppressState,
-) => isBetControlsInForeground(canvasSizes, mainLayout, layoutType, gameType) && !isBetControlsSuppressed(suppress);
+	menuOpen: boolean,
+) =>
+	isBetControlsInForeground(canvasSizes, mainLayout, layoutType, gameType) &&
+	!isBetControlsSuppressed(suppress) &&
+	!shouldSuspendForegroundForMenu(menuOpen);
+
+export const syncBetControlsUiState = (options: {
+	canvasSizes: { width: number; height: number };
+	mainLayout: { width: number; height: number; scale: number };
+	layoutType: LayoutType;
+	gameType: DekaGameType;
+	suppress: BetControlsSuppressState;
+	menuOpen: boolean;
+}) => {
+	const { canvasSizes, mainLayout, layoutType, gameType, suppress, menuOpen } = options;
+	return {
+		betControlsHidden: isBetControlsSuppressed(suppress),
+		amountBetInForeground: shouldShowBetControls(
+			canvasSizes,
+			mainLayout,
+			layoutType,
+			gameType,
+			suppress,
+			menuOpen,
+		),
+	};
+};

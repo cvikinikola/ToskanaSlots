@@ -36,6 +36,7 @@ export type SoundEffectName =
 	| 'sfx_bigwin_coinloop'
 	| 'sfx_youwon_panel'
 	// Free spins
+	| 'sfx_scatter_mark'
 	| 'sfx_scatter_win_v2'
 	| 'sfx_superfreespin'
 	| 'sfx_rooster_crow'

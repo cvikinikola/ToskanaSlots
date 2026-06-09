@@ -54,18 +54,15 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		onReelStopping: () => {
 			eventEmitter.broadcast({
 				type: 'soundReelStop',
-				forcePlay: !stateBet.isTurbo || stateGame.gameType === 'freeSpins',
-				playbackRate:
-					stateBet.isTurbo && stateGame.gameType !== 'freeSpins' ? 1.25 : 1,
+				forcePlay: !stateBet.isTurbo,
+				playbackRate: stateBet.isTurbo ? 1.25 : 1,
 			});
 		},
 		onSymbolLand,
 	});
 
-	reel.reelState.spinOptions = () => {
-		if (stateGame.gameType === 'freeSpins') return SPIN_OPTIONS_DEFAULT;
-		return reel.reelState.spinType === 'fast' ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
-	};
+	reel.reelState.spinOptions = () =>
+		reel.reelState.spinType === 'fast' ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
 
 	return reel;
 });
@@ -159,8 +156,7 @@ const scatterLandIndex = () => {
 	return stateGame.scatterCounter as 1 | 2 | 3 | 4 | 5;
 };
 
-/** Free spins match base-game pacing even if turbo is toggled on. */
-const useTurboPacing = () => stateBet.isTurbo && stateGame.gameType !== 'freeSpins';
+const useTurboPacing = () => stateBet.isTurbo;
 
 // ─── Enhanced board (spin/pre-spin/settle) ────────────────────────────────────
 

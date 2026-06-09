@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Container, anchorToPivot } from 'pixi-svelte';
 	import { MainContainer } from 'components-layout';
+	import { stateUi } from 'state-shared';
 	import {
 		LabelBet,
 		ButtonIncrease,
@@ -29,7 +30,8 @@
 			layoutType,
 			gameType,
 			context.stateGame,
-		),
+			stateUi.menuOpen,
+		) && !stateUi.betControlsHidden,
 	);
 </script>
 

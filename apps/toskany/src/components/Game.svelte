@@ -20,6 +20,7 @@
 	import BackgroundCharacter from './BackgroundCharacter.svelte';
 	import DekaSaluteOverlay from './DekaSaluteOverlay.svelte';
 	import BetAmountForeground from './BetAmountForeground.svelte';
+	import BetControlsMenuSync from './BetControlsMenuSync.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import MipmapEnabler from './MipmapEnabler.svelte';
 	import Board from './Board.svelte';
@@ -97,6 +98,7 @@
 		<ReplayPhaseTracker />
 		<Sound />
 
+		<BetControlsMenuSync />
 		<BackgroundCharacter layer="background" />
 		<!-- Portrait deka — iza okvira grida (ispod MainContainer). -->
 		<BackgroundCharacter layer="portrait" />
