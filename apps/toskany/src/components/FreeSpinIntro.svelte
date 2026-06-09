@@ -42,17 +42,13 @@
 	const PANEL_ENTER_MS = 320;
 
 	const layout = $derived(context.stateLayoutDerived.mainLayout());
-	const PANEL_W = $derived(Math.min(SYMBOL_SIZE * 6, layout.width * 0.9));
-	const PANEL_H = $derived(Math.min(SYMBOL_SIZE * 3.6, layout.height * 0.55));
-	const FONT_SCALE = $derived(PANEL_W / (SYMBOL_SIZE * 6));
-	const CORNER = 14;
+	const FRAME_ASPECT = 422 / 591;
+	const PANEL_W = $derived(Math.min(SYMBOL_SIZE * 6.2, layout.width * 0.92));
+	const PANEL_H = $derived(Math.min(PANEL_W * FRAME_ASPECT, layout.height * 0.55));
+	const FONT_SCALE = $derived(PANEL_W / (SYMBOL_SIZE * 6.2));
 
-	// Toskany panel theme — matches modal-theme.scss / menu buttons
-	const PANEL_WOOD = 0x3b2116;
-	const PANEL_WOOD_MID = 0x4a2a18;
+	// Text colours — tuned for outro_frame asset (same as FreeSpinOutro)
 	const PANEL_WOOD_DEEP = 0x2e180f;
-	const PANEL_GOLD = 0xd4af37;
-	const PANEL_GOLD_LIGHT = 0xffe79a;
 	const PANEL_GOLD_HEADING = 0xffd86b;
 	const PANEL_CREAM = 0xf5e7c0;
 
@@ -285,27 +281,7 @@
 			<!-- ── FRONT LAYER: frame, rooster, text ── -->
 			<Container label="intro-front">
 				<Container x={-PANEL_W / 2} y={-PANEL_H / 2} alpha={panelAlpha.current}>
-					<Graphics
-						draw={(g) => {
-							g.clear();
-							const inset = 8;
-							// Soft depth shadow
-							g.roundRect(4, 6, PANEL_W - 8, PANEL_H - 8, CORNER);
-							g.fill({ color: PANEL_WOOD_DEEP, alpha: 0.85 });
-							// Wood body
-							g.roundRect(0, 0, PANEL_W, PANEL_H, CORNER);
-							g.fill({ color: PANEL_WOOD, alpha: 0.98 });
-							// Top wood highlight (gradient hint)
-							g.roundRect(0, 0, PANEL_W, PANEL_H * 0.38, CORNER);
-							g.fill({ color: PANEL_WOOD_MID, alpha: 0.5 });
-							// Gold outer border
-							g.roundRect(0, 0, PANEL_W, PANEL_H, CORNER);
-							g.stroke({ color: PANEL_GOLD, width: 3 });
-							// Inner gold highlight
-							g.roundRect(inset, inset, PANEL_W - inset * 2, PANEL_H - inset * 2, CORNER - 4);
-							g.stroke({ color: PANEL_GOLD_LIGHT, width: 1.5, alpha: 0.55 });
-						}}
-					/>
+					<Sprite key="outro_frame" width={PANEL_W} height={PANEL_H} />
 				</Container>
 
 				<Container y={-SYMBOL_SIZE * 0.6 + roosterLift.current} scale={roosterScale.current}>
@@ -329,28 +305,29 @@
 				<Container alpha={textAlpha.current}>
 					<BitmapText
 						anchor={{ x: 0.5, y: 0.5 }}
-						y={SYMBOL_SIZE * 0.55}
+						y={PANEL_H * -0.15}
 						text={mode === 'retrigger' ? 'RETRIGGER' : 'FREE SPINS'}
 						style={{
 							fontFamily: 'proxima-nova',
-							fontSize: SYMBOL_SIZE * 0.7 * FONT_SCALE,
+							fontSize: SYMBOL_SIZE * 0.34 * FONT_SCALE,
 							fill: PANEL_GOLD_HEADING,
-							fontWeight: '800',
+							fontWeight: '900',
 							stroke: { color: PANEL_WOOD_DEEP, width: 3 },
 						}}
 					/>
 
 					<BitmapText
 						anchor={{ x: 0.5, y: 0.5 }}
-						y={SYMBOL_SIZE * 1.2}
+						y={PANEL_H * 0.12}
 						text={mode === 'retrigger'
 							? `+${extraFreeSpins} FREE SPINS (${totalFreeSpins} TOTAL)`
 							: `${totalFreeSpins} SPINS AWARDED`}
 						style={{
 							fontFamily: 'proxima-nova',
-							fontSize: SYMBOL_SIZE * 0.42 * FONT_SCALE,
+							fontSize: SYMBOL_SIZE * 0.44 * FONT_SCALE,
 							fill: PANEL_CREAM,
-							fontWeight: '700',
+							fontWeight: '900',
+							stroke: { color: PANEL_WOOD_DEEP, width: 2 },
 						}}
 					/>
 				</Container>
