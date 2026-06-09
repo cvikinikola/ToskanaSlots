@@ -4,12 +4,13 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, BitmapText, REM } from 'pixi-svelte';
+	import { App, REM, Sprite } from 'pixi-svelte';
 
 	import { UI } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
+	import { stateGame } from '../game/stateGame.svelte';
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
@@ -22,6 +23,7 @@
 	import BetAmountForeground from './BetAmountForeground.svelte';
 	import BetControlsMenuSync from './BetControlsMenuSync.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
+	import LogoTexturePrep from './LogoTexturePrep.svelte';
 	import MipmapEnabler from './MipmapEnabler.svelte';
 	import Board from './Board.svelte';
 	import TumbleBoard from './TumbleBoard.svelte';
@@ -41,6 +43,7 @@
 	import Transition from './Transition.svelte';
 	import PayTableContent from './PayTableContent.svelte';
 	import GameRulesContent from './GameRulesContent.svelte';
+	import PhoneLandscapeLogo from './PhoneLandscapeLogo.svelte';
 
 	const context = getContext();
 
@@ -53,23 +56,26 @@
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
-	// Global multiplier for top-right "Toskany Harvest" title (all layouts).
-	const TITLE_FONT_GLOBAL_SCALE = 1.22;
+	/** logo_tuscany_harvest*.png aspect (height / width), 760×507. */
+	const LOGO_ASPECT = 507 / 760;
 
-	// Shrink the painted-text titles on stacked (portrait/tablet) layouts so
-	// they don't crowd the centred reels.
-	// QA 03.06.2026: the Toskany Harvest title overlapped the MULTIPLIER panel
-	// in the top-right corner on the SQUARE / "kockasti" screen, which is the
-	// `tablet` layout type (NOT covered by isStacked(), which only matches
-	// portrait). Scale it down there specifically, while keeping the existing
-	// portrait/mobile size.
-	const titleScale = $derived.by(() => {
-		const layoutType = context.stateLayoutDerived.layoutType();
-		if (layoutType === 'tablet') return 0.68; // square / kockasti screen
-		if (layoutType === 'portrait') return 0.7; // mobile portrait
-		if (layoutType === 'landscape') return 0.6; // mobile landscape
-		return 1;
-	});
+	/** Logo width as fraction of canvas width — scales with viewport per layout. */
+	const LOGO_WIDTH_FRAC = {
+		desktop: 0.19 * 0.85 * 0.85,
+		landscape: 0.28, // phone landscape uses PhoneLandscapeLogo (frame-anchored)
+		portrait: 0.38 * 0.7, // 30% smaller than default portrait frac
+		tablet: 0.24 * 0.85 * 0.85, // square / kockasti tablet
+	} as const;
+
+	const canvas = $derived(context.stateLayoutDerived.canvasSizes());
+	const layoutType = $derived(context.stateLayoutDerived.layoutType());
+	const isFreeSpins = $derived(stateGame.gameType === 'freeSpins');
+	const logoWidth = $derived(canvas.width * LOGO_WIDTH_FRAC[layoutType]);
+	const logoHeight = $derived(logoWidth * LOGO_ASPECT);
+	const logoY = $derived(context.stateLayoutDerived.isStacked() ? REM * 0.5 : 0);
+	const logoOnRight = $derived(layoutType !== 'portrait');
+	const logoInUi = $derived(logoOnRight && layoutType !== 'landscape');
+	const logoKey = $derived(isFreeSpins ? 'logo_day' : 'logo');
 </script>
 
 <style lang="scss">
@@ -88,6 +94,7 @@
 	<EnableGameActor />
 	<EnablePixiExtension />
 
+	<LogoTexturePrep />
 	<MipmapEnabler />
 
 	{#if context.stateLayout.showLoadingScreen}
@@ -133,28 +140,31 @@
 		<WinSparks />
 		<WinGlow />
 
+		<PhoneLandscapeLogo />
+
 		<UI>
 			{#snippet gameName()}
-				<!-- Single title used (logo snippet renders 'Toskany Harvest' top-right) -->
+				{#if !logoOnRight}
+					<Sprite
+						key={logoKey}
+						anchor={{ x: 0, y: 0 }}
+						y={logoY}
+						width={logoWidth}
+						height={logoHeight}
+					/>
+				{/if}
 			{/snippet}
 			{#snippet logo()}
-				<BitmapText
-					text="Toskany Harvest"
-					anchor={{ x: 1, y: 0 }}
-					x={0}
-					y={context.stateLayoutDerived.isStacked() ? REM * 0.5 : 0}
-					style={{
-						fontFamily: 'system-ui',
-						fontSize: REM * 1.15 * titleScale * TITLE_FONT_GLOBAL_SCALE,
-						fill: 0xf5d78e,
-						fontWeight: '700',
-						stroke: {
-							color: 0x3d2817,
-							width: 5 * titleScale * TITLE_FONT_GLOBAL_SCALE,
-						},
-						letterSpacing: 1 * titleScale * TITLE_FONT_GLOBAL_SCALE,
-					}}
-				/>
+				{#if logoInUi}
+					<Sprite
+						key={logoKey}
+						anchor={{ x: 1, y: 0 }}
+						x={0}
+						y={logoY}
+						width={logoWidth}
+						height={logoHeight}
+					/>
+				{/if}
 			{/snippet}
 		</UI>
 

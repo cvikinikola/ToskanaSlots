@@ -42,9 +42,6 @@
 	const isCompact = $derived(
 		['portrait', 'tablet'].includes(context.stateLayoutDerived.layoutType()),
 	);
-	/** Turbo base game — panel se uopšte ne renderuje (free spins i dalje rade). */
-	const allowPanel = $derived(!context.stateGameDerived.useTurboPacing());
-
 	type PanelMode = 'hidden' | 'freeSpinRemaining' | 'singleCluster' | 'winner';
 
 	let show = $state(false);
@@ -57,7 +54,7 @@
 
 	const panelWidth = $derived(isCompact ? PANEL_W_STACKED : PANEL_W);
 	const panelHeight = $derived(isCompact ? PANEL_H_STACKED : PANEL_H);
-	const visible = $derived(show && allowPanel);
+	const visible = $derived(show);
 
 	const frameBounds = $derived({
 		top: BOARD_SIZES.height / 2 - REEL_FRAME_SIZES.height / 2 + REEL_FRAME_OFFSET.y,
@@ -117,20 +114,16 @@
 		clusterLine = undefined;
 	};
 
-	const tryShow = () => {
-		if (!allowPanel) return;
-		show = true;
-	};
-
 	context.eventEmitter.subscribeOnMount({
-		tumbleWinAmountShow: tryShow,
+		tumbleWinAmountShow: () => {
+			show = true;
+		},
 
 		tumbleWinAmountHide: resetPanel,
 
 		tumbleWinAmountReset: resetPanel,
 
 		tumbleWinSpinRemainingShow: (emitterEvent) => {
-			if (!allowPanel) return;
 			panelMode = 'freeSpinRemaining';
 			freeSpinRemaining = emitterEvent.remaining;
 			clusterLine = undefined;
@@ -146,7 +139,6 @@
 		},
 
 		tumbleWinBreakdownShow: (emitterEvent) => {
-			if (!allowPanel) return;
 			if (emitterEvent.multiCluster || emitterEvent.lines.length > 1) {
 				panelMode = 'winner';
 				clusterLine = undefined;
@@ -164,7 +156,6 @@
 		tumbleWinAmountHideMultiplier: () => {},
 
 		tumbleWinAmountPulse: async () => {
-			if (!allowPanel) return;
 			flashAmount = 1;
 			await pulseScale.set(1.22, { duration: 220, easing: cubicOut });
 			await pulseScale.set(1.0, { duration: 320, easing: cubicOut });

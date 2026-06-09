@@ -16,6 +16,7 @@
 		DEKA_SPRITE_TINT,
 		getDekaLayout,
 	} from '../game/backgroundCharacter';
+	import { applyDekaBlackBackgroundCutoutToAssets } from '../game/dekaTextureCutout';
 	import { startBackgroundCharacterAnim, type DekaAnimController } from '../game/backgroundCharacterAnim';
 	import { dekaSaluteVisual } from '../game/dekaSaluteVisual.svelte';
 	import { shouldShowDekaCharacter, shouldSuspendForegroundForMenu } from '../game/betControlsForeground';
@@ -66,13 +67,7 @@
 	$effect(() => {
 		const assets = context.stateApp.loadedAssets;
 		if (!assets) return;
-		for (const key of DEKA_TEXTURE_KEYS) {
-			const tex = assets[key] as PIXI.Texture | undefined;
-			const source = tex?.source;
-			if (!source) continue;
-			source.alphaMode = 'premultiply-alpha-on-upload';
-			source.update?.();
-		}
+		applyDekaBlackBackgroundCutoutToAssets(assets, DEKA_TEXTURE_KEYS);
 	});
 
 	let breathScale = $state(1);

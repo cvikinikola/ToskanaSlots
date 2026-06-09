@@ -234,7 +234,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		// Sugar Rush: na POČETKU svakog free spina prikaži preostale spinove;
 		// sakrij čim krene animacija (preSpin/spin), winInfo zamenjuje dobitkom.
-		if (isFreeSpinReveal && !stateGameDerived.useTurboPacing()) {
+		if (isFreeSpinReveal) {
 			const current = stateUi.freeSpinCounterCurrent || 0;
 			const remaining = Math.max(0, stateUi.freeSpinCounterTotal - current + 1);
 			eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
@@ -282,15 +282,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		eventEmitter.broadcast({ type: 'tumbleWinSpinRemainingHide' });
 
-		const showTumbleWinPanel = !stateGameDerived.useTurboPacing();
-		if (showTumbleWinPanel) {
-			eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
-			eventEmitter.broadcast({
-				type: 'tumbleWinBreakdownShow',
-				lines: bookEvent.wins.map(buildTumbleBreakdownLine),
-				multiCluster: bookEvent.wins.length > 1,
-			});
-		}
+		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
+		eventEmitter.broadcast({
+			type: 'tumbleWinBreakdownShow',
+			lines: bookEvent.wins.map(buildTumbleBreakdownLine),
+			multiCluster: bookEvent.wins.length > 1,
+		});
 
 		// QA 03.06.2026: tokom free spina prikazujemo SIROVE (winWithoutMult)
 		// iznose — globalMult se množi tek na kraju spina u `finalWin`.
@@ -629,12 +626,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			await waitForTimeout(stateBet.isTurbo ? 350 : 700);
 		}
 
-		if (!stateGameDerived.useTurboPacing()) {
-			eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
-			eventEmitter.broadcast({ type: 'tumbleWinSpinRemainingShow', remaining: 0 });
-			await waitForTimeout(stateBet.isTurbo ? 400 : 800);
-			eventEmitter.broadcast({ type: 'tumbleWinSpinRemainingHide' });
-		}
+		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
+		eventEmitter.broadcast({ type: 'tumbleWinSpinRemainingShow', remaining: 0 });
+		await waitForTimeout(stateBet.isTurbo ? 400 : 800);
+		eventEmitter.broadcast({ type: 'tumbleWinSpinRemainingHide' });
 
 		const winLevelData = getFreeSpinOutroWinLevelData(bookEvent.amount);
 

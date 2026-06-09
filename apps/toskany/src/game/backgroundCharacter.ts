@@ -7,8 +7,8 @@ import {
 
 export type DekaGameType = 'basegame' | 'freeSpins';
 
-/** Native pixel size — all deka v2 frames share the same 1536×1024 canvas. */
-export const DEKA_NATIVE = { w: 1536, h: 1024 } as const;
+/** Native pixel size — all deka v2 character frames share the same 1024×682 canvas. */
+export const DEKA_NATIVE = { w: 1024, h: 682 } as const;
 
 // ─── Idle breathing (container scale, pivot at feet) ─────────────────────────
 export const BREATH_SCALE_MIN = 1.0;
@@ -34,8 +34,14 @@ export const DEKA_X_FRAC = 0.86;
 export const DEKA_BESIDE_TABLET_X_FRAC = 0.824;
 /** Distance inset from bg bottom edge (fraction of bg height). */
 export const DEKA_BOTTOM_INSET_FRAC = 0.02;
-/** Deka sprite height as fraction of background height (desktop baseline). */
+/** Deka sprite height as fraction of background / frame height (desktop baseline). */
 export const DEKA_HEIGHT_FRAC = 0.8;
+/** Phone landscape — logo width as fraction of reel-frame width (scales with grid). */
+export const LOGO_FRAME_WIDTH_FRAC = 0.4;
+/** Gap between frame right edge and logo left edge (fraction of frame width). */
+export const LOGO_FRAME_GAP_FRAC = 0.03;
+/** Phone landscape — gap from frame right to deka left edge (fraction of frame width). */
+export const DEKA_FRAME_BESIDE_GAP_FRAC = 0.08;
 
 /** Global size multiplier applied everywhere (0.8 = 20% smaller). */
 export const DEKA_GLOBAL_SCALE = 0.8;
@@ -112,11 +118,20 @@ export const getDekaScreenScale = (canvasSizes: { width: number; height: number 
 	return Math.min(1, Math.max(DEKA_MIN_SCREEN_SCALE, Math.min(sx, sy)));
 };
 
+export type ReelFrameCanvasRect = {
+	left: number;
+	right: number;
+	top: number;
+	bottom: number;
+	width: number;
+	height: number;
+};
+
 export const getReelFrameCanvasRect = (
 	canvasSizes: { width: number; height: number },
 	mainLayout: { width: number; height: number; scale: number },
 	layoutType: LayoutType,
-) => {
+): ReelFrameCanvasRect => {
 	const board = getBoardCenterMain(mainLayout, layoutType);
 	const frameScale = board.scale * mainLayout.scale;
 	const width = REEL_FRAME_SIZES.width * frameScale;
@@ -135,11 +150,40 @@ export const getReelFrameCanvasRect = (
 	};
 };
 
+/** Beside deka anchored to reel frame — phone landscape (scales/moves with grid). */
+export const getBesideDekaRectFromFrame = (frame: ReelFrameCanvasRect) => {
+	const height = frame.height * DEKA_HEIGHT_FRAC * DEKA_GLOBAL_SCALE;
+	const width = DEKA_NATIVE.w * (height / DEKA_NATIVE.h);
+	const x = frame.right + frame.width * DEKA_FRAME_BESIDE_GAP_FRAC + width * 0.5;
+	const y = frame.bottom - frame.height * DEKA_BOTTOM_INSET_FRAC;
+	return { x, y, width, height, screenScale: 1 };
+};
+
+/** Logo to the right of reel frame — phone landscape only. */
+export const getFrameAnchoredLogoLayout = (frame: ReelFrameCanvasRect) => {
+	const width = frame.width * LOGO_FRAME_WIDTH_FRAC;
+	const height = width * (507 / 760);
+	const gap = frame.width * LOGO_FRAME_GAP_FRAC;
+	return {
+		x: frame.right + gap,
+		y: frame.top,
+		width,
+		height,
+	};
+};
+
 export const getBesideDekaRect = (
 	canvasSizes: { width: number; height: number },
 	layoutType: LayoutType,
 	gameType: DekaGameType = 'basegame',
+	mainLayout?: { width: number; height: number; scale: number },
 ) => {
+	if (layoutType === 'landscape' && mainLayout) {
+		return getBesideDekaRectFromFrame(
+			getReelFrameCanvasRect(canvasSizes, mainLayout, layoutType),
+		);
+	}
+
 	const bg = getBgLayout(canvasSizes, layoutType, gameType);
 	const screenScale = getDekaScreenScale(canvasSizes);
 	const height = bg.height * DEKA_HEIGHT_FRAC * screenScale * DEKA_GLOBAL_SCALE;
@@ -170,7 +214,10 @@ export const isAlmostSquareHorizontal = (
 export const getBesideDekaXFrac = (
 	canvasSizes: { width: number; height: number },
 	layoutType: LayoutType,
-) => (isAlmostSquareHorizontal(canvasSizes, layoutType) ? DEKA_BESIDE_TABLET_X_FRAC : DEKA_X_FRAC);
+) => {
+	if (isAlmostSquareHorizontal(canvasSizes, layoutType)) return DEKA_BESIDE_TABLET_X_FRAC;
+	return DEKA_X_FRAC;
+};
 
 /**
  * Display mode:
@@ -198,7 +245,7 @@ export const getDekaLayout = (
 	gameType: DekaGameType = 'basegame',
 ): DekaLayout | null => {
 	const mode = getDekaDisplayMode(canvasSizes, layoutType, gameType);
-	const beside = getBesideDekaRect(canvasSizes, layoutType, gameType);
+	const beside = getBesideDekaRect(canvasSizes, layoutType, gameType, mainLayout);
 
 	if (mode === 'hidden') return null;
 

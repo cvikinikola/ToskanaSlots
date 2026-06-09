@@ -91,15 +91,27 @@ export const REEL_FRAME_OFFSET = {
 	y: 0,
 };
 
+export type BgAssetKey =
+	| 'deka_v2_bg'
+	| 'deka_v2_bg_day'
+	| 'bg_portrait_night'
+	| 'bg_portrait_day';
+
 export type BgConfig = {
-	key: 'deka_v2_bg' | 'deka_v2_bg_day';
+	key: BgAssetKey;
 	native: { w: number; h: number };
 };
 
-export const BG_CONFIGS: Record<'landscape' | 'portrait' | 'freespins', BgConfig> = {
-	landscape: { key: 'deka_v2_bg', native: { w: 1536, h: 1024 } },
-	portrait: { key: 'deka_v2_bg', native: { w: 1536, h: 1024 } },
-	freespins: { key: 'deka_v2_bg_day', native: { w: 1228, h: 819 } },
+export const BG_NATIVE_PORTRAIT = { w: 576, h: 1024 } as const;
+
+export const BG_CONFIGS: Record<
+	'landscape' | 'portrait' | 'freespins' | 'portrait_freespins',
+	BgConfig
+> = {
+	landscape: { key: 'deka_v2_bg', native: { w: 1024, h: 682 } },
+	portrait: { key: 'bg_portrait_night', native: BG_NATIVE_PORTRAIT },
+	freespins: { key: 'deka_v2_bg_day', native: { w: 1024, h: 682 } },
+	portrait_freespins: { key: 'bg_portrait_day', native: BG_NATIVE_PORTRAIT },
 };
 
 
@@ -107,7 +119,9 @@ export const getBgConfig = (
 	layoutType: LayoutType,
 	gameType: 'basegame' | 'freeSpins' = 'basegame',
 ): BgConfig => {
-	if (gameType === 'freeSpins') return BG_CONFIGS.freespins;
+	if (gameType === 'freeSpins') {
+		return layoutType === 'portrait' ? BG_CONFIGS.portrait_freespins : BG_CONFIGS.freespins;
+	}
 	return layoutType === 'portrait' ? BG_CONFIGS.portrait : BG_CONFIGS.landscape;
 };
 

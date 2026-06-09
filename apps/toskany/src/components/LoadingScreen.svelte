@@ -18,8 +18,8 @@
 	const stacked = $derived(layoutType === 'portrait' || layoutType === 'tablet');
 	const logoScale = $derived(stacked ? 0.88 : 1);
 
-	/** logo_tuscany_harvest_night.png aspect (height / width). */
-	const LOGO_ASPECT = 0.74;
+	/** logo_tuscany_harvest_night.png aspect (height / width), 760×507. */
+	const LOGO_ASPECT = 507 / 760;
 	const logoWidth = $derived(
 		context.stateLayoutDerived.mainLayout().width * (stacked ? 0.9 : 0.5) * logoScale,
 	);
