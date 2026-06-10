@@ -235,6 +235,17 @@ const resolveSpinCelebrationAmount = async () => {
 	return finalAmount != null ? Math.max(preAmount, finalAmount) : preAmount;
 };
 
+/** Base spin ended with FS trigger — resolve tumble×mult, then Bravo tier amount. */
+const resolveBaseGameCelebrationBeforeFreeSpins = async () => {
+	const preAmount = resolveGridWinCelebrationAmount(
+		stateBet.winBookEventAmount,
+		spinEndMultiply,
+	);
+	const { animated, finalAmount } = await playSpinEndMultiply();
+	if (animated) await waitForTimeout(stateBet.isTurbo ? 350 : 700);
+	return finalAmount != null ? Math.max(preAmount, finalAmount) : preAmount;
+};
+
 const updateRoundWinBookEventAmount = (bookEventAmount: number) => {
 	if (stateGame.gameType !== 'freeSpins') {
 		stateBet.winBookEventAmount = bookEventAmount;
@@ -580,6 +591,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── freeSpinTrigger ───────────────────────────────────────────────────────
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
+		// Base tumble can qualify for BIG/SUPER/MEGA — play Bravo before scatter / FS intro.
+		const celebrationAmount = await resolveBaseGameCelebrationBeforeFreeSpins();
+		await tryPlayGridWinCelebration(celebrationAmount);
+
 		bonusRoundGridWinCelebrationsActive = true;
 		freeSpinWinBookEventAmount = stateBet.winBookEventAmount;
 		freeSpinTumbleWinBookEventAmount = 0;
