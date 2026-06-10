@@ -19,7 +19,8 @@
 		"math:verify": "node scripts/compare-paytable.mjs && node scripts/verify-paytable.mjs",
 		"math:calibrate": "node scripts/calibrate-rtp.mjs",
 		"math:calibrate-modes": "node scripts/calibrate-modes.mjs",
-		"math:sample-wins": "node scripts/sample-wins-qa.mjs"
+		"math:sample-wins": "node scripts/sample-wins-qa.mjs",
+		"build:tile": "node scripts/build-marketing-tile.mjs"
 	},
 	"type": "module",
 	"devDependencies": {
@@ -30,7 +31,8 @@
 		"config-ts": "workspace:*",
 		"config-vite": "workspace:*",
 		"eslint": "9.21.0",
-		"eslint-config-custom": "workspace:*"
+		"eslint-config-custom": "workspace:*",
+		"sharp": "^0.34.5"
 	},
 	"dependencies": {
 		"@lingui/core": "5.2.0",
