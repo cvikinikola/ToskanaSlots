@@ -43,6 +43,8 @@ const assets = {
 	menu_frame_free_spins: sprite(`${MENU_BAR}/frame_free_spins.png`),
 	menu_history_tumble: sprite(`${MENU_BAR}/history_tumble.png`),
 	menu_frame: sprite(`${MENU_BAR}/frame.webp`),
+	intro_frame_full: sprite(`${MENU_BAR}/frame_full.png`),
+	intro_frame_multiplicator: sprite(`${MENU_BAR}/frame_multiplicator.png`),
 	menu_plus: sprite(`${MENU_BAR}/plus_icon.png`),
 	menu_minus: sprite(`${MENU_BAR}/minus_icon.png`),
 	menu_turbo: sprite(`${MENU_BAR}/turbo_icon.png`),	menu_turbo_active: sprite(`${MENU_BAR}/turbo_active.png`),

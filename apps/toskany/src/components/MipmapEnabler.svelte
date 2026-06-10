@@ -51,7 +51,8 @@
 				key === 'warrior' ||
 				key === 'logo' ||
 				key === 'logo_day' ||
-				key.startsWith('menu_')
+				key.startsWith('menu_') ||
+				key.startsWith('intro_frame_')
 			) {
 				tuneTexture(val);
 			}
