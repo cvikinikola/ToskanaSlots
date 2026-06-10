@@ -19,6 +19,7 @@
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { applyPanelChromeUiState } from '../game/betControlsForeground';
 
 	const context = getContext();
 
@@ -191,6 +192,7 @@
 		freeSpinIntroShow: () => {
 			mode = 'trigger';
 			stateGame.freeSpinIntroActive = true;
+			applyPanelChromeUiState();
 			show = true;
 		},
 		freeSpinIntroHide: () => {
@@ -198,14 +200,18 @@
 			resetAnimation();
 			show = false;
 			stateGame.freeSpinIntroActive = false;
+			applyPanelChromeUiState();
 		},
 		freeSpinIntroUpdate: async (e) => {
 			totalFreeSpins = e.totalFreeSpins;
+			stateGame.freeSpinIntroActive = true;
+			applyPanelChromeUiState();
 			await playIntroSequence(false);
 		},
 		freeSpinRetriggerShow: () => {
 			mode = 'retrigger';
 			stateGame.freeSpinIntroActive = true;
+			applyPanelChromeUiState();
 			show = true;
 		},
 		freeSpinRetriggerHide: () => {
@@ -213,10 +219,13 @@
 			resetAnimation();
 			show = false;
 			stateGame.freeSpinIntroActive = false;
+			applyPanelChromeUiState();
 		},
 		freeSpinRetriggerUpdate: async (e) => {
 			extraFreeSpins = e.extraFreeSpins;
 			totalFreeSpins = e.totalFreeSpins;
+			stateGame.freeSpinIntroActive = true;
+			applyPanelChromeUiState();
 			await playIntroSequence(true);
 		},
 	});

@@ -175,6 +175,14 @@
 				playAudio('/assets/audio/Bravo! Jingling.mp3', 1);
 				return;
 			}
+			if (name === 'sfx_bravo_big_super') {
+				playNamedOnce(name, '/assets/audio/Bravo_big_super.mp3', 0.95);
+				return;
+			}
+			if (name === 'sfx_bravo_mega_epic') {
+				playNamedOnce(name, '/assets/audio/Bravo_mega_epic_legendary.mp3', 0.95);
+				return;
+			}
 			if (name === 'sfx_thunder') {
 				const now = performance.now();
 				if (now - lastThunderAt < 4500) return;
@@ -191,7 +199,7 @@
 			}
 			// Rooster crow — free-spin intro panel (FreeSpinIntro.svelte)
 			if (name === 'sfx_rooster_crow') {
-				playAudio('/assets/audio/kukuriku.mp3', 0.95);
+				playNamedOnce(name, '/assets/audio/kukuriku.mp3', 0.95);
 				return;
 			}
 			// Legacy free-spin jingle (unused by intro; kept for compatibility)

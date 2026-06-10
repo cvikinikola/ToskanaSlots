@@ -79,6 +79,12 @@ const assets = {
 	coin_06: sprite(`${COIN}/coin_06.png`),
 	coin_07: sprite(`${COIN}/coin_07.png`),
 	coin_08: sprite(`${COIN}/coin_08.png`),
+
+	win_big: sprite(`${COIN}/win_big.png`),
+	win_super: sprite(`${COIN}/win_super.png`),
+	win_mega: sprite(`${COIN}/win_mega.png`),
+	win_congratulations: sprite(`${COIN}/congratulations.png`),
+	win_sunburst: sprite(`${COIN}/win_sunburst.png`),
 };
 
 export default assets;

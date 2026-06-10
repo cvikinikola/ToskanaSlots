@@ -8,6 +8,7 @@ import type { EmitterEventFreeSpinIntro } from '../components/FreeSpinIntro.svel
 import type { EmitterEventFreeSpinCounter } from '../components/FreeSpinCounter.svelte';
 import type { EmitterEventFreeSpinOutro } from '../components/FreeSpinOutro.svelte';
 import type { EmitterEventWin } from '../components/Win.svelte';
+import type { EmitterEventBigWinCelebration } from '../components/WinCelebration.svelte';
 import type { EmitterEventSound } from '../components/Sound.svelte';
 import type { EmitterEventTransition } from '../components/Transition.svelte';
 import type { EmitterEventWinSparks } from '../components/WinSparks.svelte';
@@ -31,6 +32,7 @@ export type EmitterEventGame =
 	| EmitterEventFreeSpinCounter
 	| EmitterEventFreeSpinOutro
 	| EmitterEventWin
+	| EmitterEventBigWinCelebration
 	| EmitterEventSound
 	| EmitterEventTransition
 	| EmitterEventWinSparks

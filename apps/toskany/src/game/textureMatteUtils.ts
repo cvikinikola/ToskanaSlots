@@ -89,6 +89,130 @@ export const keyNeutralBlackMatteFromBorders = (
 	}
 };
 
+/** Export chroma-key fringe (#FF00FF family). Grape purple stays — lower R/B, higher G. */
+export const isMagentaChromaPixel = (r: number, g: number, b: number, a: number) => {
+	if (a < 8) return false;
+	if (r < 130 || b < 130) return false;
+	if (g > 95) return false;
+	if (r - g < 70 || b - g < 70) return false;
+	return true;
+};
+
+export const keyMagentaChromaPixels = (data: Uint8ClampedArray) => {
+	for (let i = 0; i < data.length; i += 4) {
+		if (isMagentaChromaPixel(data[i], data[i + 1], data[i + 2], data[i + 3])) {
+			data[i] = 0;
+			data[i + 1] = 0;
+			data[i + 2] = 0;
+			data[i + 3] = 0;
+		}
+	}
+};
+
+/**
+ * Photoshop checkerboard / white export matte baked into win art (also light halos).
+ * Gold keeps warm chroma; neutral whites/grays become transparent.
+ */
+export const isNeutralLightExportMattePixel = (
+	r: number,
+	g: number,
+	b: number,
+	a: number,
+	minChannel = 172,
+	maxChroma = 20,
+) => {
+	if (a < 6) return true;
+	const max = Math.max(r, g, b);
+	const min = Math.min(r, g, b);
+	if (max < minChannel) return false;
+	return max - min <= maxChroma;
+};
+
+export const keyGlobalNeutralLightMattePixels = (
+	data: Uint8ClampedArray,
+	minChannel = 172,
+	maxChroma = 20,
+) => {
+	for (let i = 0; i < data.length; i += 4) {
+		if (
+			isNeutralLightExportMattePixel(
+				data[i],
+				data[i + 1],
+				data[i + 2],
+				data[i + 3],
+				minChannel,
+				maxChroma,
+			)
+		) {
+			data[i] = 0;
+			data[i + 1] = 0;
+			data[i + 2] = 0;
+			data[i + 3] = 0;
+		}
+	}
+};
+
+/** Flood-fill neutral white/gray export matte from image borders. */
+export const keyNeutralLightMatteFromBorders = (
+	data: Uint8ClampedArray,
+	width: number,
+	height: number,
+	minChannel = 168,
+	maxChroma = 24,
+) => {
+	const total = width * height;
+	const visited = new Uint8Array(total);
+	const queue = new Int32Array(total);
+	let head = 0;
+	let tail = 0;
+
+	const trySeed = (x: number, y: number) => {
+		const i = y * width + x;
+		if (visited[i]) return;
+		const o = i * 4;
+		if (
+			!isNeutralLightExportMattePixel(
+				data[o],
+				data[o + 1],
+				data[o + 2],
+				data[o + 3],
+				minChannel,
+				maxChroma,
+			)
+		) {
+			return;
+		}
+		visited[i] = 1;
+		queue[tail++] = i;
+	};
+
+	for (let x = 0; x < width; x++) {
+		trySeed(x, 0);
+		trySeed(x, height - 1);
+	}
+	for (let y = 0; y < height; y++) {
+		trySeed(0, y);
+		trySeed(width - 1, y);
+	}
+
+	while (head < tail) {
+		const i = queue[head++];
+		const o = i * 4;
+		data[o] = 0;
+		data[o + 1] = 0;
+		data[o + 2] = 0;
+		data[o + 3] = 0;
+
+		const x = i % width;
+		const y = Math.floor(i / width);
+
+		if (x > 0) trySeed(x - 1, y);
+		if (x < width - 1) trySeed(x + 1, y);
+		if (y > 0) trySeed(x, y - 1);
+		if (y < height - 1) trySeed(x, y + 1);
+	}
+};
+
 export const rewriteTextureWithPixelPass = (
 	texture: PIXI.Texture,
 	applied: WeakSet<PIXI.Texture>,

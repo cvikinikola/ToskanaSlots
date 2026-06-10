@@ -8,6 +8,7 @@
 	import { DEKA_BRIGHTNESS, DEKA_SPRITE_TINT } from '../game/backgroundCharacter';
 	import {
 		DEKA_OVERLAY_Z_INDEX,
+		readBetControlsSuppressState,
 		shouldShowDekaCharacter,
 		shouldSuspendForegroundForMenu,
 	} from '../game/betControlsForeground';
@@ -15,8 +16,9 @@
 
 	const visual = dekaSaluteVisual;
 
+	const suppress = $derived(readBetControlsSuppressState(stateGame));
 	const show = $derived(
-		shouldShowDekaCharacter(stateGame.gameType, stateGame) &&
+		shouldShowDekaCharacter(stateGame.gameType, suppress) &&
 			visual.visible &&
 			visual.layout &&
 			!shouldSuspendForegroundForMenu(stateUi.menuOpen),

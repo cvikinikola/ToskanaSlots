@@ -6,11 +6,19 @@ import { stateSlots } from 'utils-slots';
 import { stateBet, stateUi, stateBetDerived } from 'state-shared';
 import { sequence } from 'utils-shared/sequence';
 import { waitForTimeout } from 'utils-shared/wait';
-import { bookEventAmountToBetAmountMultiplier } from 'utils-shared/amount';
 
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
 import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
+import {
+	getCelebrationTierByAmount,
+	resolveGridWinCelebrationAmount,
+} from './winCelebration';
+import { applyPanelChromeUiState } from './betControlsForeground';
+import {
+	getGridWinCelebrationDurationMs,
+	getGridWinCelebrationSoundName,
+} from './winCelebrationAudio';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import { TUMBLE_OPTIONS, TURBO_NO_WIN_SETTLE_MS } from './constants';
 import config from './config';
@@ -65,6 +73,47 @@ const winLevelSoundsStop = () => {
 	eventEmitter.broadcastAsync({ type: 'uiShow' });
 };
 
+const playBigWinCelebration = async (amount: number, winLevelData: WinLevelData) => {
+	const duration = await getGridWinCelebrationDurationMs(winLevelData);
+	const soundName = getGridWinCelebrationSoundName(winLevelData);
+	await eventEmitter.broadcastAsync({ type: 'uiHide' });
+	eventEmitter.broadcast({ type: 'bigWinCelebrationShow', winLevelData });
+	eventEmitter.broadcast({ type: 'soundOnce', name: soundName });
+	await eventEmitter.broadcastAsync({
+		type: 'bigWinCelebrationUpdate',
+		amount,
+		winLevelData,
+		duration,
+	});
+	eventEmitter.broadcast({ type: 'soundStop', name: soundName });
+	eventEmitter.broadcast({ type: 'bigWinCelebrationHide' });
+	await eventEmitter.broadcastAsync({ type: 'uiShow' });
+};
+
+const tryPlayGridWinCelebration = async (
+	amount: number,
+	options?: { inFreeSpins?: boolean },
+) => {
+	if (amount <= 0) return;
+	if (bigWinCelebrationPlayedThisRound) return;
+	if (stateGame.freeSpinIntroActive || stateGame.freeSpinOutroActive || stateGame.transitionActive) {
+		return;
+	}
+	if (options?.inFreeSpins) {
+		if (stateGame.gameType !== 'freeSpins') return;
+	} else if (stateGame.gameType !== 'basegame') {
+		return;
+	}
+	const tier = getCelebrationTierByAmount(amount);
+	if (!tier) return;
+	bigWinCelebrationPlayedThisRound = true;
+	await playBigWinCelebration(amount, tier);
+};
+
+const tryPlayBigWinCelebration = async (amount: number) => {
+	await tryPlayGridWinCelebration(amount);
+};
+
 /**
  * Triggers win animations on the main board for the given positions.
  * Sets each symbol to 'win' state and awaits the animation completing
@@ -102,9 +151,17 @@ let freeSpinTumbleWinBookEventAmount = 0;
 // (raw×globalMult) tako da igrač vidi finalni iznos.
 let spinRawWinAmount = 0;
 let dekaSaluteTriggeredThisSpin = false;
+let bigWinCelebrationPlayedThisRound = false;
+/** Per-spin grid-win celebrations run during FS; skip duplicate in `finalWin`. */
+let bonusRoundGridWinCelebrationsActive = false;
+
+const getSpinGridWinCelebrationAmount = () =>
+	resolveGridWinCelebrationAmount(freeSpinTumbleWinBookEventAmount, spinEndMultiply);
+
 const resetSpinRawWinAmount = () => {
 	spinRawWinAmount = 0;
 	dekaSaluteTriggeredThisSpin = false;
+	bigWinCelebrationPlayedThisRound = false;
 };
 
 // QA 05.06.2026: množenje se prikazuje na KRAJU SPINA (ne odmah). Tokom spina
@@ -140,13 +197,15 @@ const hasMoreTumbleCascades = (bookEvent: { index: number }, bookEvents: BookEve
 	);
 };
 
-const playSpinEndMultiply = async (): Promise<boolean> => {
+const playSpinEndMultiply = async (): Promise<{ animated: boolean; finalAmount: number | null }> => {
 	const data = spinEndMultiply;
 	spinEndMultiply = null;
-	if (!data) return false;
-	// Ako nema stvarnog multiplikatora (×1) ili pomnoženi iznos nije veći od
-	// sirovog, nema šta da se animira.
-	if (!(data.multiplier > 1 && data.multiplied > data.raw && data.raw > 0)) return false;
+	if (!data) return { animated: false, finalAmount: null };
+	const shouldAnimate =
+		data.multiplier > 1 && data.multiplied > data.raw && data.raw > 0;
+	if (!shouldAnimate) {
+		return { animated: false, finalAmount: data.multiplied };
+	}
 
 	eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
 	eventEmitter.broadcast({ type: 'tumbleWinAmountShowMultiplier', multiplier: data.multiplier });
@@ -163,7 +222,17 @@ const playSpinEndMultiply = async (): Promise<boolean> => {
 		animate: true,
 	});
 	eventEmitter.broadcast({ type: 'tumbleWinAmountHideMultiplier' });
-	return true;
+	return { animated: true, finalAmount: data.multiplied };
+};
+
+const resolveSpinCelebrationAmount = async () => {
+	const preAmount = Math.max(
+		getSpinGridWinCelebrationAmount(),
+		freeSpinTumbleWinBookEventAmount,
+	);
+	const { animated, finalAmount } = await playSpinEndMultiply();
+	if (animated) await waitForTimeout(stateBet.isTurbo ? 350 : 700);
+	return finalAmount != null ? Math.max(preAmount, finalAmount) : preAmount;
 };
 
 const updateRoundWinBookEventAmount = (bookEventAmount: number) => {
@@ -180,24 +249,6 @@ const commitFreeSpinTumbleWin = () => {
 	freeSpinWinBookEventAmount += freeSpinTumbleWinBookEventAmount;
 	freeSpinTumbleWinBookEventAmount = 0;
 	stateBet.winBookEventAmount = freeSpinWinBookEventAmount;
-};
-
-const getFreeSpinOutroWinLevelData = (amount: number) => {
-	const multiplier = bookEventAmountToBetAmountMultiplier(amount);
-
-	if (multiplier >= 100) {
-		return { ...winLevelMap[9], presentDuration: 7000 };
-	}
-
-	if (multiplier >= 50) {
-		return { ...winLevelMap[8], presentDuration: 6000 };
-	}
-
-	if (multiplier >= 20) {
-		return { ...winLevelMap[6], presentDuration: 5000 };
-	}
-
-	return { ...winLevelMap[1], presentDuration: 3000 };
 };
 
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
@@ -305,10 +356,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// (sirovi zbir × globalMult) === server `totalWin`. Čuvamo poslednje
 		// vrednosti; animacija se odigrava u `updateFreeSpin`/`freeSpinEnd`.
 		if (stateGame.gameType === 'freeSpins') {
-			const spinMultiplier = bookEvent.wins[0]?.meta.globalMult ?? stateGame.globalMultiplier;
+			const spinMultiplier = Math.max(1, bookEvent.wins[0]?.meta.globalMult ?? 1);
+			const raw = spinRawWinAmount;
+			const tumbleTotal = bookEvent.totalWin;
+			let multiplied = Math.max(tumbleTotal, raw);
+			if (spinMultiplier > 1 && raw > 0) {
+				multiplied = Math.max(multiplied, Math.round(raw * spinMultiplier));
+			}
 			spinEndMultiply = {
-				raw: spinRawWinAmount,
-				multiplied: bookEvent.totalWin,
+				raw,
+				multiplied,
 				multiplier: spinMultiplier,
 			};
 		}
@@ -480,6 +537,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	updateTumbleWin: async (bookEvent: BookEventOfType<'updateTumbleWin'>) => {
 		if (bookEvent.amount > 0) {
 			updateRoundWinBookEventAmount(bookEvent.amount);
+			if (stateGame.gameType === 'freeSpins' && spinEndMultiply) {
+				spinEndMultiply = {
+					...spinEndMultiply,
+					multiplied: Math.max(spinEndMultiply.multiplied, bookEvent.amount),
+				};
+			}
 			eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
 			// QA 03.06.2026: server `amount` ovde uključuje globalMult tokom free
 			// spina; mi prikazujemo SIROVI iznos (ažuriran u `winInfo`/
@@ -517,6 +580,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── freeSpinTrigger ───────────────────────────────────────────────────────
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
+		bonusRoundGridWinCelebrationsActive = true;
 		freeSpinWinBookEventAmount = stateBet.winBookEventAmount;
 		freeSpinTumbleWinBookEventAmount = 0;
 		spinEndMultiply = null;
@@ -538,11 +602,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await waitForTimeout(1500);
 
-		// Transition to free spins mode
+		// Transition to free spins mode — suppress deka/BET chrome before panel (outside UI fade).
+		stateGame.freeSpinIntroActive = true;
+		applyPanelChromeUiState();
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await eventEmitter.broadcastAsync({ type: 'transition' });
 
-		// Intro sting (free_spin_intro.mp3); Nova returns when animation ends
+		// Intro sting (free_spin_intro.mp3); Nova returns when animation ends.
 		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
 		await eventEmitter.broadcastAsync({
@@ -585,6 +651,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		setTimeout(() => eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' }), 350);
 		await animateSymbols({ positions: bookEvent.positions });
 
+		stateGame.freeSpinIntroActive = true;
+		applyPanelChromeUiState();
 		eventEmitter.broadcast({ type: 'freeSpinRetriggerShow' });
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinRetriggerUpdate',
@@ -607,8 +675,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// QA 05.06.2026: na kraju PRETHODNOG spina odigraj animaciju množenja
 		// (sirovo → pomnoženo) pre nego što commit-ujemo dobitak u WIN i pre nego
 		// što sledeći `reveal` resetuje panel.
-		const didMultiply = await playSpinEndMultiply();
-		if (didMultiply) await waitForTimeout(stateBet.isTurbo ? 350 : 700);
+		const celebrationAmount = await resolveSpinCelebrationAmount();
+
+		// Grid win (Bravo) — per spin only; FS outro keeps its own panel/music.
+		await tryPlayGridWinCelebration(celebrationAmount, { inFreeSpins: true });
+
 		commitFreeSpinTumbleWin();
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		stateUi.freeSpinCounterShow = true;
@@ -623,34 +694,31 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── freeSpinEnd ───────────────────────────────────────────────────────────
 	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
-		// QA 05.06.2026: poslednji free spin nema `updateFreeSpin` posle sebe —
-		// odigraj njegovu animaciju množenja ovde, pre outro count-upa.
-		if (await playSpinEndMultiply()) {
-			await waitForTimeout(stateBet.isTurbo ? 350 : 700);
-		}
+		// Poslednji spin nema `updateFreeSpin` posle sebe — množenje + grid-win
+		// celebration moraju ovde, PRE outro panela.
+		const celebrationAmount = await resolveSpinCelebrationAmount();
+
+		await tryPlayGridWinCelebration(celebrationAmount, { inFreeSpins: true });
+		commitFreeSpinTumbleWin();
 
 		eventEmitter.broadcast({ type: 'tumbleWinAmountShow' });
 		eventEmitter.broadcast({ type: 'tumbleWinSpinRemainingShow', remaining: 0 });
 		await waitForTimeout(stateBet.isTurbo ? 400 : 800);
 		eventEmitter.broadcast({ type: 'tumbleWinSpinRemainingHide' });
 
-		const winLevelData = getFreeSpinOutroWinLevelData(bookEvent.amount);
-
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 
 		eventEmitter.broadcast({ type: 'freeSpinOutroShow' });
 		stateGame.freeSpinOutroActive = true;
+		applyPanelChromeUiState();
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_youwon_panel' });
-		winLevelSoundsPlay({ winLevelData });
 
 		await eventEmitter.broadcastAsync({
 			type: 'freeSpinOutroCountUp',
 			amount: bookEvent.amount,
-			winLevelData,
 		});
 
 		stateBet.winBookEventAmount = bookEvent.amount;
-		winLevelSoundsStop();
 		stateGame.gameType = 'basegame';
 		stateSlots.activeRevealBoard = undefined;
 		stateSlots.skipStopRequested = false;
@@ -661,6 +729,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'stopButtonEnable' });
 		eventEmitter.broadcast({ type: 'freeSpinOutroHide' });
 		stateGame.freeSpinOutroActive = false;
+		applyPanelChromeUiState();
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
 		stateUi.freeSpinCounterShow = false;
 		eventEmitter.broadcast({ type: 'globalMultiplierHide' });
@@ -676,7 +745,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── setWin ────────────────────────────────────────────────────────────────
 	setWin: async (bookEvent: BookEventOfType<'setWin'>) => {
+		if (stateGame.gameType !== 'basegame') return;
+
+		const celebrationTier = getCelebrationTierByAmount(bookEvent.amount);
+		if (celebrationTier) {
+			if (!bigWinCelebrationPlayedThisRound) {
+				bigWinCelebrationPlayedThisRound = true;
+				await playBigWinCelebration(bookEvent.amount, celebrationTier);
+			}
+			return;
+		}
+
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];
+		if (!winLevelData) return;
 
 		eventEmitter.broadcast({ type: 'winShow' });
 		winLevelSoundsPlay({ winLevelData });
@@ -691,7 +772,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 	// ── finalWin ──────────────────────────────────────────────────────────────
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
-		// Simboli su stali — spin dugme odmah, animacije nastavljaju u pozadini.
+		// Base game ≥10×/30×/100× — not after FS (per-spin Bravo already ran in bonus).
+		if (
+			stateGame.gameType === 'basegame' &&
+			bookEvent.amount > 0 &&
+			!bonusRoundGridWinCelebrationsActive
+		) {
+			await tryPlayBigWinCelebration(bookEvent.amount);
+		}
+		bonusRoundGridWinCelebrationsActive = false;
+		// Simboli su stali — spin dugme posle celebration-a.
 		eventEmitter.broadcast({ type: 'stopButtonEnable' });
 		if (bookEvent.amount > 0) {
 			playWinToBalanceCoins();

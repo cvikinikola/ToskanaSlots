@@ -54,7 +54,9 @@ export type SoundEffectName =
 	| 'sfx_thunder'
 	| 'sfx_thunder_clap'
 	// Free-spin outro money count-up (Vinyl Jackpot)
-	| 'sfx_jackpot_ascension';
+	| 'sfx_jackpot_ascension'
+	| 'sfx_bravo_big_super'
+	| 'sfx_bravo_mega_epic';
 
 export type SoundName = MusicName | SoundEffectName;
 

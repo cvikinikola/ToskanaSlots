@@ -15,6 +15,7 @@
 	import { getContext } from '../game/context';
 	import {
 		BET_CONTROLS_FOREGROUND_Z_INDEX,
+		readBetControlsSuppressState,
 		shouldShowBetControls,
 	} from '../game/betControlsForeground';
 
@@ -23,13 +24,14 @@
 	const layoutType = $derived(context.stateLayoutDerived.layoutType());
 	const mainLayoutStandard = $derived(context.stateLayoutDerived.mainLayoutStandard());
 	const gameType = $derived(context.stateGame.gameType);
+	const suppress = $derived(readBetControlsSuppressState(context.stateGame));
 	const show = $derived(
 		shouldShowBetControls(
 			context.stateLayoutDerived.canvasSizes(),
 			context.stateLayoutDerived.mainLayout(),
 			layoutType,
 			gameType,
-			context.stateGame,
+			suppress,
 			stateUi.menuOpen,
 		) && !stateUi.betControlsHidden,
 	);

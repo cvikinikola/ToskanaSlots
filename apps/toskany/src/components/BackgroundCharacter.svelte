@@ -19,7 +19,7 @@
 	import { applyDekaBlackBackgroundCutoutToAssets } from '../game/dekaTextureCutout';
 	import { startBackgroundCharacterAnim, type DekaAnimController } from '../game/backgroundCharacterAnim';
 	import { dekaSaluteVisual } from '../game/dekaSaluteVisual.svelte';
-	import { shouldShowDekaCharacter, shouldSuspendForegroundForMenu } from '../game/betControlsForeground';
+	import { shouldShowDekaCharacter, shouldSuspendForegroundForMenu, readBetControlsSuppressState } from '../game/betControlsForeground';
 
 	type Props = {
 		/** `background` = bg + beside; `portrait` = header overlay (render after board). */
@@ -78,17 +78,26 @@
 	let animController: DekaAnimController | null = null;
 
 	const menuForegroundSuspended = $derived(shouldSuspendForegroundForMenu(stateUi.menuOpen));
+	const menuBarChromeVisible = $derived(
+		stateUi.pixiMenuBarVisible &&
+			!stateGame.freeSpinIntroActive &&
+			!stateGame.freeSpinOutroActive &&
+			!stateGame.transitionActive,
+	);
 
 	const renderDekaAnim = $derived(
 		showDeka &&
+			menuBarChromeVisible &&
 			((layer === 'background' && isBeside) || (layer === 'portrait' && isHeader)),
 	);
-	const dekaCharacterVisible = $derived(shouldShowDekaCharacter(gameType, stateGame));
+	const dekaCharacterVisible = $derived(
+		shouldShowDekaCharacter(gameType, readBetControlsSuppressState(stateGame)),
+	);
 	const showBesideInBackground = $derived(
 		renderDekaAnim &&
 			dekaCharacterVisible &&
 			isBeside &&
-			menuForegroundSuspended &&
+			!menuForegroundSuspended &&
 			layer === 'background' &&
 			dekaLayout,
 	);

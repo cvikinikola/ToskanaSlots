@@ -64,6 +64,8 @@ export const stateUi = $state({
 	freeSpinCounterCurrent: 0,
 	freeSpinCounterTotal: 0,
 	menuOpen: false,
+	/** Mirrors UiFadeContainer visibility — foreground BET/deka follow menu bar hide/show. */
+	pixiMenuBarVisible: true,
 	/** When true, bet plate is drawn in a foreground layer (above character overlay). */
 	amountBetInForeground: false,
 	/** Hide BET plate and +/- (intro/outro/transition panels). */

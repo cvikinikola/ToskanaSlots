@@ -50,6 +50,7 @@
 				key.startsWith('sym_') ||
 				key === 'warrior' ||
 				key === 'logo' ||
+				key === 'logo_day' ||
 				key.startsWith('menu_')
 			) {
 				tuneTexture(val);

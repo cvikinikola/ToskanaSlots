@@ -1,10 +1,8 @@
 <script lang="ts" module>
-	import type { WinLevelData } from '../game/winLevelMap';
-
 	export type EmitterEventFreeSpinOutro =
 		| { type: 'freeSpinOutroShow' }
 		| { type: 'freeSpinOutroHide' }
-		| { type: 'freeSpinOutroCountUp'; amount: number; winLevelData: WinLevelData };
+		| { type: 'freeSpinOutroCountUp'; amount: number };
 </script>
 
 <script lang="ts">
@@ -37,8 +35,9 @@
 	const PANEL_GOLD_HEADING = 0xffd86b;
 	const PANEL_CREAM = 0xf5e7c0;
 
+	const FREE_SPIN_OUTRO_HEADING = 'FREE SPINS COMPLETE!';
+
 	let show = $state(false);
-	let winLevelData = $state<WinLevelData>();
 	const countUpAmount = new Tween(0);
 	let countUpComplete = $state(false);
 
@@ -79,7 +78,6 @@
 	context.eventEmitter.subscribeOnMount({
 		freeSpinOutroShow: () => {
 			show = true;
-			winLevelData = undefined;
 			countUpComplete = false;
 			countUpAmount.set(0, { duration: 0 });
 		},
@@ -90,8 +88,6 @@
 		},
 
 		freeSpinOutroCountUp: async (e) => {
-			winLevelData = e.winLevelData;
-
 			const totalDuration = await getFreeSpinOutroMusicDurationMs();
 			const countUpDuration = Math.round(totalDuration * FREE_SPIN_OUTRO_COUNT_FRACTION);
 			const startedAt = performance.now();
@@ -147,7 +143,7 @@
 				anchor={{ x: 0.5, y: 0.5 }}
 				x={PANEL_W / 2}
 				y={PANEL_H * 0.35}
-				text={winLevelData?.text || 'FREE SPINS COMPLETE!'}
+				text={FREE_SPIN_OUTRO_HEADING}
 				style={{
 					fontFamily: 'proxima-nova',
 					fontSize: SYMBOL_SIZE * 0.34 * FONT_SCALE,

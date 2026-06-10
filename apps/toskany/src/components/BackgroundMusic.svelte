@@ -162,6 +162,17 @@
 			musicSuppressed = false;
 			restoreMainMusic();
 		},
+
+		bigWinCelebrationShow: () => {
+			musicSuppressed = true;
+			stopIntroMusic();
+			fadeTo(0);
+		},
+
+		bigWinCelebrationHide: () => {
+			musicSuppressed = false;
+			restoreMainMusic();
+		},
 	});
 </script>
 

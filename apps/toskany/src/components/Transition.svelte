@@ -8,6 +8,7 @@
 
 	import { getContext } from '../game/context';
 	import { stateGame } from '../game/stateGame.svelte';
+	import { applyPanelChromeUiState } from '../game/betControlsForeground';
 
 	const context = getContext();
 
@@ -23,6 +24,7 @@
 		transition: async () => {
 			visible = true;
 			stateGame.transitionActive = true;
+			applyPanelChromeUiState();
 			// Fade to black
 			alpha = 1;
 			await waitForTimeout(300);
@@ -34,6 +36,7 @@
 			await waitForTimeout(300);
 			visible = false;
 			stateGame.transitionActive = false;
+			applyPanelChromeUiState();
 		},
 	});
 </script>

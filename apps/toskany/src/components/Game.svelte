@@ -21,6 +21,7 @@
 	import BackgroundCharacter from './BackgroundCharacter.svelte';
 	import DekaSaluteOverlay from './DekaSaluteOverlay.svelte';
 	import BetAmountForeground from './BetAmountForeground.svelte';
+	import MenuBarChromeFade from './MenuBarChromeFade.svelte';
 	import BetControlsMenuSync from './BetControlsMenuSync.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import LogoTexturePrep from './LogoTexturePrep.svelte';
@@ -34,6 +35,7 @@
 	import MultiplierFly from './MultiplierFly.svelte';
 	import ReelFramePanel from './ReelFramePanel.svelte';
 	import Win from './Win.svelte';
+	import WinCelebration from './WinCelebration.svelte';
 	import WinSparks from './WinSparks.svelte';
 	import WinGlow from './WinGlow.svelte';
 	import FreeSpinIntro from './FreeSpinIntro.svelte';
@@ -134,8 +136,11 @@
 			<SpotMultipliers />
 		</MainContainer>
 
-		<!-- Beside deka always in foreground layer (arm over frame). Portrait salute too. -->
-		<DekaSaluteOverlay />
+		<!-- BET + +/- and beside deka — same fade as menu bar (uiHide + intro/outro). -->
+		<MenuBarChromeFade>
+			<DekaSaluteOverlay />
+			<BetAmountForeground />
+		</MenuBarChromeFade>
 
 		<WinSparks />
 		<WinGlow />
@@ -169,13 +174,11 @@
 		</UI>
 
 		<Win />
+		<WinCelebration />
 		<FreeSpinIntro />
 
 		<FreeSpinOutroCoins />
 		<FreeSpinOutro />
-
-		<!-- Last HUD layer: BET + +/- must stay above deka even if overlay mounts later. -->
-		<BetAmountForeground />
 
 		<Transition />
 	{/if}
